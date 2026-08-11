@@ -4,6 +4,7 @@ __pycache__/
 .vagrant
 /.pio/
 /.venv/
+/.vscode/
 /compile_commands.json
 /build/
 /dist/
