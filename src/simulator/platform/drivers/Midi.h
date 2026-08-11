@@ -35,6 +35,10 @@ public:
         _simulator.registerTargetInputObserver(this);
     }
 
+    ~Midi() {
+        _simulator.unregisterTargetInputObserver(this);
+    }
+
     void init() {}
 
     bool send(const MidiMessage &message) {

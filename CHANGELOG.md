@@ -1,4 +1,22 @@
 # Changelog
+
+### Step 6.9 — screenshot section isolation and acknowledgement placement
+
+- moves the Simon Kallweit / Westlicht PER|FORMER acknowledgement directly below the repository badges so upstream authorship is explicit before the Styr project description;
+- runs each manual screenshot group in a fresh `styr_manual_screenshots` process while retaining one transactional staging directory;
+- adds section-selective screenshot generation for focused debugging and clearer failure localization;
+- documents the section-isolated screenshot workflow.
+
+## Step 6.7 - GitHub README and documentation index
+
+- Fixed simulator reboot observer lifetime: simulator input drivers now unregister on destruction, preventing dangling observer pointers and access violations during multi-section manual screenshot generation.
+- Added `TestSimulatorReboot` regression coverage for repeated simulator target recreation.
+
+- reworked the root README as a GitHub-oriented project landing page with CI/license/toolchain badges, GitHub alerts, a table of contents, quick-start commands and explicit project status;
+- added a repository-level documentation index and documented the audience/purpose-based documentation layout;
+- expanded `docs/README.md` with a documentation tree, placement rules and operational entry points;
+- kept badge claims limited to workflows, licenses and build/target facts that are actually present in the repository.
+
 ## v0.1.47 (05 April 2026)
 
 #### Features
@@ -17,6 +35,8 @@
 #### Fixes
 
 #### Development
+- Updated GitHub Actions to Node 24-compatible `actions/checkout@v6` and `actions/setup-python@v6`, added the explicit PlatformIO pip-cache dependency path, and enabled CTest output on failure for actionable CI logs.
+- Decoupled `TestSequenceState` from stale hard-coded RNG samples while retaining explicit RandomWalk boundary-wrap coverage; production random/sequencer behavior is unchanged.
 - Removed the experimental Algorithmic Track (including Markov/Turing implementation, UI, engine integration, and tests) ahead of the build-system restructuring.
 - Rolled the project serialization format back to version 32; version 32 remains the current format with LFO track persistence.
 - Added and updated relevant unit and integration tests for negative gate offsets and look-ahead triggering.

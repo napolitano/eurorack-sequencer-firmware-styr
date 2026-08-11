@@ -24,6 +24,16 @@ static Random seeded(uint32_t seed) {
     return Random(seed);
 }
 
+static uint32_t seedSelecting(uint32_t range, uint32_t value) {
+    for (uint32_t seed = 0; seed < 65536; ++seed) {
+        Random probe(seed);
+        if (probe.nextRange(range) == value) {
+            return seed;
+        }
+    }
+    return uint32_t(-1);
+}
+
 } // namespace
 
 UNIT_TEST("SequenceState") {
@@ -144,33 +154,37 @@ UNIT_TEST("SequenceState") {
         expectEqual(state.iteration(), uint32_t(1));
     }
 
-    CASE("advanceFree random and randomWalk use deterministic seeded choices including wrap behavior") {
+    CASE("advanceFree random follows Random and randomWalk wraps at both boundaries") {
         SequenceState randomState;
         Random randomRng = seeded(0);
+        Random expectedRandomRng = seeded(0);
         randomState.reset();
-        randomState.advanceFree(Types::RunMode::Random, 3, 5, randomRng);
-        expectEqual(randomState.step(), 3);
 
+        const int expectedRandomStep = int(expectedRandomRng.nextRange(3)) + 3;
+        randomState.advanceFree(Types::RunMode::Random, 3, 5, randomRng);
+        expectEqual(randomState.step(), expectedRandomStep);
+        expectEqual(randomState.prevStep(), -1);
+
+        // Put the state on the left boundary without consuming the RNG, then
+        // choose a seed whose first binary draw selects the negative direction.
+        const uint32_t leftSeed = seedSelecting(2, 0);
+        expect(leftSeed != uint32_t(-1));
         SequenceState walkLeftWrap;
-        Random leftWrapRng = seeded(0);
+        Random leftWrapRng = seeded(leftSeed);
         walkLeftWrap.reset();
-        walkLeftWrap.advanceFree(Types::RunMode::RandomWalk, 0, 1, leftWrapRng);
+        walkLeftWrap.advanceFree(Types::RunMode::Forward, 0, 1, leftWrapRng);
         expectEqual(walkLeftWrap.step(), 0);
         walkLeftWrap.advanceFree(Types::RunMode::RandomWalk, 0, 1, leftWrapRng);
         expectEqual(walkLeftWrap.step(), 1);
 
-        SequenceState walkRight;
-        Random rightRng = seeded(3);
-        walkRight.reset();
-        walkRight.advanceFree(Types::RunMode::RandomWalk, 0, 2, rightRng);
-        expectEqual(walkRight.step(), 0);
-        walkRight.advanceFree(Types::RunMode::RandomWalk, 0, 2, rightRng);
-        expectEqual(walkRight.step(), 1);
-
+        // Likewise exercise the right-boundary wrap explicitly with a seed
+        // whose first binary draw selects the positive direction.
+        const uint32_t rightSeed = seedSelecting(2, 1);
+        expect(rightSeed != uint32_t(-1));
         SequenceState walkRightWrap;
-        Random rightWrapRng = seeded(686);
+        Random rightWrapRng = seeded(rightSeed);
         walkRightWrap.reset();
-        walkRightWrap.advanceFree(Types::RunMode::RandomWalk, 0, 1, rightWrapRng);
+        walkRightWrap.advanceFree(Types::RunMode::Backward, 0, 1, rightWrapRng);
         expectEqual(walkRightWrap.step(), 1);
         walkRightWrap.advanceFree(Types::RunMode::RandomWalk, 0, 1, rightWrapRng);
         expectEqual(walkRightWrap.step(), 0);
@@ -270,19 +284,30 @@ UNIT_TEST("SequenceState") {
         SequenceState walkState;
         SequenceState lastState;
         Random randomRng = seeded(0);
+        Random expectedRandomRng = seeded(0);
         Random walkRng = seeded(0);
+        Random expectedWalkRng = seeded(0);
         Random lastRng = seeded(0);
         randomState.reset();
         walkState.reset();
         lastState.reset();
 
+        const int expectedRandomStep = int(expectedRandomRng.nextRange(3)) + 3;
         randomState.advanceAligned(99, Types::RunMode::Random, 3, 5, randomRng);
-        expectEqual(randomState.step(), 3);
+        expectEqual(randomState.step(), expectedRandomStep);
 
+        int expectedWalkStep = int(expectedWalkRng.nextRange(2));
         walkState.advanceAligned(0, Types::RunMode::RandomWalk, 0, 1, walkRng);
-        expectEqual(walkState.step(), 0);
+        expectEqual(walkState.step(), expectedWalkStep);
+
+        const int walkDirection = int(expectedWalkRng.nextRange(2));
+        if (walkDirection == 0) {
+            expectedWalkStep = expectedWalkStep == 0 ? 1 : expectedWalkStep - 1;
+        } else {
+            expectedWalkStep = expectedWalkStep == 1 ? 0 : expectedWalkStep + 1;
+        }
         walkState.advanceAligned(1, Types::RunMode::RandomWalk, 0, 1, walkRng);
-        expectEqual(walkState.step(), 1);
+        expectEqual(walkState.step(), expectedWalkStep);
 
         lastState.advanceAligned(7, Types::RunMode::Forward, 0, 3, lastRng);
         expectEqual(lastState.step(), 3);

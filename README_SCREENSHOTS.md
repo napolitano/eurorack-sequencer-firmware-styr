@@ -160,3 +160,28 @@ A changed generated PNG can mean either an intentional UI change or an unintende
 Generated screenshots are committed documentation artifacts. They should remain readable without building Styr, while still being reproducible from the current codebase.
 
 From Munich with <img src="docs/manual/assets/blue-heart.svg" alt="blue heart" width="14">
+
+### Simulator reboot isolation
+
+The documentation generator deliberately resets the simulated firmware between complex capture groups. Simulator platform drivers register as target-input observers and now unregister themselves in their destructors. This RAII lifecycle is required: keeping observers from a destroyed `SequencerApp` would leave dangling pointers and can cause native access violations during later capture groups.
+
+`TestSimulatorReboot` exercises repeated target recreation as a regression test for this contract.
+
+
+## Section isolation
+
+The canonical `manual-screenshots` target does not generate the entire manual in one long-lived simulator process. It invokes the capture tool separately for `global`, `note`, `curve`, `midi-cv`, `lfo`, `generators`, `song`, and `system`.
+
+This is intentional. Each section starts with a fresh `SequencerApp` and simulator process, so modal UI state, model state, observer lifetimes, and driver state cannot leak from one documentation group into the next. The shared staging directory is published to `docs/manual/assets/` only after every section succeeds.
+
+A single section can be reproduced directly for debugging:
+
+```powershell
+.\build\simulator\windows-ucrt64-debug\styr_manual_screenshots.exe `
+  .\build\simulator\windows-ucrt64-debug\manual-screenshots-debug `
+  3 `
+  generators
+```
+
+Valid sections are `global`, `note`, `curve`, `midi-cv`, `lfo`, `generators`, `song`, and `system`. Omitting the section retains the developer-oriented `all` mode.
+

@@ -38,6 +38,10 @@ public:
         _simulator.registerTargetInputObserver(this);
     }
 
+    ~UsbMidi() {
+        _simulator.unregisterTargetInputObserver(this);
+    }
+
     void init() {}
 
     bool send(uint8_t cable, const MidiMessage &message) {

@@ -37,6 +37,10 @@ public:
         _simulator.registerTargetInputObserver(this);
     }
 
+    ~Encoder() {
+        _simulator.unregisterTargetInputObserver(this);
+    }
+
     void init() {}
 
     void process() {}

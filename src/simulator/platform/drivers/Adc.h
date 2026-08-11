@@ -29,12 +29,18 @@ class Adc : private sim::TargetInputHandler {
 public:
     static constexpr int Channels = CONFIG_ADC_CHANNELS;
 
-    Adc() {
+    Adc() :
+        _simulator(sim::Simulator::instance())
+    {
         for (int channel = 0; channel < Channels; ++channel) {
             _channels[channel] = 0x7fff;
         }
 
-        sim::Simulator::instance().registerTargetInputObserver(this);
+        _simulator.registerTargetInputObserver(this);
+    }
+
+    ~Adc() {
+        _simulator.unregisterTargetInputObserver(this);
     }
 
     void init() {}
@@ -48,5 +54,6 @@ private:
         _channels[channel] = value;
     }
 
+    sim::Simulator &_simulator;
     std::array<uint16_t, Channels> _channels;
 };

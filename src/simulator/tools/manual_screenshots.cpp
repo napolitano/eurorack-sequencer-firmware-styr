@@ -589,6 +589,25 @@ int main(int argc, char **argv) {
         dbg_set_assert_handler(&screenshotAssertHandler);
         const std::string outputDirectory = argc > 1 ? argv[1] : "docs/manual/assets";
         const int screenshotScale = argc > 2 ? parseScale(argv[2]) : 3;
+        const std::string requestedSection = argc > 3 ? argv[3] : "all";
+
+        static const char *validSections[] = {
+            "all", "global", "note", "curve", "midi-cv", "lfo", "generators", "song", "system"
+        };
+        bool sectionValid = false;
+        for (const char *section : validSections) {
+            if (requestedSection == section) {
+                sectionValid = true;
+                break;
+            }
+        }
+        if (!sectionValid) {
+            throw std::runtime_error("unknown manual screenshot section: " + requestedSection);
+        }
+
+        const auto wantsSection = [&requestedSection] (const char *section) {
+            return requestedSection == "all" || requestedSection == section;
+        };
 
         std::unique_ptr<SequencerApp> sequencer;
         sim::Simulator simulator({
@@ -615,100 +634,118 @@ int main(int argc, char **argv) {
 
         Project *project = &sequencer->model.project();
 
-        // Global and project pages.
-        c.down(Key::Tempo).wait(100).screenshot("tempo").up(Key::Tempo).wait(100);
-        c.down(Key::Tempo).wait(100).down(Key::Right).wait(800).screenshot("tempo-nudge").up(Key::Right).up(Key::Tempo).wait(100);
-        c.selectPage(Key::Tempo).screenshot("clock");
-        c.selectPage(Key::Left).screenshot("overview");
-        c.screenshotRegion("header", 0, 0, CONFIG_LCD_WIDTH, 10);
-        c.selectPage(Key::Pattern).screenshot("pattern");
-        c.selectPage(Key::Performer).screenshot("performance");
-        c.selectPage(Key::Track0).screenshot("project");
+        if (wantsSection("global")) {
+            std::cout << "manual screenshot section: global" << std::endl;
 
-        // Layout modes and examples.
-        c.selectPage(Key::Track1).screenshot("layout-mode");
-        c.screenshotRegion("footer", 0, CONFIG_LCD_HEIGHT - 10, CONFIG_LCD_WIDTH, 10);
-        c.press(Key::F1).screenshot("layout-link");
-        c.press(Key::F2).screenshot("layout-gate");
-        c.press(Key::F3).screenshot("layout-cv");
-        c.press(Key::F0).pressEncoder().rotateEncoder(1).screenshot("layout-mode-confirm");
+            // Global and project pages.
+            c.down(Key::Tempo).wait(100).screenshot("tempo").up(Key::Tempo).wait(100);
+            c.down(Key::Tempo).wait(100).down(Key::Right).wait(800).screenshot("tempo-nudge").up(Key::Right).up(Key::Tempo).wait(100);
+            c.selectPage(Key::Tempo).screenshot("clock");
+            c.selectPage(Key::Left).screenshot("overview");
+            c.screenshotRegion("header", 0, 0, CONFIG_LCD_WIDTH, 10);
+            c.selectPage(Key::Pattern).screenshot("pattern");
+            c.selectPage(Key::Performer).screenshot("performance");
+            c.selectPage(Key::Track0).screenshot("project");
 
-        project->setTrackMode(0, Track::TrackMode::MidiCv);
-        auto &midiCvTrack = project->track(0).midiCvTrack();
-        midiCvTrack.setVoiceConfig(MidiCvTrack::VoiceConfig::PitchVelocity);
-        midiCvTrack.setVoices(2);
-        project->setCvOutputTrack(0, 0);
-        project->setCvOutputTrack(1, 0);
-        project->setCvOutputTrack(2, 0);
-        project->setCvOutputTrack(3, 0);
-        c.press(Key::F3).screenshot("layout-cv-example");
-        project->clear();
+            // Layout modes and examples.
+            c.selectPage(Key::Track1).screenshot("layout-mode");
+            c.screenshotRegion("footer", 0, CONFIG_LCD_HEIGHT - 10, CONFIG_LCD_WIDTH, 10);
+            c.press(Key::F1).screenshot("layout-link");
+            c.press(Key::F2).screenshot("layout-gate");
+            c.press(Key::F3).screenshot("layout-cv");
+            c.press(Key::F0).pressEncoder().rotateEncoder(1).screenshot("layout-mode-confirm");
 
-        // Routing, MIDI, scales and monitoring.
-        c.selectPage(Key::Track2).screenshot("routing");
-        c.pressEncoder().rotateEncoder(10).screenshot("routing-edit");
-        c.selectPage(Key::Track3).screenshot("midi-output");
-        c.selectPage(Key::Track4).screenshot("user-scale");
-        c.selectPage(Key::Step7).screenshot("monitor-cv-in");
-        c.press(Key::F1).screenshot("monitor-cv-out");
-        c.press(Key::F2).midi(0, MidiMessage::makeNoteOn(0, 60)).screenshot("monitor-midi");
-        c.press(Key::F3).screenshot("monitor-stats");
+            project->setTrackMode(0, Track::TrackMode::MidiCv);
+            auto &midiCvTrack = project->track(0).midiCvTrack();
+            midiCvTrack.setVoiceConfig(MidiCvTrack::VoiceConfig::PitchVelocity);
+            midiCvTrack.setVoices(2);
+            project->setCvOutputTrack(0, 0);
+            project->setCvOutputTrack(1, 0);
+            project->setCvOutputTrack(2, 0);
+            project->setCvOutputTrack(3, 0);
+            c.press(Key::F3).screenshot("layout-cv-example");
+            project->clear();
 
-        // Track/sequence overview pages plus exhaustive step-editor layers.
-        // Start complex mode-specific capture groups from a clean simulator
-        // session. This prevents modal/page state from one group leaking into
-        // the next and makes assertion failures local and reproducible.
-        c.reboot("note");
-        project = &sequencer->model.project();
-        prepareNoteExample(*project);
-        c.selectPage(Key::Step2).screenshot("note-track");
-        c.selectPage(Key::Step1).screenshot("note-sequence");
-        captureNoteLayers(c, *project);
+            // Routing, MIDI, scales and monitoring.
+            c.selectPage(Key::Track2).screenshot("routing");
+            c.pressEncoder().rotateEncoder(10).screenshot("routing-edit");
+            c.selectPage(Key::Track3).screenshot("midi-output");
+            c.selectPage(Key::Track4).screenshot("user-scale");
+            c.selectPage(Key::Step7).screenshot("monitor-cv-in");
+            c.press(Key::F1).screenshot("monitor-cv-out");
+            c.press(Key::F2).midi(0, MidiMessage::makeNoteOn(0, 60)).screenshot("monitor-midi");
+            c.press(Key::F3).screenshot("monitor-stats");
+        }
 
-        c.reboot("curve");
-        project = &sequencer->model.project();
-        prepareCurveExample(*project);
-        c.selectPage(Key::Step2).screenshot("curve-track");
-        c.selectPage(Key::Step1).screenshot("curve-sequence");
-        captureCurveLayers(c, *project);
+        const auto beginIsolatedSection = [&] (const char *section) {
+            // In the normal CMake documentation target every complex section
+            // runs in its own process. The fallback "all" mode retains the
+            // historical in-process reboot path for developer convenience.
+            if (requestedSection == "all") {
+                c.reboot(section);
+            } else {
+                c.releaseAllControls();
+                std::cout << "manual screenshot section: " << section << std::endl;
+                c.requireUiReady("section start");
+            }
+            project = &sequencer->model.project();
+        };
 
-        c.reboot("midi-cv");
-        project = &sequencer->model.project();
-        project->setTrackMode(0, Track::TrackMode::MidiCv);
-        c.wait(30).selectPage(Key::Step2).screenshot("midi-cv-track");
+        if (wantsSection("note")) {
+            beginIsolatedSection("note");
+            prepareNoteExample(*project);
+            c.selectPage(Key::Step2).screenshot("note-track");
+            c.selectPage(Key::Step1).screenshot("note-sequence");
+            captureNoteLayers(c, *project);
+        }
 
-        c.reboot("lfo");
-        project = &sequencer->model.project();
-        captureLfo(c, *project);
+        if (wantsSection("curve")) {
+            beginIsolatedSection("curve");
+            prepareCurveExample(*project);
+            c.selectPage(Key::Step2).screenshot("curve-track");
+            c.selectPage(Key::Step1).screenshot("curve-sequence");
+            captureCurveLayers(c, *project);
+        }
 
-        c.reboot("generators");
-        project = &sequencer->model.project();
-        captureGenerators(c, *project);
+        if (wantsSection("midi-cv")) {
+            beginIsolatedSection("midi-cv");
+            project->setTrackMode(0, Track::TrackMode::MidiCv);
+            c.wait(30).selectPage(Key::Step2).screenshot("midi-cv-track");
+        }
 
-        // Song page.
-        c.reboot("song");
-        project = &sequencer->model.project();
-        project->clear();
-        c.selectPage(Key::Step3).screenshot("song");
-        c.down(Key::F0).wait(100)
-            .press(Key::Step0).press(Key::Step0).press(Key::Step0).press(Key::Step1)
-            .press(Key::Step0).press(Key::Step0).press(Key::Step0).press(Key::Step2)
-            .up(Key::F0).wait(100).press(Key::Play).press(Key::F4).screenshot("song-chain-example");
-        c.rotateEncoder(-5).press(Key::F4).wait(1500).screenshot("song-playback");
-        c.press(Key::F4).press(Key::Play).wait(100);
+        if (wantsSection("lfo")) {
+            beginIsolatedSection("lfo");
+            captureLfo(c, *project);
+        }
 
-        // System pages start from a clean session as they use confirmation
-        // and modal pages that should not depend on the Song workflow.
-        c.reboot("system");
-        project = &sequencer->model.project();
-        c.selectPage(Key::Track7).screenshot("system-confirm");
-        c.press(Key::F4).screenshot("system-calibration");
-        c.pressEncoder().screenshot("system-calibration-edit").pressEncoder();
-        c.press(Key::F3).screenshot("system-utilities");
-        c.press(Key::F4).screenshot("system-update");
+        if (wantsSection("generators")) {
+            beginIsolatedSection("generators");
+            captureGenerators(c, *project);
+        }
 
-        std::cout << "Generated manual screenshots at " << screenshotScale
-                  << "x nearest-neighbour scale." << std::endl;
+        if (wantsSection("song")) {
+            beginIsolatedSection("song");
+            project->clear();
+            c.selectPage(Key::Step3).screenshot("song");
+            c.down(Key::F0).wait(100)
+                .press(Key::Step0).press(Key::Step0).press(Key::Step0).press(Key::Step1)
+                .press(Key::Step0).press(Key::Step0).press(Key::Step0).press(Key::Step2)
+                .up(Key::F0).wait(100).press(Key::Play).press(Key::F4).screenshot("song-chain-example");
+            c.rotateEncoder(-5).press(Key::F4).wait(1500).screenshot("song-playback");
+            c.press(Key::F4).press(Key::Play).wait(100);
+        }
+
+        if (wantsSection("system")) {
+            beginIsolatedSection("system");
+            c.selectPage(Key::Track7).screenshot("system-confirm");
+            c.press(Key::F4).screenshot("system-calibration");
+            c.pressEncoder().screenshot("system-calibration-edit").pressEncoder();
+            c.press(Key::F3).screenshot("system-utilities");
+            c.press(Key::F4).screenshot("system-update");
+        }
+
+        std::cout << "Generated manual screenshot section '" << requestedSection
+                  << "' at " << screenshotScale << "x nearest-neighbour scale." << std::endl;
         return 0;
     } catch (const std::exception &error) {
         std::cerr << "manual screenshot generation failed: " << error.what() << std::endl;

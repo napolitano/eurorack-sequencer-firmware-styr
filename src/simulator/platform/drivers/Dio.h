@@ -74,6 +74,10 @@ public:
         });
     }
 
+    ~Dio() {
+        _simulator.unregisterTargetInputObserver(this);
+    }
+
     void init() {}
 
     Input clockInput;

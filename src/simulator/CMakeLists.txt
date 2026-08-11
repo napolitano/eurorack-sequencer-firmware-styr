@@ -280,9 +280,17 @@ if(NOT CMAKE_SYSTEM_NAME MATCHES "Emscripten")
         # leave the checked-out manual with a half-updated screenshot set.
         COMMAND ${CMAKE_COMMAND} -E rm -rf "${STYR_MANUAL_SCREENSHOT_STAGING}"
         COMMAND ${CMAKE_COMMAND} -E make_directory "${STYR_MANUAL_SCREENSHOT_STAGING}"
-        COMMAND $<TARGET_FILE:styr_manual_screenshots>
-            "${STYR_MANUAL_SCREENSHOT_STAGING}"
-            "${STYR_DOC_SCREENSHOT_SCALE}"
+        # Run each documentation group in a fresh process. This prevents UI,
+        # observer and model state from leaking between unrelated capture
+        # groups and makes a failure immediately attributable to one section.
+        COMMAND $<TARGET_FILE:styr_manual_screenshots> "${STYR_MANUAL_SCREENSHOT_STAGING}" "${STYR_DOC_SCREENSHOT_SCALE}" global
+        COMMAND $<TARGET_FILE:styr_manual_screenshots> "${STYR_MANUAL_SCREENSHOT_STAGING}" "${STYR_DOC_SCREENSHOT_SCALE}" note
+        COMMAND $<TARGET_FILE:styr_manual_screenshots> "${STYR_MANUAL_SCREENSHOT_STAGING}" "${STYR_DOC_SCREENSHOT_SCALE}" curve
+        COMMAND $<TARGET_FILE:styr_manual_screenshots> "${STYR_MANUAL_SCREENSHOT_STAGING}" "${STYR_DOC_SCREENSHOT_SCALE}" midi-cv
+        COMMAND $<TARGET_FILE:styr_manual_screenshots> "${STYR_MANUAL_SCREENSHOT_STAGING}" "${STYR_DOC_SCREENSHOT_SCALE}" lfo
+        COMMAND $<TARGET_FILE:styr_manual_screenshots> "${STYR_MANUAL_SCREENSHOT_STAGING}" "${STYR_DOC_SCREENSHOT_SCALE}" generators
+        COMMAND $<TARGET_FILE:styr_manual_screenshots> "${STYR_MANUAL_SCREENSHOT_STAGING}" "${STYR_DOC_SCREENSHOT_SCALE}" song
+        COMMAND $<TARGET_FILE:styr_manual_screenshots> "${STYR_MANUAL_SCREENSHOT_STAGING}" "${STYR_DOC_SCREENSHOT_SCALE}" system
         COMMAND ${CMAKE_COMMAND} -E make_directory "${STYR_ROOT}/docs/manual/assets"
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${STYR_MANUAL_SCREENSHOT_STAGING}"

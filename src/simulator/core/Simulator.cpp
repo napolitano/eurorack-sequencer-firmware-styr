@@ -192,6 +192,25 @@ void Simulator::registerTargetOutputObserver(TargetOutputHandler *observer) {
     _targetOutputObservers.emplace_back(observer);
 }
 
+namespace {
+template<typename Observer>
+void eraseObserver(std::vector<Observer *> &observers, Observer *observer) {
+    observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+}
+}
+
+void Simulator::unregisterTargetTickObserver(TargetTickHandler *observer) {
+    eraseObserver(_targetTickObservers, observer);
+}
+
+void Simulator::unregisterTargetInputObserver(TargetInputHandler *observer) {
+    eraseObserver(_targetInputObservers, observer);
+}
+
+void Simulator::unregisterTargetOutputObserver(TargetOutputHandler *observer) {
+    eraseObserver(_targetOutputObservers, observer);
+}
+
 // TargetInputHandler
 
 void Simulator::writeButton(int index, bool pressed) {

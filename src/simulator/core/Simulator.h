@@ -60,6 +60,10 @@ public:
     void registerTargetInputObserver(TargetInputHandler *observer);
     void registerTargetOutputObserver(TargetOutputHandler *observer);
 
+    void unregisterTargetTickObserver(TargetTickHandler *observer);
+    void unregisterTargetInputObserver(TargetInputHandler *observer);
+    void unregisterTargetOutputObserver(TargetOutputHandler *observer);
+
     // TargetInputHandler
     void writeButton(int index, bool pressed) override;
     void writeEncoder(EncoderEvent event) override;
