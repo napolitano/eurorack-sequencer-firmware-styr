@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  firmware:
+    name: Firmware (PlatformIO)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install PlatformIO Core
+        run: python -m pip install -r toolchain/requirements-platformio.txt
+      - name: Validate PlatformIO configuration
+        run: pio project config --lint
+      - name: Build embedded targets
+        run: >-
+          pio run
+          -e application
+          -e application_standalone
+          -e tester
+          -e tester_standalone
+          -e hwconfig_default
+          -e hwconfig_dac8568a
+          -e hwconfig_invert_leds
+          -e hwconfig_invert_leds_dac8568a
+          -e hwconfig_reverse_encoder
+          -e hwconfig_reverse_encoder_dac8568a
+          -e hwconfig_reverse_encoder_invert_leds
+          -e hwconfig_reverse_encoder_invert_leds_dac8568a
+      - name: Build bootloader (known size migration blocker)
+        continue-on-error: true
+        run: pio run -e bootloader
+      - name: Build SD update bundle
+        run: pio run -e application -t sd-update
+
+  simulator_linux:
+    name: Simulator and native tests (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install host dependencies
+        run: sudo apt-get update && sudo apt-get install -y ninja-build libsdl2-dev libasound2-dev mesa-common-dev python3-dev libgl1-mesa-dev
+      - name: Configure
+        working-directory: src/simulator
+        run: cmake --preset release
+      - name: Build
+        working-directory: src/simulator
+        run: cmake --build --preset release
+      - name: Build documentation screenshot generator
+        working-directory: src/simulator
+        run: cmake --build --preset release --target styr_manual_screenshots
+      - name: Validate documentation screenshot mapping
+        run: python3 toolchain/check_manual_screenshots.py
+      - name: Test
+        working-directory: src/simulator
+        run: ctest --preset release
+
+  font_tools:
+    name: Font tools
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y ninja-build libncurses-dev
+      - name: Configure
+        working-directory: src/tools/fonts
+        run: cmake --preset release
+      - name: Build
+        working-directory: src/tools/fonts
+        run: cmake --build --preset release

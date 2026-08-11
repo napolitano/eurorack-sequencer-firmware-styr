@@ -1,0 +1,34 @@
+name: Feature request
+description: Propose a focused Styr behavior or development-workflow improvement
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Describe the concrete limitation before proposing the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: compatibility
+    attributes:
+      label: Compatibility impact
+      options:
+        - No known compatibility impact
+        - Changes sequencer behavior
+        - Changes project/settings persistence
+        - Changes hardware/bootloader behavior
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

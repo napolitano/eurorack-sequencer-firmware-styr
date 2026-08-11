@@ -1,0 +1,59 @@
+{
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/*.o": true,
+    "**/*.d": true,
+    "**/*.a": true,
+    "**/*.obj": true,
+    ".pio": true,
+    "build": true,
+    "dist": true
+  },
+  "cmake.configureOnOpen": false,
+  "git.ignoreLimitWarning": true,
+  "folder-path-color.folders": [
+    {
+      "path": "src",
+      "color": "cyan",
+      "symbol": "S",
+      "tooltip": "First-party source"
+    },
+    {
+      "path": "tests",
+      "color": "green",
+      "symbol": "T",
+      "tooltip": "Tests and regression coverage"
+    },
+    {
+      "path": "toolchain",
+      "color": "magenta",
+      "symbol": "TC",
+      "tooltip": "Build, board, linker and packaging integration"
+    },
+    {
+      "path": "third_party",
+      "color": "yellow",
+      "symbol": "3P",
+      "tooltip": "Imported third-party source"
+    },
+    {
+      "path": "docs",
+      "color": "blue",
+      "symbol": "D",
+      "tooltip": "Project documentation"
+    },
+    {
+      "path": "assets",
+      "color": "blue",
+      "symbol": "A",
+      "tooltip": "First-party assets"
+    },
+    {
+      "path": ".github",
+      "color": "magenta",
+      "symbol": "GH",
+      "tooltip": "GitHub repository metadata"
+    }
+  ]
+}

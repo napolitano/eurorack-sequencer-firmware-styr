@@ -1,0 +1,9 @@
+# Purpose: Pins the PlatformIO Core version used by the embedded Styr build.
+# Author: Axel Napolitano — Styr build-system modernization
+# Copyright: 2026 Axel Napolitano
+# License: MIT; see LICENSES/MIT.txt.
+#
+# SPDX-FileCopyrightText: 2026 Axel Napolitano
+# SPDX-License-Identifier: MIT
+
+platformio==6.1.19

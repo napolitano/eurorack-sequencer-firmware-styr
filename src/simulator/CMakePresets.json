@@ -1,0 +1,151 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "debug",
+      "displayName": "Styr Simulator - Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../../build/simulator/debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Styr Simulator - Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../../build/simulator/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "windows-ucrt64-debug",
+      "displayName": "Styr Simulator - Windows MSYS2 UCRT64 Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../../build/simulator/windows-ucrt64-debug",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "environment": {
+        "PATH": "C:/msys64/ucrt64/bin;C:/msys64/usr/bin;$penv{PATH}",
+        "SDL2DIR": "C:/msys64/ucrt64"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": {
+          "type": "FILEPATH",
+          "value": "C:/msys64/ucrt64/bin/gcc.exe"
+        },
+        "CMAKE_CXX_COMPILER": {
+          "type": "FILEPATH",
+          "value": "C:/msys64/ucrt64/bin/g++.exe"
+        },
+        "CMAKE_MAKE_PROGRAM": {
+          "type": "FILEPATH",
+          "value": "C:/msys64/ucrt64/bin/ninja.exe"
+        },
+        "CMAKE_PREFIX_PATH": "C:/msys64/ucrt64",
+        "STYR_UCRT64_PREFIX": "C:/msys64/ucrt64"
+      }
+    },
+    {
+      "name": "windows-ucrt64-release",
+      "displayName": "Styr Simulator - Windows MSYS2 UCRT64 Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../../build/simulator/windows-ucrt64-release",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "environment": {
+        "PATH": "C:/msys64/ucrt64/bin;C:/msys64/usr/bin;$penv{PATH}",
+        "SDL2DIR": "C:/msys64/ucrt64"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": {
+          "type": "FILEPATH",
+          "value": "C:/msys64/ucrt64/bin/gcc.exe"
+        },
+        "CMAKE_CXX_COMPILER": {
+          "type": "FILEPATH",
+          "value": "C:/msys64/ucrt64/bin/g++.exe"
+        },
+        "CMAKE_MAKE_PROGRAM": {
+          "type": "FILEPATH",
+          "value": "C:/msys64/ucrt64/bin/ninja.exe"
+        },
+        "CMAKE_PREFIX_PATH": "C:/msys64/ucrt64",
+        "STYR_UCRT64_PREFIX": "C:/msys64/ucrt64"
+      }
+    },
+    {
+      "name": "web",
+      "displayName": "Styr Simulator - WebAssembly",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../../build/simulator/www",
+      "toolchainFile": "$penv{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "STYR_BUILD_TESTS": "OFF",
+        "STYR_SIM_ENABLE_PYTHON": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "windows-ucrt64-debug",
+      "configurePreset": "windows-ucrt64-debug"
+    },
+    {
+      "name": "windows-ucrt64-release",
+      "configurePreset": "windows-ucrt64-release"
+    },
+    {
+      "name": "web",
+      "configurePreset": "web"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-ucrt64-debug",
+      "configurePreset": "windows-ucrt64-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-ucrt64-release",
+      "configurePreset": "windows-ucrt64-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

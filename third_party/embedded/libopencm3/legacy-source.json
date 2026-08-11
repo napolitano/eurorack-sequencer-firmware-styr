@@ -1,0 +1,7 @@
+{
+  "name": "westlicht-libopencm3-legacy",
+  "commit": "885e22205b229fa4c6fce9f9df5f288ae6adddee",
+  "source": "https://github.com/westlicht/libopencm3",
+  "license": "LGPL-3.0-or-later",
+  "purpose": "Pinned compatibility baseline for the initial Styr PlatformIO migration"
+}

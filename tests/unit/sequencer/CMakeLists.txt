@@ -1,0 +1,40 @@
+# Purpose: Defines the CMake build graph for the unit test.
+# Author: Axel Napolitano — Styr implementation and modernization
+# Copyright: 2026 Axel Napolitano
+# License: MIT; see LICENSES/MIT.txt.
+#
+# SPDX-FileCopyrightText: 2026 Axel Napolitano
+# SPDX-License-Identifier: MIT
+register_test(TestCurve TestCurve.cpp)
+register_test(TestScale TestScale.cpp)
+register_test(TestClockSetup TestClockSetup.cpp)
+register_test(TestSequenceState TestSequenceState.cpp styr_sequencer)
+register_test(TestRoutingEngine TestRoutingEngine.cpp styr_sequencer)
+register_test(TestMidiCvTrackEngine TestMidiCvTrackEngine.cpp styr_sequencer)
+register_test(TestMidiOutputEngine TestMidiOutputEngine.cpp styr_sequencer)
+register_test(TestArpeggiatorEngine TestArpeggiatorEngine.cpp styr_sequencer)
+register_test(TestGenerator TestGenerator.cpp styr_sequencer)
+register_test(TestRandomGenerator TestRandomGenerator.cpp styr_sequencer)
+register_test(TestSequenceRandomWalkChi2 TestSequenceRandomWalkChi2.cpp styr_sequencer)
+register_test(TestEuclideanGenerator TestEuclideanGenerator.cpp styr_sequencer)
+register_test(TestRhythm TestRhythm.cpp styr_sequencer)
+register_test(TestMidiLearn TestMidiLearn.cpp styr_sequencer)
+register_test(TestAcidBasslineGenerator TestAcidBasslineGenerator.cpp styr_sequencer)
+register_test(TestCvInput TestCvInput.cpp styr_sequencer)
+register_test(TestCvOutput TestCvOutput.cpp styr_sequencer)
+register_test(TestNoteTrackEngineGateOffset TestNoteTrackEngineGateOffset.cpp styr_sequencer)
+register_test(TestNoteTrackEngineAdvanced TestNoteTrackEngineAdvanced.cpp styr_sequencer)
+register_test(TestCurveTrackEngine TestCurveTrackEngine.cpp styr_sequencer)
+register_test(TestEngine TestEngine.cpp styr_sequencer)
+register_test(TestEngineTransportClock TestEngineTransportClock.cpp styr_sequencer)
+register_test(TestClockExternalTiming TestClockExternalTiming.cpp styr_sequencer)
+register_test(TestClockCore TestClockCore.cpp styr_sequencer)
+register_test(TestLfoTrackEngine TestLfoTrackEngine.cpp styr_sequencer)
+register_test(TestLfoTrackEngine_EvalWaveform TestLfoTrackEngine_EvalWaveform.cpp styr_sequencer)
+register_test(TestLfoTrackEngine_FreeMode TestLfoTrackEngine_FreeMode.cpp styr_sequencer)
+register_test(TestLfoTrackEngine_Nudge TestLfoTrackEngine_Nudge.cpp styr_sequencer)
+register_test(TestLfoTrackEngine_RandomSteps TestLfoTrackEngine_RandomSteps.cpp styr_sequencer)
+register_test(TestLfoTrackPersistence TestLfoTrackPersistence.cpp styr_sequencer)
+register_test(TestProjectLfoPersistence TestProjectLfoPersistence.cpp styr_sequencer)
+register_test(TestProject TestProject.cpp styr_sequencer)
+register_test(TestClipBoard TestClipBoard.cpp styr_sequencer)

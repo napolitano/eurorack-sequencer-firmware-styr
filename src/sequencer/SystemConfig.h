@@ -1,0 +1,86 @@
+/**
+ * @file SystemConfig.h
+ * @brief Declares the SystemConfig component used by the sequencer application.
+ *
+ * @author Simon Kallweit — original PER|FORMER implementation lineage
+ * @author Axel Napolitano — Styr modifications, integration and modernization
+ * @copyright 2017-2018 Simon Kallweit
+ * @copyright 2026 Axel Napolitano
+ *
+ * @par License
+ * MIT; see LICENSES/MIT.txt.
+ *
+ * SPDX-FileCopyrightText: 2017-2018 Simon Kallweit
+ * SPDX-FileCopyrightText: 2026 Axel Napolitano
+ * SPDX-License-Identifier: MIT
+ */
+#pragma once
+
+#include "Platform.h"
+
+// CPU
+#define CONFIG_CPU_FREQUENCY            168000000
+#define CONFIG_TICK_FREQUENCY           1000
+
+// Interrupt priorities
+#define CONFIG_HIGHRES_IRQ_PRIORITY     (0<<4)
+#define CONFIG_CLOCKTIMER_IRQ_PRIORITY  (1<<4)
+#define CONFIG_DIO_IRQ_PRIORITY         (2<<4)
+#define CONFIG_MIDI_IRQ_PRIORITY        (3<<4)
+#define CONFIG_LCD_IRQ_PRIORITY         (4<<4)
+#define CONFIG_CONSOLE_IRQ_PRIORITY     (5<<4)
+
+// printf
+#define CONFIG_PRINTF_BUFFER            16
+
+// Debugging
+#define CONFIG_ENABLE_DEBUG             1
+#define CONFIG_ENABLE_PROFILER          0
+#define CONFIG_ENABLE_TASK_PROFILER     1
+
+// Sanitization
+#define CONFIG_ENABLE_SANITIZE          1
+
+// USB host
+#define CONFIG_ENABLE_USBH_DRIVER_FS    1
+#define CONFIG_ENABLE_USBH_DEBUG        0
+
+// LCD
+#define CONFIG_LCD_WIDTH                256
+#define CONFIG_LCD_HEIGHT               64
+
+// Simulator display color
+#define DISPLAY_YELLOW                  0
+#define DISPLAY_WHITE                   1
+#define DISPLAY_CYAN                    2
+
+#ifndef CONFIG_SIMULATOR_DISPLAY_COLOR
+#define CONFIG_SIMULATOR_DISPLAY_COLOR  DISPLAY_YELLOW
+#endif
+
+// Simulator frontpanel asset suffix.
+// Examples:
+//   ""        -> assets/frontpanel.png
+//   "-white"  -> assets/frontpanel-white.png
+#ifndef CONFIG_SIMULATOR_FRONTPANEL_SUFFIX
+#define CONFIG_SIMULATOR_FRONTPANEL_SUFFIX ""
+#endif
+
+// Shift registers
+#define CONFIG_NUM_SR                   3
+
+// Button Led Matrix
+#define CONFIG_BLM_ROWS                 8
+#define CONFIG_BLM_COLS_BUTTON          5
+#define CONFIG_BLM_COLS_LED             4
+
+#define CONFIG_FUNCTION_KEY_COUNT       5
+
+// ADC
+#define CONFIG_ADC_CHANNELS             4
+
+// DAC
+#define CONFIG_DAC_CHANNELS             8
+
+// SdCard
+#define CONFIG_SDCARD_USE_CARD_DETECT   1

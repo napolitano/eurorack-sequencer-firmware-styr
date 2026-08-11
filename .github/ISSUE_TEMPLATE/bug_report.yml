@@ -1,0 +1,61 @@
+name: Bug report
+description: Report a reproducible Styr firmware, simulator or build defect
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Please provide a minimal reproduction. Security vulnerabilities must be reported through SECURITY.md, not this form."
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Sequencer / engine
+        - User interface
+        - LFO track
+        - Note / Curve track
+        - MIDI / USB
+        - Simulator
+        - Firmware build / PlatformIO
+        - Bootloader / update
+        - Hardware configuration / tester
+        - Documentation / tooling
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Revision or release
+      placeholder: commit, branch, tag or release
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include the smallest sequence of actions that reproduces the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Hardware revision, OS, compiler/toolchain, simulator/native target and connected MIDI/CV devices when relevant.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or additional context
+      render: text

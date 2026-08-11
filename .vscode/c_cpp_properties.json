@@ -1,0 +1,69 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
+{
+    "configurations": [
+        {
+            "name": "PlatformIO",
+            "includePath": [
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/src",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/libopencm3/vendor/include",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/sequencer",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/shared",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/sequencer/platform/stm32",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/common",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/freertos/include",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/freertos/portable",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/libusbhost/include",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/hwconfig",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/bootloader",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/bootloader",
+                "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/bootloader/md5",
+                ""
+            ],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": [
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/src",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/libopencm3/vendor/include",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/sequencer",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/shared",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/sequencer/platform/stm32",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/common",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/freertos/include",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/freertos/portable",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/libusbhost/include",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/hwconfig",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/src/bootloader",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/bootloader",
+                    "C:/Users/arthur_dent/Desktop/Styr Sequencer/third_party/embedded/bootloader/md5",
+                    ""
+                ]
+            },
+            "defines": [
+                "SOURCE_PATH_SIZE=44",
+                "F_CPU=168000000L",
+                "PLATFORMIO=60119",
+                "PLATFORM_STM32",
+                "STM32F4",
+                "STM32F405xx",
+                ""
+            ],
+            "cppStandard": "c++11",
+            "compilerPath": "C:/Users/arthur_dent/.platformio/packages/toolchain-gccarmnoneeabi@1.60301.0/bin/arm-none-eabi-gcc.exe",
+            "compilerArgs": [
+                "-mthumb",
+                "-mcpu=cortex-m4",
+                "-mcpu=cortex-m4",
+                "-mthumb",
+                "-mfloat-abi=hard",
+                "-mfpu=fpv4-sp-d16",
+                "-mthumb-interwork",
+                ""
+            ]
+        }
+    ],
+    "version": 4
+}

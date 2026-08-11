@@ -1,0 +1,19 @@
+.DS_Store
+*.pyc
+__pycache__/
+.vagrant
+/.pio/
+/.venv/
+/compile_commands.json
+/build/
+/dist/
+
+# Downloaded pinned legacy dependency cache (managed by PlatformIO build glue)
+/third_party/embedded/libopencm3/vendor/lib/*
+!/third_party/embedded/libopencm3/vendor/lib/.gitkeep
+/third_party/embedded/libopencm3/vendor/include/*
+!/third_party/embedded/libopencm3/vendor/include/.gitkeep
+/third_party/embedded/libopencm3/vendor/.styr-libopencm3-revision
+/third_party/embedded/libopencm3/vendor/.download/
+
+/third_party/embedded/libopencm3/vendor/.styr-libopencm3-fetch.lock/

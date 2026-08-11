@@ -1,0 +1,16 @@
+<!-- SPDX-FileCopyrightText: 2026 Axel Napolitano -->
+<!-- SPDX-License-Identifier: CC-BY-NC-4.0 -->
+
+# Documentation license — CC BY-NC 4.0
+
+Copyright © 2026 Axel Napolitano.
+
+Unless a document explicitly states otherwise, documentation created for Styr and maintained outside `docs/legacy/performer/` is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International** license (CC BY-NC 4.0).
+
+You may share and adapt the licensed documentation provided that appropriate attribution is given, changes are indicated, and the material is not used for commercial purposes.
+
+Canonical license and legal code:
+
+<https://creativecommons.org/licenses/by-nc/4.0/>
+
+This documentation license does not apply to the Styr software, third-party source, fonts or inherited PER|FORMER documentation. Those materials retain the licenses stated in their respective files and in the repository provenance records.

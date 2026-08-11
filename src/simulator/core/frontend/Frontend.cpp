@@ -1,0 +1,760 @@
+/**
+ * @file Frontend.cpp
+ * @brief Implements the Frontend component used by the simulator frontend.
+ *
+ * @author Simon Kallweit — original PER|FORMER implementation lineage
+ * @author Axel Napolitano — Styr modifications, integration and modernization
+ * @copyright 2017-2018 Simon Kallweit
+ * @copyright 2026 Axel Napolitano
+ *
+ * @par License
+ * MIT; see LICENSES/MIT.txt.
+ *
+ * SPDX-FileCopyrightText: 2017-2018 Simon Kallweit
+ * SPDX-FileCopyrightText: 2026 Axel Napolitano
+ * SPDX-License-Identifier: MIT
+ */
+#include "Frontend.h"
+#include "MidiConfig.h"
+#include "Frontpanel.h"
+
+#include "widgets/Button.h"
+#include "widgets/Led.h"
+#include "widgets/Image.h"
+#include "widgets/Panel.h"
+
+#include "instruments/DrumSampler.h"
+#include "instruments/Synth.h"
+
+#include "core/TargetConfig.h"
+#include "core/TargetUtils.h"
+
+#include "SystemConfig.h"
+
+#include "args.hxx"
+#include "tinyformat.h"
+
+#include <memory>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
+namespace sim {
+
+static Color simDisplayColor() {
+#if CONFIG_SIMULATOR_DISPLAY_COLOR == DISPLAY_YELLOW
+    return Color(0.8f, 0.9f, 0.f, 1.f);
+#elif CONFIG_SIMULATOR_DISPLAY_COLOR == DISPLAY_WHITE
+    return Color(0.9f, 0.9f, 0.9f, 1.f);
+#elif CONFIG_SIMULATOR_DISPLAY_COLOR == DISPLAY_CYAN
+    return Color(0.f, 0.85f, 0.85f, 1.f);
+#else
+#error "Invalid CONFIG_SIMULATOR_DISPLAY_COLOR"
+#endif
+}
+
+static const char *simFrontpanelAsset() {
+    return "assets/frontpanel" CONFIG_SIMULATOR_FRONTPANEL_SUFFIX ".png";
+}
+
+#ifdef __EMSCRIPTEN__
+static Frontend *g_instance;
+#endif
+
+template<typename T>
+static void addWidget(std::vector<T> &list, T widget, int index) {
+    list.resize(std::max(int(list.size()), index + 1));
+    list[index] = widget;
+}
+
+Frontend::Frontend(Simulator &simulator) :
+    _simulator(simulator)
+{
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER);
+
+#ifdef __EMSCRIPTEN__
+    g_instance = this;
+#endif
+}
+
+Frontend::~Frontend() {
+    SDL_Quit();
+}
+
+int Frontend::main(int argc, char *argv[]) {
+    args::ArgumentParser parser("Styr Simulator", "");
+    args::HelpFlag help(parser, "help", "Display this help menu", { 'h', "help" });
+    args::Flag showMidiPorts(parser, "midi", "Show available MIDI ports", { 'm', "midi" });
+
+    try {
+        parser.ParseCLI(argc, argv);
+    } catch (const args::Help &) {
+        std::cout << parser;
+        return 0;
+    } catch (const args::ParseError &e) {
+        std::cerr << e.what() << std::endl;
+        std::cerr << parser;
+        return 1;
+    }
+
+    if (showMidiPorts) {
+        _midi.dumpPorts();
+        return 0;
+    }
+
+
+
+    run();
+
+    return 0;
+}
+
+#ifdef __EMSCRIPTEN__
+void emscriptenMainLoop() {
+    g_instance->step();
+}
+#endif
+
+void Frontend::run() {
+    setup();
+
+#ifdef __EMSCRIPTEN__
+    // 0 fps means to use requestAnimationFrame; non-0 means to use setTimeout.
+    emscripten_set_main_loop(emscriptenMainLoop, 0, 1);
+#else
+    while (!terminate()) {
+        step();
+    }
+#endif
+}
+
+void Frontend::close() {
+    _window->close();
+}
+
+bool Frontend::terminate() const {
+    return _window->terminate();
+}
+
+void Frontend::step() {
+    update();
+    render();
+#ifdef __EMSCRIPTEN__
+    delay(1);
+#endif
+}
+
+void Frontend::update() {
+    uint32_t currentTicks = std::floor(ticks());
+    for (uint32_t tick = _lastUpdateTicks; tick < currentTicks; ++tick) {
+        _simulator.wait(1);
+    }
+    _lastUpdateTicks = currentTicks;
+
+    _midi.update();
+    _window->update();
+
+    // process any scheduled falling edges for simulated digital inputs
+    double now = ticks();
+    for (int i = 0; i < int(_digitalInputPendingFalseAt.size()); ++i) {
+        if (_digitalInputPendingFalseAt[i] > 0.0 && now >= _digitalInputPendingFalseAt[i]) {
+            // deliver falling edge to the simulator (the frontend's writeDigitalInput
+            // ignores immediate false for pin 0 for visual clarity, but the simulator
+            // and engine will still receive the false event).
+            _simulator.writeDigitalInput(i, false);
+            _digitalInputPendingFalseAt[i] = 0.0;
+        }
+    }
+
+    // clear frontend display holds for short digital input pulses (e.g. clock)
+    for (int i = 0; i < int(_digitalInputDisplayUntil.size()); ++i) {
+        if (_digitalInputDisplayUntil[i] > 0.0 && now >= _digitalInputDisplayUntil[i]) {
+            if (i >= 0 && i < int(_digitalInputJacks.size())) {
+                _digitalInputJacks[i]->setState(false);
+            }
+            _digitalInputDisplayUntil[i] = 0.0;
+        }
+    }
+}
+
+void Frontend::render() {
+    double currentTicks = ticks();
+    if (currentTicks < _lastRenderTicks + 15) {
+        return;
+    }
+    _lastRenderTicks = currentTicks;
+    _window->render();
+}
+
+void Frontend::delay(int ms) {
+    SDL_Delay(ms);
+}
+
+double Frontend::ticks() const {
+    double delta = SDL_GetPerformanceCounter() - _timerStart;
+    return delta / _timerFrequency * 1000.0;
+}
+
+void Frontend::setup() {
+    _timerFrequency = SDL_GetPerformanceFrequency();
+    _timerStart = SDL_GetPerformanceCounter();
+
+#ifdef __EMSCRIPTEN__
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#else
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#endif
+
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
+
+    setupWindow();
+    setupMidi();
+    setupInstruments();
+
+    _simulator.registerTargetInputObserver(this);
+    _simulator.registerTargetOutputObserver(this);
+
+    // initialize frontend display timers for digital input jacks
+    _digitalInputDisplayUntil.clear();
+    _digitalInputDisplayUntil.resize(TargetConfig::DigitalInputs, 0.0);
+    // initialize pending-false timers for simulated digital inputs
+    _digitalInputPendingFalseAt.clear();
+    _digitalInputPendingFalseAt.resize(TargetConfig::DigitalInputs, 0.0);
+}
+
+void Frontend::setupWindow() {
+    Vector2i size(Frontpanel::windowWidth, Frontpanel::windowHeight + Frontpanel::controlHeight);
+    _window = std::make_shared<Window>("Styr Simulator", size);
+
+    setupFrontpanel();
+    setupControls();
+}
+
+void Frontend::setupFrontpanel() {
+    const std::vector<SDL_Keycode> keys({
+        SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_b, SDLK_n, SDLK_m, SDLK_COMMA,
+        SDLK_a, SDLK_s, SDLK_d, SDLK_f, SDLK_g, SDLK_h, SDLK_j, SDLK_k,
+        SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_t, SDLK_y, SDLK_u, SDLK_i,
+        SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_LEFT, SDLK_RIGHT, SDLK_LSHIFT, SDLK_LALT,
+        SDLK_F1, SDLK_F2, SDLK_F3, SDLK_F4, SDLK_F5
+    });
+
+    const double scale = Frontpanel::scale;
+
+    auto transformToScreen = [&] (double x, double y) {
+        return Vector2f(x * scale, y * scale);
+    };
+
+    auto scaleToScreen = [&] (double w, double h) {
+        return Vector2f(w * scale, h * scale);
+    };
+
+    _window->createWidget<Image>(Vector2f(0.f, 0.f), scaleToScreen(Frontpanel::width, Frontpanel::height), simFrontpanelAsset());
+
+    for (const auto &info : Frontpanel::infos) {
+        auto origin = transformToScreen(info.x, info.y);
+        auto size = scaleToScreen(info.w, info.h);
+
+        switch (info.widget) {
+        case Frontpanel::Widget::Jack: {
+            auto jack = _window->createWidget<Jack>(origin - size / 2, size);
+            switch (info.signal) {
+            case Frontpanel::Signal::MidiInput:
+                _midiInputJack = jack;
+                break;
+            case Frontpanel::Signal::MidiOutput:
+                _midiOutputJack = jack;
+                break;
+            case Frontpanel::Signal::DigitalInput:
+                addWidget(_digitalInputJacks, jack, info.index);
+                break;
+            case Frontpanel::Signal::DigitalOutput:
+                addWidget(_digitalOutputJacks, jack, info.index);
+                break;
+            case Frontpanel::Signal::CvInput:
+                addWidget(_cvInputJacks, jack, info.index);
+                break;
+            case Frontpanel::Signal::GateOutput:
+                addWidget(_gateOutputJacks, jack, info.index);
+                break;
+            case Frontpanel::Signal::CvOutput:
+                addWidget(_cvOutputJacks, jack, info.index);
+                break;
+            default:
+                break;
+            }
+            break;
+        }
+        case Frontpanel::Widget::Led: {
+            auto led = _window->createWidget<Led>(origin - size / 2, size);
+            if (info.signal == Frontpanel::Signal::Led) {
+                addWidget(_leds, led, info.index);
+            }
+            break;
+        }
+        case Frontpanel::Widget::CButton:
+        case Frontpanel::Widget::RButton: {
+            auto button = _window->createWidget<Button>(
+                origin - size / 2,
+                size,
+                info.widget == Frontpanel::Widget::CButton ? Button::Ellipse : Button::Rectangle,
+                keys[info.index]
+            );
+            if (info.signal == Frontpanel::Signal::Button) {
+                button->setCallback([this, info] (bool pressed) {
+                    _simulator.writeButton(info.index, pressed);
+                });
+                addWidget(_buttons, button, info.index);
+            }
+            break;
+        }
+        case Frontpanel::Widget::Encoder: {
+            _encoder = _window->createWidget<Encoder>(origin - size / 2, size, SDLK_SPACE);
+            _encoder->setButtonCallback([this] (bool pressed) {
+                _simulator.writeEncoder(pressed ? EncoderEvent::Down : EncoderEvent::Up);
+            });
+
+            _encoder->setValueCallback([this] (int value) {
+                if (value > 0) {
+                    for (int i = 0; i < value; ++i) {
+                        _simulator.writeEncoder(EncoderEvent::Right);
+                    }
+                } else if (value < 0) {
+                    for (int i = 0; i > value; --i) {
+                        _simulator.writeEncoder(EncoderEvent::Left);
+                    }
+                }
+            });
+            break;
+        }
+        case Frontpanel::Widget::Lcd: {
+            Vector2i resolution(TargetConfig::LcdWidth, TargetConfig::LcdHeight);
+            _lcd = _window->createWidget<Display>(origin, size, resolution, simDisplayColor());
+            break;
+        }
+        }
+    }
+}
+
+void Frontend::setupControls() {
+    int x = 10;
+    const int controlStripTop = Frontpanel::windowHeight;
+    const int controlContentTop = controlStripTop + 5; // 1px separator + 4px gap
+    int y = controlContentTop;
+
+    constexpr float kCvMinVoltage = -5.f;
+    constexpr float kCvMaxVoltage = 5.f;
+    constexpr float kCvFineStepVoltage = 0.01f; // 1/100 V
+    const Color separatorColor(0.2f, 0.2f, 0.2f, 1.f);
+    const float separatorY = float(y + 6);
+    const float separatorHeight = float(Frontpanel::controlHeight - 20);
+
+    // Keep the simulator-only control strip opaque black and separate it from the
+    // panel with a horizontal divider plus a small black gap below the line.
+    _window->createWidget<Panel>(Vector2f(0.f, float(controlStripTop)), Vector2f(Frontpanel::windowWidth, Frontpanel::controlHeight), Color(0.07f, 0.07f, 0.07f, 1.f));
+    _window->createWidget<Panel>(Vector2f(0.f, float(controlStripTop)), Vector2f(Frontpanel::windowWidth, 1.f), separatorColor);
+
+    // cv inputs
+    for (int i = 0; i < TargetConfig::AdcChannels; ++i) {
+        const int controlX = x;
+        // Center rotary over the 78px label/value area.
+        auto rotary = _window->createWidget<Rotary>(Vector2f(controlX + 23, y + 8), Vector2f(32, 32));
+        auto fineDown = _window->createWidget<Button>(Vector2f(controlX + 24, y + 81), Vector2f(14, 14), Button::Rectangle);
+        auto fineUp = _window->createWidget<Button>(Vector2f(controlX + 40, y + 81), Vector2f(14, 14), Button::Rectangle);
+
+        _window->createWidget<Label>(Vector2f(controlX + 28, y + 89), Vector2f(8, 8), "-");
+        _window->createWidget<Label>(Vector2f(controlX + 44, y + 89), Vector2f(8, 8), "+");
+        // Show the fine-step size centered below the CV label/value area.
+        _window->createWidget<Label>(Vector2f(controlX, y + 72), Vector2f(78, 10), "STEP 0.01V");
+
+        _window->createWidget<Label>(Vector2f(controlX, y + 48), Vector2f(78, 10), tfm::format("CV%d IN", i + 1));
+        auto voltageLabel = _window->createWidget<Label>(Vector2f(controlX, y + 60), Vector2f(78, 10), "");
+
+        auto formatVoltage = [] (float voltage) {
+            // Avoid rendering "-0.00V" near zero.
+            if (std::fabs(voltage) < 0.0005f) {
+                voltage = 0.f;
+            }
+            return tfm::format("%+.2fV", voltage);
+        };
+
+        auto setCvInputVoltage = [this, i, rotary, voltageLabel, formatVoltage, kCvMinVoltage, kCvMaxVoltage] (float voltage) {
+            float clampedVoltage = std::max(kCvMinVoltage, std::min(kCvMaxVoltage, voltage));
+            float normalized = (clampedVoltage - kCvMinVoltage) / (kCvMaxVoltage - kCvMinVoltage);
+            rotary->setValue(normalized);
+            _simulator.setAdc(i, clampedVoltage);
+            voltageLabel->setText(formatVoltage(clampedVoltage));
+        };
+
+        rotary->setValueCallback([setCvInputVoltage, kCvMinVoltage, kCvMaxVoltage] (float value) {
+            setCvInputVoltage(kCvMinVoltage + value * (kCvMaxVoltage - kCvMinVoltage));
+        });
+
+        fineDown->setCallback([setCvInputVoltage, rotary, kCvMinVoltage, kCvMaxVoltage, kCvFineStepVoltage] (bool pressed) {
+            if (pressed) {
+                float currentVoltage = kCvMinVoltage + rotary->value() * (kCvMaxVoltage - kCvMinVoltage);
+                setCvInputVoltage(currentVoltage - kCvFineStepVoltage);
+            }
+        });
+
+        fineUp->setCallback([setCvInputVoltage, rotary, kCvMinVoltage, kCvMaxVoltage, kCvFineStepVoltage] (bool pressed) {
+            if (pressed) {
+                float currentVoltage = kCvMinVoltage + rotary->value() * (kCvMaxVoltage - kCvMinVoltage);
+                setCvInputVoltage(currentVoltage + kCvFineStepVoltage);
+            }
+        });
+
+        setCvInputVoltage(0.f);
+        x += 90;
+    }
+
+    _window->createWidget<Panel>(Vector2f(float(x + 6), separatorY), Vector2f(1.f, separatorHeight), separatorColor);
+    x += 14;
+
+    // clock input
+    {
+        int controlX = x;
+        int controlY = y;
+
+        auto button = _window->createWidget<Button>(
+            Vector2f(controlX + 14, controlY + 34),
+            Vector2f(20, 20),
+            Button::Rectangle,
+            SDLK_F10
+        );
+        _window->createWidget<Label>(Vector2f(controlX, controlY + 72), Vector2f(50, 10), "CLK IN");
+
+        _clockSource.reset(new ClockSource(_simulator, [this] () {
+             // issue a rising edge immediately and schedule a delayed falling edge
+             _simulator.writeDigitalInput(0, true);
+             constexpr double kPulseWidthMs = 2.0; // 2 ms pulse width for reliable detection
+             if (0 >= 0 && 0 < int(_digitalInputPendingFalseAt.size())) {
+                 _digitalInputPendingFalseAt[0] = ticks() + kPulseWidthMs;
+             }
+         }));
+
+         auto ppqValueLabel = _window->createWidget<Label>(Vector2f(controlX + 94, controlY + 35), Vector2f(30, 10), "");
+         auto bpmValueLabel = _window->createWidget<Label>(Vector2f(controlX + 94, controlY + 58), Vector2f(40, 10), "");
+         auto swingValueLabel = _window->createWidget<Label>(Vector2f(controlX + 197, controlY + 72), Vector2f(30, 10), "");
+
+         _window->createWidget<Label>(Vector2f(controlX + 50, controlY + 35), Vector2f(35, 10), "PPQ");
+         // Hint: correct PPQ = 48 / ClockSetup::InputDivisor (e.g. 48/12=4 for default 1/16)
+         _window->createWidget<Label>(Vector2f(controlX + 50, controlY + 58), Vector2f(35, 10), "BPM");
+         _window->createWidget<Label>(Vector2f(controlX + 193, controlY + 48), Vector2f(35, 10), "Swing");
+
+         // Rotary control for swing (0..100)
+         auto swingRotary = _window->createWidget<Rotary>(Vector2f(controlX + 194, controlY + 8), Vector2f(32, 32));
+
+         auto refreshClockLabels = [this, ppqValueLabel, bpmValueLabel] () {
+             ppqValueLabel->setText(tfm::format("%d", _clockSource->ppqn()));
+             bpmValueLabel->setText(tfm::format("%.0f", _clockSource->bpm()));
+         };
+         // extended refresh to show swing and update rotary
+         auto refreshClockLabelsExt = [this, refreshClockLabels, swingValueLabel, swingRotary] () {
+             refreshClockLabels();
+             int s = _clockSource->swing();
+             swingValueLabel->setText(tfm::format("%d", s));
+             swingRotary->setValue(s / 100.0f);
+         };
+         refreshClockLabelsExt();
+
+         auto ppqDown = _window->createWidget<Button>(Vector2f(controlX + 82, controlY + 28), Vector2f(14, 14), Button::Rectangle);
+         auto ppqUp = _window->createWidget<Button>(Vector2f(controlX + 138, controlY + 28), Vector2f(14, 14), Button::Rectangle);
+         auto bpmDown = _window->createWidget<Button>(Vector2f(controlX + 82, controlY + 51), Vector2f(14, 14), Button::Rectangle);
+         auto bpmUp = _window->createWidget<Button>(Vector2f(controlX + 138, controlY + 51), Vector2f(14, 14), Button::Rectangle);
+         auto swingDown = _window->createWidget<Button>(Vector2f(controlX + 196, controlY + 81), Vector2f(14, 14), Button::Rectangle);
+         auto swingUp = _window->createWidget<Button>(Vector2f(controlX + 212, controlY + 81), Vector2f(14, 14), Button::Rectangle);
+
+         _window->createWidget<Label>(Vector2f(controlX + 86, controlY + 36), Vector2f(8, 8), "-");
+         _window->createWidget<Label>(Vector2f(controlX + 142, controlY + 36), Vector2f(8, 8), "+");
+         _window->createWidget<Label>(Vector2f(controlX + 86, controlY + 59), Vector2f(8, 8), "-");
+         _window->createWidget<Label>(Vector2f(controlX + 142, controlY + 59), Vector2f(8, 8), "+");
+         _window->createWidget<Label>(Vector2f(controlX + 200, controlY + 89), Vector2f(8, 8), "-");
+         _window->createWidget<Label>(Vector2f(controlX + 216, controlY + 89), Vector2f(8, 8), "+");
+
+         ppqDown->setCallback([this, refreshClockLabels] (bool pressed) {
+             if (pressed) {
+                 _clockSource->setPpqn(_clockSource->ppqn() - 1);
+                 refreshClockLabels();
+             }
+         });
+
+         ppqUp->setCallback([this, refreshClockLabels] (bool pressed) {
+             if (pressed) {
+                 _clockSource->setPpqn(_clockSource->ppqn() + 1);
+                 refreshClockLabels();
+             }
+         });
+
+         bpmDown->setCallback([this, refreshClockLabelsExt] (bool pressed) {
+             if (pressed) {
+                 _clockSource->setBpm(_clockSource->bpm() - 1.0);
+                 refreshClockLabelsExt();
+             }
+         });
+
+         bpmUp->setCallback([this, refreshClockLabelsExt] (bool pressed) {
+             if (pressed) {
+                 _clockSource->setBpm(_clockSource->bpm() + 1.0);
+                 refreshClockLabelsExt();
+             }
+         });
+
+         swingDown->setCallback([this, refreshClockLabelsExt] (bool pressed) {
+             if (pressed) {
+                 _clockSource->setSwing(_clockSource->swing() - 5);
+                 refreshClockLabelsExt();
+             }
+         });
+
+         swingUp->setCallback([this, refreshClockLabelsExt] (bool pressed) {
+             if (pressed) {
+                 _clockSource->setSwing(_clockSource->swing() + 5);
+                 refreshClockLabelsExt();
+             }
+         });
+
+         // rotary callback (fine-grained)
+         swingRotary->setValueCallback([this, refreshClockLabelsExt] (float value) {
+             int s = int(value * 100.0f + 0.5f);
+             _clockSource->setSwing(s);
+             refreshClockLabelsExt();
+         });
+
+         button->setCallback([this, button] (bool pressed) {
+             if (pressed) {
+                 _clockSource->toggle();
+                 // Reflect running state visually: filled = active, outline = inactive
+                 button->setState(_clockSource->active());
+             }
+         });
+
+        x += 260; // expand control block to include swing control
+    }
+
+    // reset input
+    {
+        auto button = _window->createWidget<Button>(
+            Vector2f(x + 10, y + 34),
+            Vector2f(20, 20),
+            Button::Rectangle,
+            SDLK_F11
+        );
+        _window->createWidget<Label>(Vector2f(x, y + 72), Vector2f(40, 10), "RST IN");
+        x += 50;
+
+        button->setCallback([this] (bool pressed) {
+            _simulator.writeDigitalInput(1, pressed);
+        });
+    }
+
+    _window->createWidget<Panel>(Vector2f(float(x + 4), separatorY), Vector2f(1.f, separatorHeight), separatorColor);
+    x += 12;
+
+    // screenshot
+    {
+        auto button = _window->createWidget<Button>(
+            Vector2f(x + 14, y + 34),
+            Vector2f(40, 20),
+            Button::Rectangle,
+            SDLK_F12
+        );
+        _window->createWidget<Label>(Vector2f(x + 6, y + 72), Vector2f(60, 10), "SCREENSHOT");
+        x += 70;
+
+        button->setCallback([&] (bool pressed) {
+            if (pressed) {
+                _simulator.screenshot("screenshot.png");
+            }
+        });
+
+    }
+
+    _window->createWidget<Panel>(Vector2f(float(x + 4), separatorY), Vector2f(1.f, separatorHeight), separatorColor);
+    x += 12;
+
+    // reboot
+    {
+        auto button = _window->createWidget<Button>(
+            Vector2f(x + 14, y + 34),
+            Vector2f(40, 20),
+            Button::Rectangle
+        );
+        _window->createWidget<Label>(Vector2f(x + 10, y + 72), Vector2f(52, 10), "REBOOT");
+        x += 70;
+
+        button->setCallback([this] (bool pressed) {
+            // Reboot on release so the button and mouse state are fully released
+            // before the simulated firmware instance is recreated.
+            if (!pressed) {
+                _simulator.reboot();
+            }
+        });
+    }
+}
+
+// // button label
+// auto buttonLabel = _window->createWidget<Label>(
+//     origin - settings.buttonSize / 2,
+//     settings.buttonSize,
+//     SDL_GetKeyName(keys[index]),
+//     Font("inconsolata", 12),
+//     Color(0.5f, 1.f)
+// );
+// _labels.emplace_back(buttonLabel);
+
+void Frontend::setupMidi() {
+    _midiPort = std::make_shared<Midi::Port>(
+        midiPortConfig.portIn,
+        midiPortConfig.portOut,
+        [this] (const std::vector<uint8_t> &message) {
+            if (message.size() >= 1 && message.size() <= 3) {
+                _simulator.writeMidiInput(MidiEvent::makeMessage(0, MidiMessage(message.data(), message.size())));
+            }
+        }
+    );
+
+    _midi.registerPort(_midiPort);
+
+    _usbMidiPort = std::make_shared<sim::Midi::Port>(
+        usbMidiPortConfig.portIn,
+        usbMidiPortConfig.portOut,
+        [this] (const std::vector<uint8_t> &message) {
+            if (message.size() >= 1 && message.size() <= 3) {
+                _simulator.writeMidiInput(MidiEvent::makeMessage(1, MidiMessage(message.data(), message.size())));
+            }
+        },
+        [this] () {
+            _simulator.writeMidiInput(MidiEvent::makeConnect(1, usbMidiPortConfig.vendorId, usbMidiPortConfig.productId));
+        },
+        [this] () {
+            _simulator.writeMidiInput(MidiEvent::makeDisconnect(1));
+        }
+    );
+
+    _midi.registerPort(_usbMidiPort);
+}
+
+void Frontend::setupInstruments() {
+    // _instruments.reset(new SamplerSetup(_audio));
+    _instruments.reset(new MixedSetup(_audio));
+}
+
+// TargetInputHandler
+
+void Frontend::writeButton(int index, bool pressed) {
+    if (index >= 0 && index < int(_buttons.size())) {
+        _buttons[index]->setState(pressed);
+    }
+}
+
+void Frontend::writeEncoder(EncoderEvent event) {
+}
+
+void Frontend::writeAdc(int channel, uint16_t value) {
+    if (channel >= 0 && channel < int(_cvInputJacks.size())) {
+        float voltage = adcToVoltage(value);
+        _cvInputJacks[channel]->setValue(voltage, -5.f, 5.f);
+    }
+}
+
+void Frontend::writeDigitalInput(int pin, bool value) {
+    if (pin < 0 || pin >= int(_digitalInputJacks.size())) return;
+
+    // For very short pulses (clock) keep the jack visually high for a short
+    // frontend-only duration so the user can see the pulse. Do not change the
+    // actual simulator timing or target input semantics.
+    constexpr double kDisplayHoldMs = 30.0; // milliseconds
+
+    if (pin == 0) {
+        if (value) {
+            _digitalInputJacks[pin]->setState(true);
+            _digitalInputDisplayUntil[pin] = ticks() + kDisplayHoldMs;
+        } else {
+            // ignore immediate false for visual clarity; the scheduled clear
+            // in update() will turn the jack off after the hold period.
+        }
+    } else {
+        // For other digital inputs (e.g. RST IN) reflect the real state
+        _digitalInputJacks[pin]->setState(value);
+        // cancel any pending visual hold
+        if (pin >= 0 && pin < int(_digitalInputDisplayUntil.size())) {
+            _digitalInputDisplayUntil[pin] = 0.0;
+        }
+    }
+}
+
+void Frontend::writeMidiInput(MidiEvent event) {
+}
+
+// TargetOutputHandler
+
+void Frontend::writeLed(int index, bool red, bool green) {
+    if (index >= 0 && index < int(_leds.size())) {
+        _leds[index]->color() = Color(red ? 1.f : 0.f, green ? 1.f : 0.f, 0.f, 1.f);
+    }
+}
+
+void Frontend::writeGateOutput(int channel, bool value) {
+    _instruments->setGate(channel, value);
+    if (channel >= 0 && channel < int(_gateOutputJacks.size())) {
+        _gateOutputJacks[channel]->setState(value);
+    }
+}
+
+void Frontend::writeDac(int channel, uint16_t value) {
+    float voltage = dacToVoltage(value);
+    _instruments->setCv(channel, voltage);
+    if (channel >= 0 && channel < int(_cvOutputJacks.size())) {
+        _cvOutputJacks[channel]->setValue(voltage, -5.f, 5.f);
+    }
+}
+
+void Frontend::writeDigitalOutput(int pin, bool value) {
+    if (pin >= 0 && pin < int(_digitalOutputJacks.size())) {
+        _digitalOutputJacks[pin]->setState(value);
+    }
+}
+
+void Frontend::writeLcd(const FrameBuffer &frameBuffer) {
+    _lcd->draw(frameBuffer.data());
+}
+
+void Frontend::writeMidiOutput(MidiEvent event) {
+    if (event.kind == MidiEvent::Message) {
+        const auto &message = event.message;
+        switch (event.port) {
+        case 0:
+            _midiPort->send(message.raw(), message.length());
+            break;
+        case 1:
+            if (message.isSystemExclusive()) {
+                const uint8_t *payloadData = message.payloadData();
+                size_t payloadLength = message.payloadLength();
+                if (payloadData && payloadLength > 0) {
+                    std::vector<uint8_t> data;
+                    data.push_back(0xf0);
+                    data.insert(data.end(), payloadData, payloadData + payloadLength);
+                    data.push_back(0xf7);
+                    _usbMidiPort->send(data.data(), data.size());
+                }
+            } else {
+                _usbMidiPort->send(message.raw(), message.length());
+            }
+            break;
+        }
+    }
+}
+
+} // namespace sim

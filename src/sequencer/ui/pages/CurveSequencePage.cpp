@@ -1,0 +1,152 @@
+/**
+ * @file CurveSequencePage.cpp
+ * @brief Implements the CurveSequencePage component used by the sequencer UI page.
+ *
+ * @author Simon Kallweit — original PER|FORMER implementation lineage
+ * @author Axel Napolitano — Styr modifications, integration and modernization
+ * @copyright 2017-2018 Simon Kallweit
+ * @copyright 2026 Axel Napolitano
+ *
+ * @par License
+ * MIT; see LICENSES/MIT.txt.
+ *
+ * SPDX-FileCopyrightText: 2017-2018 Simon Kallweit
+ * SPDX-FileCopyrightText: 2026 Axel Napolitano
+ * SPDX-License-Identifier: MIT
+ */
+#include "Config.h"
+#include "CurveSequencePage.h"
+
+#include "Pages.h"
+
+#include "ui/LedPainter.h"
+#include "ui/painters/WindowPainter.h"
+
+#include "core/utils/StringBuilder.h"
+
+enum class ContextAction {
+    Init,
+    Copy,
+    Paste,
+    Duplicate,
+    Route,
+    Last
+};
+
+static const ContextMenuModel::Item contextMenuItems[] = {
+    { TXT_MENU_INIT },
+    { TXT_MENU_COPY },
+    { TXT_MENU_PASTE },
+    { TXT_MENU_DUPLICATE },
+    { TXT_MENU_ROUTE },
+};
+
+CurveSequencePage::CurveSequencePage(PageManager &manager, PageContext &context) :
+    ListPage(manager, context, _listModel)
+{}
+
+void CurveSequencePage::enter() {
+    _listModel.setSequence(&_project.selectedCurveSequence());
+}
+
+void CurveSequencePage::exit() {
+    _listModel.setSequence(nullptr);
+}
+
+void CurveSequencePage::draw(Canvas &canvas) {
+    WindowPainter::clear(canvas);
+    WindowPainter::drawHeader(canvas, _model, _engine, TXT_MODE_SEQUENCE);
+    WindowPainter::drawActiveFunction(canvas, Track::trackModeName(_project.selectedTrack().trackMode()));
+    WindowPainter::drawFooter(canvas);
+
+    ListPage::draw(canvas);
+}
+
+void CurveSequencePage::updateLeds(Leds &leds) {
+    ListPage::updateLeds(leds);
+}
+
+void CurveSequencePage::keyPress(KeyPressEvent &event) {
+    const auto &key = event.key();
+
+    if (key.isContextMenu()) {
+        contextShow();
+        event.consume();
+        return;
+    }
+
+    if (key.pageModifier()) {
+        return;
+    }
+
+    if (!event.consumed()) {
+        ListPage::keyPress(event);
+    }
+}
+
+void CurveSequencePage::contextShow() {
+    showContextMenu(ContextMenu(
+        contextMenuItems,
+        int(ContextAction::Last),
+        [&] (int index) { contextAction(index); },
+        [&] (int index) { return contextActionEnabled(index); }
+    ));
+}
+
+void CurveSequencePage::contextAction(int index) {
+    switch (ContextAction(index)) {
+    case ContextAction::Init:
+        initSequence();
+        break;
+    case ContextAction::Copy:
+        copySequence();
+        break;
+    case ContextAction::Paste:
+        pasteSequence();
+        break;
+    case ContextAction::Duplicate:
+        duplicateSequence();
+        break;
+    case ContextAction::Route:
+        initRoute();
+        break;
+    case ContextAction::Last:
+        break;
+    }
+}
+
+bool CurveSequencePage::contextActionEnabled(int index) const {
+    switch (ContextAction(index)) {
+    case ContextAction::Paste:
+        return _model.clipBoard().canPasteCurveSequence();
+    case ContextAction::Route:
+        return _listModel.routingTarget(selectedRow()) != Routing::Target::None;
+    default:
+        return true;
+    }
+}
+
+void CurveSequencePage::initSequence() {
+    _project.selectedCurveSequence().clear();
+    showMessage(TXT_MESSAGE_SEQUENCE_INITIALIZED);
+}
+
+void CurveSequencePage::copySequence() {
+    _model.clipBoard().copyCurveSequence(_project.selectedCurveSequence());
+    showMessage(TXT_MESSAGE_SEQUENCE_COPIED);
+}
+
+void CurveSequencePage::pasteSequence() {
+    _model.clipBoard().pasteCurveSequence(_project.selectedCurveSequence());
+    showMessage(TXT_MESSAGE_SEQUENCE_PASTED);
+}
+
+void CurveSequencePage::duplicateSequence() {
+    if (_project.selectedTrack().duplicatePattern(_project.selectedPatternIndex())) {
+        showMessage(TXT_MESSAGE_SEQUENCE_DUPLICATED);
+    }
+}
+
+void CurveSequencePage::initRoute() {
+    _manager.pages().top.editRoute(_listModel.routingTarget(selectedRow()), _project.selectedTrackIndex());
+}

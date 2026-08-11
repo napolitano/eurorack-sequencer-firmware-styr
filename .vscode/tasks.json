@@ -1,0 +1,143 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Firmware: Refresh clangd Database",
+      "type": "shell",
+      "command": "pio run -e application -t compiledb",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Firmware: Build Application",
+      "type": "shell",
+      "command": "pio run -e application",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Firmware: Flash Application (ST-Link)",
+      "type": "shell",
+      "command": "pio run -e application -t upload",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Firmware: Build SD Update",
+      "type": "shell",
+      "command": "pio run -e application -t sd-update",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Firmware: Clean Application",
+      "type": "shell",
+      "command": "pio run -e application -t clean",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Firmware: Reset PlatformIO Workspace",
+      "type": "shell",
+      "command": "python toolchain/scripts/reset_platformio_workspace.py",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Simulator: Configure Debug",
+      "type": "shell",
+      "command": "cmake --preset debug",
+      "options": {
+        "cwd": "${workspaceFolder}/src/simulator"
+      },
+      "problemMatcher": [],
+      "windows": {
+        "command": "C:\\msys64\\ucrt64\\bin\\cmake.exe",
+        "args": [
+          "--preset",
+          "windows-ucrt64-debug"
+        ]
+      }
+    },
+    {
+      "label": "Simulator: Build Debug",
+      "type": "shell",
+      "command": "cmake --build --preset debug",
+      "options": {
+        "cwd": "${workspaceFolder}/src/simulator"
+      },
+      "dependsOn": "Simulator: Configure Debug",
+      "problemMatcher": "$gcc",
+      "windows": {
+        "command": "C:\\msys64\\ucrt64\\bin\\cmake.exe",
+        "args": [
+          "--build",
+          "--preset",
+          "windows-ucrt64-debug"
+        ]
+      }
+    },
+    {
+      "label": "Simulator: Test Debug",
+      "type": "shell",
+      "command": "ctest --preset debug",
+      "options": {
+        "cwd": "${workspaceFolder}/src/simulator"
+      },
+      "dependsOn": "Simulator: Build Debug",
+      "problemMatcher": [],
+      "windows": {
+        "command": "C:\\msys64\\ucrt64\\bin\\ctest.exe",
+        "args": [
+          "--preset",
+          "windows-ucrt64-debug"
+        ]
+      }
+    },
+    {
+      "label": "Font Tools: Build",
+      "type": "shell",
+      "command": "cmake --preset release && cmake --build --preset release",
+      "options": {
+        "cwd": "${workspaceFolder}/src/tools/fonts"
+      },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "Simulator: Build & Run Debug",
+      "type": "shell",
+      "command": "${workspaceFolder}/build/simulator/debug/styr_simulator",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "dependsOn": "Simulator: Build Debug",
+      "problemMatcher": [],
+      "windows": {
+        "command": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "$env:PATH='C:\\msys64\\ucrt64\\bin;'+$env:PATH; & '${workspaceFolder}\\build\\simulator\\windows-ucrt64-debug\\styr_simulator.exe'"
+        ]
+      }
+    }
+  ]
+}

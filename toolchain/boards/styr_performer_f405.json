@@ -1,0 +1,34 @@
+{
+  "build": {
+    "core": "stm32",
+    "cpu": "cortex-m4",
+    "f_cpu": "168000000L",
+    "mcu": "stm32f405rgt6",
+    "product_line": "STM32F405xx"
+  },
+  "debug": {
+    "default_tools": [
+      "stlink"
+    ],
+    "jlink_device": "STM32F405RG",
+    "onboard_tools": [
+      "stlink"
+    ],
+    "openocd_target": "stm32f4x",
+    "svd_path": "STM32F40x.svd"
+  },
+  "frameworks": [],
+  "name": "Styr target: Westlicht Performer STM32F405RG",
+  "upload": {
+    "maximum_ram_size": 131072,
+    "maximum_size": 1048576,
+    "protocol": "stlink",
+    "protocols": [
+      "stlink",
+      "jlink",
+      "blackmagic"
+    ]
+  },
+  "url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f405rg.html",
+  "vendor": "Styr"
+}
