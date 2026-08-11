@@ -21,6 +21,7 @@
 #include "TargetTrace.h"
 
 #include <array>
+#include <cstdint>
 #include <functional>
 #include <string>
 #include <vector>
@@ -51,8 +52,10 @@ public:
     double ticks();
 
     typedef std::function<void()> UpdateCallback;
+    using UpdateCallbackId = uint64_t;
 
-    void addUpdateCallback(UpdateCallback callback);
+    UpdateCallbackId addUpdateCallback(UpdateCallback callback);
+    void removeUpdateCallback(UpdateCallbackId id);
 
     // Target input/output handling
 
@@ -93,7 +96,13 @@ private:
     std::vector<TargetInputHandler *> _targetInputObservers;
     std::vector<TargetOutputHandler *> _targetOutputObservers;
 
-    std::vector<UpdateCallback> _updateCallbacks;
+    struct UpdateCallbackEntry {
+        UpdateCallbackId id;
+        UpdateCallback callback;
+    };
+
+    std::vector<UpdateCallbackEntry> _updateCallbacks;
+    UpdateCallbackId _nextUpdateCallbackId = 1;
 
     TargetState _targetState;
     TargetStateTracker _targetStateTracker;

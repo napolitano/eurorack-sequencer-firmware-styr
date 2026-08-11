@@ -82,6 +82,9 @@ Frontend::Frontend(Simulator &simulator) :
 }
 
 Frontend::~Frontend() {
+    _clockSource.reset();
+    _simulator.unregisterTargetInputObserver(this);
+    _simulator.unregisterTargetOutputObserver(this);
     SDL_Quit();
 }
 

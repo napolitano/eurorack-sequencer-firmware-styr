@@ -27,9 +27,12 @@ public:
     };
 
     ClockTimer() :
-        _simulator(sim::Simulator::instance())
-    {
-        _simulator.addUpdateCallback([this] () { update(); });
+        _simulator(sim::Simulator::instance()),
+        _updateCallbackId(_simulator.addUpdateCallback([this] () { update(); }))
+    {}
+
+    ~ClockTimer() {
+        _simulator.removeUpdateCallback(_updateCallbackId);
     }
 
     void init() {
@@ -76,6 +79,7 @@ private:
     }
 
     sim::Simulator &_simulator;
+    sim::Simulator::UpdateCallbackId _updateCallbackId;
     uint32_t _period = 0;
     double _periodTicks = 0.0;
     Listener *_listener = nullptr;

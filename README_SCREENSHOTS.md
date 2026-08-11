@@ -163,9 +163,9 @@ From Munich with <img src="docs/manual/assets/blue-heart.svg" alt="blue heart" w
 
 ### Simulator reboot isolation
 
-The documentation generator deliberately resets the simulated firmware between complex capture groups. Simulator platform drivers register as target-input observers and now unregister themselves in their destructors. This RAII lifecycle is required: keeping observers from a destroyed `SequencerApp` would leave dangling pointers and can cause native access violations during later capture groups.
+The documentation generator deliberately resets the simulated firmware between complex capture groups. Simulator platform drivers register as target-input observers and now unregister themselves in their destructors. The simulated `ClockTimer` also owns a per-step update callback and unregisters that callback when the target is destroyed. This RAII lifecycle is required: keeping observers or callbacks from a destroyed `SequencerApp` would leave dangling pointers and can cause native access violations during later capture groups.
 
-`TestSimulatorReboot` exercises repeated target recreation as a regression test for this contract.
+`TestSimulatorReboot` exercises repeated target recreation and explicit callback removal as regression coverage for this contract.
 
 
 ## Section isolation

@@ -27,9 +27,12 @@ class ClockSource {
 public:
     ClockSource(Simulator &simulator, std::function<void()> handler) :
         _simulator(simulator),
-        _handler(handler)
-    {
-        _simulator.addUpdateCallback([this] () { update(); });
+        _handler(handler),
+        _updateCallbackId(_simulator.addUpdateCallback([this] () { update(); }))
+    {}
+
+    ~ClockSource() {
+        _simulator.removeUpdateCallback(_updateCallbackId);
     }
 
     void toggle() {
@@ -115,6 +118,7 @@ private:
 
     Simulator &_simulator;
     std::function<void()> _handler;
+    Simulator::UpdateCallbackId _updateCallbackId;
 
     bool _active = false;
     // Default PPQN must match engine expected external pulse rate.

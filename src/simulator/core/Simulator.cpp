@@ -23,6 +23,7 @@
 #include "core/midi/MidiMessage.h"
 
 #include <memory>
+#include <utility>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
@@ -176,8 +177,19 @@ double Simulator::ticks() {
     return _tick;
 }
 
-void Simulator::addUpdateCallback(UpdateCallback callback) {
-    _updateCallbacks.emplace_back(callback);
+Simulator::UpdateCallbackId Simulator::addUpdateCallback(UpdateCallback callback) {
+    const auto id = _nextUpdateCallbackId++;
+    _updateCallbacks.push_back({ id, std::move(callback) });
+    return id;
+}
+
+void Simulator::removeUpdateCallback(UpdateCallbackId id) {
+    _updateCallbacks.erase(
+        std::remove_if(
+            _updateCallbacks.begin(),
+            _updateCallbacks.end(),
+            [id] (const UpdateCallbackEntry &entry) { return entry.id == id; }),
+        _updateCallbacks.end());
 }
 
 void Simulator::registerTargetTickObserver(TargetTickHandler *observer) {
@@ -299,8 +311,24 @@ void Simulator::step() {
         callback();
     }
 
-    for (const auto &callback : _updateCallbacks) {
-        callback();
+    // Iterate by stable callback ids rather than directly over the vector.
+    // A callback may indirectly unregister itself or another callback; resolving
+    // each id immediately before invocation avoids iterator invalidation and
+    // prevents a callback removed earlier in this step from being called.
+    std::vector<UpdateCallbackId> updateCallbackIds;
+    updateCallbackIds.reserve(_updateCallbacks.size());
+    for (const auto &entry : _updateCallbacks) {
+        updateCallbackIds.push_back(entry.id);
+    }
+    for (const auto id : updateCallbackIds) {
+        const auto it = std::find_if(
+            _updateCallbacks.begin(),
+            _updateCallbacks.end(),
+            [id] (const UpdateCallbackEntry &entry) { return entry.id == id; });
+        if (it != _updateCallbacks.end()) {
+            const auto callback = it->callback;
+            callback();
+        }
     }
 
     _target.update();

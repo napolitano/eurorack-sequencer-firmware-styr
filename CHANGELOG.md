@@ -1,5 +1,12 @@
 # Changelog
 
+### Step 6.11 — simulator update-callback lifecycle fix
+
+- fixes the remaining simulator reboot use-after-free: `ClockTimer` now unregisters its per-step `[this]` callback before the target object is destroyed;
+- makes simulator update callbacks explicitly removable through stable callback ids and dispatches them safely even if the callback set changes during a simulator step;
+- applies the same symmetric callback cleanup to `ClockSource` and unregisters `Frontend` input/output observers during teardown;
+- extends `TestSimulatorReboot` with direct update-callback removal coverage in addition to repeated full `SequencerApp` recreation.
+
 ### Step 6.10 — CI simulator reboot test link fix
 
 - fixes the Linux CI link failure for `TestSimulatorReboot` by linking the regression test against `styr_sequencer`, matching every other test that instantiates sequencer application types;

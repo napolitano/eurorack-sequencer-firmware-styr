@@ -20,7 +20,28 @@
 
 UNIT_TEST("SimulatorReboot") {
 
-    CASE("repeated reboot keeps simulator driver observers valid") {
+    CASE("removed simulator update callback is not invoked again") {
+        int callbackCount = 0;
+
+        sim::Simulator simulator({
+            [] () {},
+            [] () {},
+            [] () {}
+        });
+
+        const auto callbackId = simulator.addUpdateCallback([&callbackCount] () {
+            ++callbackCount;
+        });
+
+        simulator.wait(2);
+        expect(callbackCount == 2);
+
+        simulator.removeUpdateCallback(callbackId);
+        simulator.wait(2);
+        expect(callbackCount == 2);
+    }
+
+    CASE("repeated reboot keeps simulator driver observers and callbacks valid") {
         std::unique_ptr<SequencerApp> sequencer;
 
         sim::Simulator simulator({
@@ -30,7 +51,7 @@ UNIT_TEST("SimulatorReboot") {
         });
 
         // First step creates the target. Repeated target destruction and
-        // recreation used to leave dangling simulator-driver observers behind.
+        // recreation used to leave dangling simulator-driver observers and update callbacks behind.
         simulator.wait(10);
         for (int iteration = 0; iteration < 12; ++iteration) {
             simulator.reboot();
