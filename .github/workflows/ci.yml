@@ -9,7 +9,7 @@ jobs:
     name: Firmware (PlatformIO)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -44,7 +44,7 @@ jobs:
     name: Simulator and native tests (Linux)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install host dependencies
         run: sudo apt-get update && sudo apt-get install -y ninja-build libsdl2-dev libasound2-dev mesa-common-dev python3-dev libgl1-mesa-dev
       - name: Configure
@@ -66,7 +66,7 @@ jobs:
     name: Font tools
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y ninja-build libncurses-dev
       - name: Configure
