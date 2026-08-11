@@ -1,5 +1,10 @@
 # Changelog
 
+### Step 6.10 — CI simulator reboot test link fix
+
+- fixes the Linux CI link failure for `TestSimulatorReboot` by linking the regression test against `styr_sequencer`, matching every other test that instantiates sequencer application types;
+- leaves production firmware and simulator behavior unchanged; this is a test build-graph correction only.
+
 ### Step 6.9 — screenshot section isolation and acknowledgement placement
 
 - moves the Simon Kallweit / Westlicht PER|FORMER acknowledgement directly below the repository badges so upstream authorship is explicit before the Styr project description;

@@ -40,4 +40,4 @@ register_test(TestProject TestProject.cpp styr_sequencer)
 register_test(TestClipBoard TestClipBoard.cpp styr_sequencer)
 
 # Simulator lifecycle regression: repeated target recreation must not retain stale driver observers.
-register_test(TestSimulatorReboot TestSimulatorReboot.cpp)
+register_test(TestSimulatorReboot TestSimulatorReboot.cpp styr_sequencer)
