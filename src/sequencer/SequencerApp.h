@@ -37,10 +37,6 @@
 
 #include "os/os.h"
 
-static os::PeriodicTask<1024> fsTask("file", CONFIG_FILE_TASK_PRIORITY, os::time::ms(10), [] () {
-    FileManager::processTask();
-});
-
 struct SequencerApp {
     // drivers
     ClockTimer clockTimer;
@@ -57,6 +53,7 @@ struct SequencerApp {
 
     // filesystem
     fs::Volume volume;
+    os::PeriodicTask<1024> fsTask;
 
     uint8_t midiMessagePayloadPool[32];
 
@@ -67,6 +64,9 @@ struct SequencerApp {
 
     SequencerApp() :
         volume(sdCard),
+        fsTask("file", CONFIG_FILE_TASK_PRIORITY, os::time::ms(10), [] () {
+            FileManager::processTask();
+        }),
         engine(model, clockTimer, adc, dac, dio, gateOutput, midi, usbMidi),
         ui(model, engine, lcd, blm, encoder)
     {

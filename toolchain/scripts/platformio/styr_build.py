@@ -101,7 +101,6 @@ LIBUSBHOST_FILTER = [
 ]
 
 BOOTLOADER_SUPPORT_FILTER = [
-    "+<lib/stb_sprintf.c>",
     "+<lib/ff/ff.c>",
     "+<md5/MD5.cpp>",
 ]

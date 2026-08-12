@@ -13,18 +13,6 @@ Styr exists because Simon Kallweit created **[Westlicht PER|FORMER](https://gith
 
 Styr is an independent continuation and modernization of that foundation. It is not an attempt to blur, replace or take ownership of Simon's authorship; keeping that provenance clear is part of the project itself.
 
-## Why “Styr”?
-
-**Styr** comes from the Swedish verb *styra*: to steer, guide, direct, or control. *Styr* is its present-tense form - literally, something that *steers*.
-
-The word reaches further back into the Germanic languages. Old Norse *stýra* carried much the same meaning, and its relatives can still be found in English *steer* and German *steuern*.
-
-That felt appropriate for a sequencer.
-
-Styr is not meant to make musical decisions for you. It provides timing, structure, modulation, probability, routing, and generative tools - but the direction remains yours. It is there to steer a performance rather than define it.
-
-The name is also deliberately short and functional: four letters for a device whose job is to keep a fairly complex musical system under control.
-
 ---
 
 Styr modernizes the build, simulator, tests, documentation and selected firmware functionality while retaining explicit provenance to the original PER|FORMER project.
