@@ -20,13 +20,19 @@
 
 #include "core/Simulator.h"
 
-#include <vector>
+#include <cstdint>
 #include <functional>
 #include <mutex>
+#include <utility>
 
 namespace os {
 
-    std::vector<std::function<void(void)>> &updateCallbacks();
+    using UpdateCallback = std::function<void(void)>;
+    using UpdateCallbackId = uint64_t;
+
+    UpdateCallbackId addUpdateCallback(UpdateCallback callback);
+    void removeUpdateCallback(UpdateCallbackId id);
+    void runUpdateCallbacks();
 
     typedef int TaskHandle;
 
@@ -47,9 +53,20 @@ namespace os {
     template<size_t StackSize>
     class PeriodicTask {
     public:
-        PeriodicTask(const char *name, uint8_t priority, uint32_t interval, std::function<void(void)> func) {
-            os::updateCallbacks().emplace_back(func);
+        PeriodicTask(const char *name, uint8_t priority, uint32_t interval, std::function<void(void)> func) :
+            _callbackId(os::addUpdateCallback(std::move(func)))
+        {
         }
+
+        ~PeriodicTask() {
+            os::removeUpdateCallback(_callbackId);
+        }
+
+        PeriodicTask(const PeriodicTask &) = delete;
+        PeriodicTask &operator=(const PeriodicTask &) = delete;
+
+    private:
+        UpdateCallbackId _callbackId;
     };
 
     inline void suspend(TaskHandle handle) {}

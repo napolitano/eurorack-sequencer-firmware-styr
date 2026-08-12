@@ -307,9 +307,7 @@ void Simulator::step() {
         observer->setTick(_tick);
     }
 
-    for (const auto &callback : os::updateCallbacks()) {
-        callback();
-    }
+    os::runUpdateCallbacks();
 
     // Iterate by stable callback ids rather than directly over the vector.
     // A callback may indirectly unregister itself or another callback; resolving
