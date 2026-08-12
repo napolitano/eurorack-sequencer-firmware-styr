@@ -22,7 +22,6 @@
 #define CONFIG_CPU_FREQUENCY        168000000
 #define CONFIG_TICK_FREQUENCY       1000
 
-#define CONFIG_PRINTF_BUFFER        128
 
 #define CONFIG_LCD_WIDTH            256
 #define CONFIG_LCD_HEIGHT           64

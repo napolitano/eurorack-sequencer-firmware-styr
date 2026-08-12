@@ -16,7 +16,7 @@
  */
 #include "UpdateFile.h"
 #include "FileSystem.h"
-#include "Console.h"
+#include "Format.h"
 
 static FATFS fs;
 static FIL fil;

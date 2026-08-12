@@ -17,7 +17,7 @@
 #pragma once
 
 #include "Config.h"
-#include "Console.h"
+#include "Format.h"
 
 #ifdef __cplusplus
 extern "C" {

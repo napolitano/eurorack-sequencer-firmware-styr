@@ -18,6 +18,7 @@
 #include "Debug.h"
 #include "System.h"
 #include "Console.h"
+#include "Format.h"
 #include "Encoder.h"
 #include "Lcd.h"
 #include "Canvas.h"
@@ -183,7 +184,7 @@ static void bootloader() {
     if (success) {
         formatVersion(updateVersion, updateStr, sizeof(updateStr));
         printf("found update image: %s\n", updateStr);
-        printf("size: %zd bytes\n", updateSize);
+        printf("size: %lu bytes\n", static_cast<unsigned long>(updateSize));
         printf("md5sum: ");
         for (size_t i = 0; i < sizeof(updateMd5); ++i) {
             printf("%02x", updateMd5[i]);

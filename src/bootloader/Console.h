@@ -16,8 +16,6 @@
  */
 #pragma once
 
-#include "lib/stb_sprintf.h"
-
 #include <cstdlib>
 
 class Console {
@@ -33,11 +31,3 @@ private:
     static void send(char c);
 };
 
-extern "C" {
-
-void printf(char const *fmt, ...) __attribute__((__format__(__printf__, 1, 2)));
-
-} // extern "C"
-
-#define sprintf stbsp_sprintf
-#define snprintf stbsp_snprintf

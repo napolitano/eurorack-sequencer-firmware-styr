@@ -1,11 +1,26 @@
 # Changelog
 
-### Step 6.11 — simulator update-callback lifecycle fix
+### Step 6.13 — bootloader size repair
 
-- fixes the remaining simulator reboot use-after-free: `ClockTimer` now unregisters its per-step `[this]` callback before the target object is destroyed;
-- makes simulator update callbacks explicitly removable through stable callback ids and dispatches them safely even if the callback set changes during a simulator step;
-- applies the same symmetric callback cleanup to `ClockSource` and unregisters `Frontend` input/output observers during teardown;
-- extends `TestSimulatorReboot` with direct update-callback removal coverage in addition to repeated full `SequencerApp` recreation.
+- replaces the generic `stb_sprintf` implementation in the fixed 32 KiB bootloader with a bootloader-local formatter that implements only the conversions actually used by the bootloader (`%s`, `%d`, `%u`, `%x`, `%%`, `l`, field width and zero padding);
+- removes `stb_sprintf.c` from the bootloader build graph while retaining the imported source under `third_party/` for provenance;
+- corrects the update-size diagnostic to print `size_t` through an explicit 32-bit `unsigned long` conversion on the STM32F405 target;
+- keeps application/runtime formatting unchanged; the size reduction is isolated to the bootloader;
+- verifies the compact formatter against the bootloader's active format patterns and records the size repair in `docs/analysis/BOOTLOADER_SIZE.md`.
+
+### Step 6.12 — simulator task lifecycle and reboot regression fix
+
+- fixes the remaining `TestSimulatorReboot` segmentation fault by removing the simulator file task from static header lifetime and making it an explicit `SequencerApp`-owned periodic task;
+- adds RAII registration/deregistration for simulator `os::PeriodicTask` callbacks, so task callbacks cannot survive destruction of the object graph they reference;
+- makes OS callback dispatch removal-safe through stable callback IDs;
+- keeps the standalone simulator callback regression valid without requiring a filesystem volume, and adds progress markers so any future reboot failure is localized to a specific stage/iteration;
+- verified the full reboot regression in a native Linux minimal simulator/sequencer build: both cases pass, including 12 complete target destroy/recreate cycles.
+
+### Step 6.11 — simulator update callback lifecycle fix
+
+- added stable callback IDs and explicit removal for simulator-owned update callbacks;
+- made `ClockTimer` and `ClockSource` deregister their callbacks on destruction;
+- completed frontend observer cleanup during teardown.
 
 ### Step 6.10 — CI simulator reboot test link fix
 

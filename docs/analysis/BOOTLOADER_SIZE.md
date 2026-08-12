@@ -3,36 +3,47 @@
 
 # Bootloader size investigation
 
-## Current state
+## Flash constraint
 
-The PlatformIO bootloader target preserves the historical 32 KiB flash region at `0x08000000`. The target currently links above that limit and therefore remains a migration blocker even though the main `application` environment builds successfully.
+The bootloader occupies the fixed 32 KiB flash region beginning at `0x08000000`. The hardware-configuration image starts at `0x08008000`, so enlarging the bootloader region is not a valid migration fix.
 
-Observed migration results:
+During the PlatformIO migration the bootloader initially exceeded this region by 7,936 bytes. Restoring the historical size-oriented compiler profile reduced the remaining overflow to 2,800 bytes, but further compiler-flag changes did not remove it.
 
-- initial PlatformIO overflow: 7,936 bytes;
-- after restoring bootloader-oriented size flags: 2,800 bytes;
-- static `libopencm3` archive linkage and the subsequent library size-profile adjustment did not remove the remaining 2,800 bytes.
+## Step 6.13 repair
 
-The flash boundary must not be enlarged simply to make the port link: the hardware configuration image begins at `0x08008000`, so changing the boundary changes the established flash layout.
+The remaining size pressure was addressed inside the bootloader rather than by changing the flash map. The legacy bootloader used the bundled `stb_sprintf` implementation for both serial diagnostics and bounded status strings. Even with floating-point support disabled, that formatter implements substantially more conversion behavior than this bootloader uses.
 
-## Next diagnostic step
+Styr now uses `src/bootloader/Format.cpp` instead. The formatter intentionally supports only the active bootloader subset:
 
-Do not continue with speculative compiler flags. Build the bootloader once and inspect:
+- `%%`
+- `%s`
+- `%d`
+- `%u`
+- `%x`
+- the `l` length modifier used for 32-bit values on STM32F405
+- decimal field width and zero padding such as `%02x` and `%08lx`
+
+`stb_sprintf.c` is no longer compiled into the bootloader. The imported source remains under `third_party/embedded/bootloader/` as historical third-party material. Application and simulator formatting are unaffected.
+
+This keeps the established bootloader behavior relevant to update handling, display messages, MD5 verification, flash programming and serial diagnostics while removing generic formatting code that the bootloader does not need.
+
+## Verification
+
+The formatter has been host-tested against the format patterns used by the current bootloader, including version strings, hexadecimal MD5 bytes, padded flash addresses, progress percentages, truncating `snprintf` behavior and unsigned image sizes.
+
+The authoritative size check remains the STM32 PlatformIO build with the pinned GCC ARM Embedded 6.3.1 toolchain:
+
+```sh
+pio run -e bootloader
+```
+
+The build must link without changing the 32 KiB region in `toolchain/linker/bootloader.ld`. After a successful target build, inspect:
 
 ```text
 .pio/build/bootloader/bootloader.map
+.pio/build/bootloader/bootloader.hex
 ```
 
-The map file should be used to rank the largest linked sections and symbols, compare them with the historical bootloader build, and identify the actual source of the remaining size difference.
-
-Useful questions for the map review:
-
-1. Which bootloader translation units dominate `.text` and `.rodata`?
-2. Which `libopencm3`, FatFs or formatting symbols are actually retained?
-3. Are exception/unwind, RTTI, C library, floating-point or formatting helpers unexpectedly linked?
-4. Is section garbage collection operating on all bootloader inputs?
-5. Does the current bootloader contain functionality or data absent from the historical 32 KiB image?
-
-Any size fix should be traceable to one of those findings and should preserve update-file compatibility and the existing flash map.
+No flash-layout relaxation is acceptable as a substitute for meeting the fixed limit.
 
 From Munich with <img src="../manual/assets/blue-heart.svg" alt="blue heart" width="14">

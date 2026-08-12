@@ -23,7 +23,6 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/cm3/nvic.h>
 
-#include <cstdarg>
 
 #define CONSOLE_USART USART1
 
@@ -74,20 +73,3 @@ void Console::send(char c) {
     usart_wait_send_ready(CONSOLE_USART);
     usart_send(CONSOLE_USART, c);
 }
-
-extern "C" {
-
-static char *_write(char *buf, void *user, int len) {
-    Console::write(buf, len);
-    return buf;
-}
-
-void printf(char const *fmt, ...) {
-    va_list va;
-    char buf[CONFIG_PRINTF_BUFFER];
-    va_start(va, fmt);
-    stbsp_vsprintfcb(&_write, buf, buf, fmt, va);
-    va_end(va);
-}
-
-} // extern "C"
