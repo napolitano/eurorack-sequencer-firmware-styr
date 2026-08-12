@@ -18,13 +18,12 @@
 
 #include "Config.h"
 
-#include "core/utils/MovingAverage.h"
-
 #include "drivers/ClockTimer.h"
 
 #include <array>
 #include <functional>
 
+#include <cstddef>
 #include <cstdint>
 
 class Clock : private ClockTimer::Listener {
@@ -99,20 +98,6 @@ public:
     Event checkEvent();
     bool checkTick(uint32_t *tick);
 
-#ifdef FIX_BROKEN_SLAVE_CLOCK_BPM_CALCULATION
-    void pushSlavePeriod(uint32_t periodUs);
-    uint32_t avgSlavePeriod() const;
-
-    uint32_t _pendingSlavePeriodUs = 0;
-    bool _havePendingSlavePeriod = false;
-
-    static constexpr int SlavePeriodWindowSize = 16;
-    std::array<uint32_t, SlavePeriodWindowSize> _slavePeriodWindow = {};
-    int _slavePeriodWindowCount = 0;
-    int _slavePeriodWindowIndex = 0;
-    uint64_t _slavePeriodWindowSum = 0;
-#endif
-
 private:
     enum class State {
         Idle,
@@ -136,6 +121,16 @@ private:
     void setupMasterTimer();
     void setupSlaveTimer();
 
+    void resetSlaveTiming();
+    void resetSlaveSwingTracking();
+    void setSlaveSwingPair(uint32_t aUs, uint32_t bUs, uint32_t nextExpectedUs);
+    void updateSlaveTiming(uint32_t periodUs, uint32_t divisor);
+    void lockSlaveTiming(uint32_t periodUs, uint32_t divisor);
+    uint32_t slaveSeedPeriodUs(uint32_t divisor) const;
+    uint32_t slaveTimeoutUs() const;
+    static bool timeReached(uint32_t now, uint32_t target);
+    static bool periodsSimilar(uint32_t a, uint32_t b, uint32_t tolerancePercent);
+
     void outputMidiMessage(uint8_t msg);
     void outputTick(uint32_t tick);
     void outputClock(bool clock);
@@ -145,6 +140,17 @@ private:
     bool slaveEnabled(int slave) const { return _slaves[slave].enabled; }
 
     static constexpr uint32_t SlaveTimerPeriod = 100; // us
+    static constexpr uint32_t SlaveMinTimeoutUs = 500000; // us
+    static constexpr uint32_t SlaveAcquisitionTimeoutUs = 3000000; // us
+    static constexpr uint32_t SlaveStableFilterTimeUs = 350000; // us
+    static constexpr uint32_t SlaveChangeFilterTimeUs = 75000; // us
+    static constexpr uint32_t SlaveShortTransitionPercent = 60;
+    static constexpr uint32_t SlaveLongTransitionPercent = 140;
+    static constexpr uint32_t SlaveTransitionMatchPercent = 20;
+    static constexpr uint32_t SlaveSwingPairTolerancePercent = 15;
+    static constexpr uint32_t SlaveSwingTrackingTolerancePercent = 15;
+    static constexpr uint32_t SlaveSwingMinSeparationPercent = 15;
+    static constexpr float SlaveMaxSupportedBpm = 1000.f;
     static constexpr size_t SlaveCount = 4;
 
     Listener *_listener = nullptr;
@@ -182,13 +188,23 @@ private:
     volatile int32_t _activeSlave = -1;
 
     uint32_t _elapsedUs;
-    uint32_t _lastSlaveTickUs; // time of last call to slaveTick
-    uint32_t _slaveTickPeriodUs = 0; // slave tick period time
+    uint32_t _lastSlaveTickUs; // timestamp of the most recent external/MIDI clock pulse
+    bool _haveLastSlaveTick = false;
+    uint32_t _previousSlavePeriodUs = 0;
+    bool _havePreviousSlavePeriod = false;
+    uint32_t _slaveTimingSamples = 0;
+    uint32_t _suspectShortPeriodUs = 0;
+    bool _haveSuspectShortPeriod = false;
+    uint32_t _suspectLongPeriodUs = 0;
+    bool _haveSuspectLongPeriod = false;
+    bool _slaveSwingTracking = false;
+    uint32_t _slaveSwingShortPeriodUs = 0;
+    uint32_t _slaveSwingLongPeriodUs = 0;
+    uint32_t _slaveExpectedSwingPeriodUs = 0;
+    uint32_t _slaveTickPeriodUs = 0; // filtered external clock pulse period
     uint32_t _slaveSubTicksPending; // number of slave sub ticks pending
     uint32_t _slaveSubTickPeriodUs = 0; // slave sub tick period time
     uint32_t _nextSlaveSubTickUs; // time of next slave sub tick
 
-    float _slaveBpmFiltered = 0.f;
-    MovingAverage<float, 4> _slaveBpmAvg;
     float _slaveBpm = 0.f;
 };

@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include "core/utils/MovingAverage.h"
 #include "drivers/HighResolutionTimer.h"
 
 class TapTempo {
