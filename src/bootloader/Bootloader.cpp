@@ -25,6 +25,7 @@
 #include "Canvas.h"
 #include "SdCard.h"
 #include "UpdateFile.h"
+#include "UpdateImagePolicy.h"
 #include "VersionTag.h"
 #include "MD5.h"
 
@@ -264,7 +265,7 @@ static void bootloader() {
                 bootPrintf("done\n");
             }
 
-            for (size_t i = 0; i < (chunkSize + 3) / 4; ++i) {
+            for (size_t i = 0; i < BootloaderUpdate::programWordCount(chunkSize); ++i) {
                 flash_program_word(addr, buf[i]);
                 flash_wait_for_last_operation();
                 addr += 4;

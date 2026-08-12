@@ -44,14 +44,14 @@ Run the simulator from the repository root:
 
 The Windows build stages the matching UCRT64 runtime DLLs (`SDL2.dll`, `glew32.dll`, `libstdc++-6.dll`, `libgcc_s_seh-1.dll`, `libwinpthread-1.dll` and `libiconv-2.dll`) beside each generated host executable. This keeps simulator and test startup independent of the caller's `PATH` and avoids mixing GCC runtimes from unrelated Windows toolchains.
 
-Run the native tests:
+Run the simulator-specific CTest suite:
 
 ```powershell
 cd src\simulator
 C:\msys64\ucrt64\bin\ctest.exe --preset windows-ucrt64-debug
 ```
 
-The Windows preset explicitly selects UCRT64 GCC/G++, Ninja and the UCRT64 prefix so STM32CubeCLT or an unrelated `cc.exe` in the normal Windows `PATH` cannot silently become the simulator toolchain.
+Product-code unit tests are not owned by this CMake project; run them from the repository root with `pio test -e test_bootloader_native` and `pio test -e test_product_native`. The Windows preset explicitly selects UCRT64 GCC/G++, Ninja and the UCRT64 prefix so STM32CubeCLT or an unrelated `cc.exe` in the normal Windows `PATH` cannot silently become the simulator toolchain.
 
 SDL2 and GLEW are resolved explicitly from `C:/msys64/ucrt64` instead of through the invoking CMake installation's helper modules. The runtime links only the SDL2 DLL import library; `SDL2main` and `-mwindows` are intentionally excluded so native test executables keep normal `main()` entry points.
 

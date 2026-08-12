@@ -8,6 +8,7 @@ __pycache__/
 /compile_commands.json
 /build/
 /dist/
+/shape-*.png
 
 # Downloaded pinned legacy dependency cache (managed by PlatformIO build glue)
 /third_party/embedded/libopencm3/vendor/lib/*

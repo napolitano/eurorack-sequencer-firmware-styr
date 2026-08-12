@@ -72,7 +72,7 @@ Styr focuses on preserving a capable Eurorack sequencing platform while making c
 | SD-card update bundle | Active | Recommended installation path for end users. |
 | Bootloader | Critical / gated | The bootloader must link within 32 KiB; host tests, ABI checks and a hard CI size gate protect it. |
 | Native simulator | Active | CMake-based; Windows UCRT64 and Linux workflows are maintained. |
-| Native tests | Active | Unit and integration tests run in CI. |
+| Product tests | Active | PlatformIO owns native bootloader, shared-core and sequencer/application tests; CI runs all 44 suites. |
 | Manual screenshots | Active | Deterministic LCD captures generated from simulator state. |
 | End-user manual | In progress | Screen and feature documentation is being expanded incrementally. |
 
@@ -132,14 +132,21 @@ Host prerequisites and additional presets are documented in [`src/simulator/READ
 
 ### Tests
 
-Run the native simulator test suite after configuring and building the simulator:
+PlatformIO is the canonical test runner for code that ships in the embedded product. Run the complete native product suite from the repository root:
+
+```sh
+pio test -e test_bootloader_native
+pio test -e test_product_native
+```
+
+CMake/CTest is reserved for simulator-specific behavior. After configuring and building the simulator, run its host-only regression suite with:
 
 ```sh
 cd src/simulator
 ctest --preset release --output-on-failure
 ```
 
-Test strategy and verification material belongs under [`docs/testing/`](docs/testing/README.md).
+Test strategy, ownership rules and verification material belong under [`docs/testing/`](docs/testing/README.md).
 
 ### Manual screenshots
 
@@ -214,14 +221,14 @@ The placement rules are:
 styr/
 ├── src/                    first-party source code
 │   ├── sequencer/          main Styr sequencer implementation
-│   ├── simulator/          desktop host for the sequencer
+│   ├── simulator/          desktop host + simulator-only CMake/CTest tests
 │   ├── bootloader/         SD-card firmware updater
 │   ├── hwconfig/           hardware configuration image
 │   ├── tester/             hardware diagnostics firmware
 │   ├── shared/             genuinely cross-target support code
 │   └── tools/              host-side source utilities
 ├── assets/                 first-party build/runtime source assets
-├── tests/                  unit, integration and simulator tests
+├── test/                   PlatformIO + Unity product tests
 ├── third_party/            imported source governed by upstream licenses
 ├── toolchain/              board, linker and build-system integration
 ├── docs/                   maintained documentation tree

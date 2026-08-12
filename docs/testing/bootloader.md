@@ -9,29 +9,30 @@ The Styr bootloader is a release-critical component. It runs before the applicat
 
 | Layer | Gate | Purpose |
 |---|---|---|
-| Host unit tests | `TestBootloaderFormat` | Verifies the compact formatter, padding, truncation, return values, boundary sizes and console output. |
-| Host unit tests | `TestBootloaderUpdatePolicy` | Rejects malformed/undersized/oversized `UPDATE.DAT` images and verifies the version-tag/update ABI boundaries, including compile-time size and field-offset assertions for the 32-byte `VersionTag`. |
-| Host integration test | `TestBootloaderUpdateFile` | Runs the production `UpdateFile.cpp` against a fake FatFs backend, covering valid parsing, rewind, short reads, mount/open/stat/seek/read failures, invalid sizes and invalid/non-terminated version tags. |
-| Host unit tests | `TestBootloaderFlashLayout` | Verifies STM32F405 sector boundaries and that application erasure starts at sector 4 rather than protected sectors 0–3. |
-| Host unit tests | `TestBootloaderMd5` | Verifies the MD5 implementation against known vectors and incremental updates. |
+| PlatformIO + Unity native unit test | `TestBootloaderFormat` | Verifies the compact formatter, padding, truncation, return values, multiple conversions, boundary sizes, malformed/trailing `%` behavior and console CR/LF output. |
+| PlatformIO + Unity native unit test | `TestBootloaderUpdatePolicy` | Rejects malformed/undersized/oversized `UPDATE.DAT` images, covers `size_t` extremes, verifies flash-word rounding at partition boundaries and checks the version-tag/update ABI, including compile-time size and field-offset assertions for the 32-byte `VersionTag`. |
+| PlatformIO + Unity native integration test | `TestBootloaderUpdateFile` | Runs the production `UpdateFile.cpp` against a fake FatFs backend, covering minimum/maximum valid images, rewind, zero-length and partial payload reads, short metadata reads, mount/open/stat/seek/read failures, bounded error strings, invalid sizes and invalid/non-terminated version tags. |
+| PlatformIO + Unity native unit test | `TestBootloaderFlashLayout` | Verifies all STM32F405 sector starts, rejects interior addresses as erase boundaries, checks ordering/flash extent and proves application erasure cannot select protected sectors 0–3. |
+| PlatformIO + Unity native unit test | `TestBootloaderMd5` | Verifies RFC 1321 vectors, MD5 padding boundaries around 64 bytes, the bootloader's 1024-byte read boundary and chunking independence. |
 | Static contract gate | `toolchain/check_bootloader_formats.py` | Rejects new printf-style conversions that the compact bootloader formatter does not support. |
 | Static layout gate | `toolchain/check_bootloader_layout.py` | Cross-checks PlatformIO, linker scripts and bootloader configuration for the fixed bootloader/HW-config/application flash map. |
 | Update ABI gate | `toolchain/check_update_abi.py` | Cross-checks the bootloader/application `VersionTag` ABI and, when binaries are supplied, verifies the embedded tag, raw MD5 trailer and byte-identical `UPDATE.DAT` payload. |
 | Packaging tests | `toolchain/tests/test_bootloader_tooling.py` | Verifies deterministic `UPDATE.DAT` construction, raw MD5 trailer behavior and the size-gate implementation. |
+| Test inventory gate | `toolchain/check_bootloader_test_coverage.py` | Prevents removal of critical Unity scenarios and enforces the current minimum of 43 bootloader regression cases across the five release-critical suites. |
 | ARM build gate | `pio run -e bootloader` | Compiles and links the actual STM32F405 bootloader with the pinned ARM GCC toolchain. The 32 KiB linker region is a hard limit. |
 | Binary-size gate | `toolchain/check_bootloader_size.py` | Independently checks the emitted binary against 32,768 bytes and reports remaining headroom. |
 
 ## Local verification
 
-Run the bootloader host suite without simulator dependencies:
+Run the bootloader product suite through PlatformIO from the repository root:
 
 ```sh
-cmake -S tests/bootloader -B build/bootloader-host-tests -DCMAKE_BUILD_TYPE=Release
-cmake --build build/bootloader-host-tests --config Release
-ctest --test-dir build/bootloader-host-tests -C Release --output-on-failure
+pio test -e test_bootloader_native
 ```
 
-The same bootloader tests are also registered in the full simulator CTest graph, providing a second integration path.
+The tests execute on PlatformIO's native host platform using PlatformIO's built-in Unity framework and do not depend on the desktop simulator. Bootloader production support is linked through static archives, so a focused suite such as the MD5 tests does not also pull in `UpdateFile`, `Console`, or FatFs merely because those sources belong to the same bootloader target. They include `unity.h` directly and use normal Unity assertions/lifecycle functions. They are intentionally **not** registered in CTest: PlatformIO is the single owner for tests of bootloader/product code.
+
+On Windows the native test adapter explicitly resolves MSYS2 UCRT64 (default `C:/msys64/ucrt64/bin`) and probes the compiler before building. Set `STYR_NATIVE_TOOLCHAIN_BIN` when GCC is installed elsewhere. This keeps the PlatformIO native test toolchain aligned with the Windows simulator toolchain and avoids silent SCons compiler-launch failures.
 
 Run the bootloader-specific static and packaging gates from the repository root:
 
@@ -40,6 +41,7 @@ python toolchain/check_bootloader_layout.py
 python toolchain/check_bootloader_formats.py
 python toolchain/check_update_abi.py
 python -m unittest toolchain.tests.test_bootloader_tooling -v
+python toolchain/check_bootloader_test_coverage.py
 ```
 
 Build the real target and apply the explicit size gate:
@@ -62,6 +64,6 @@ The application payload is constrained to `CONFIG_APPLICATION_SIZE` and begins a
 
 ## CI policy
 
-The bootloader is a hard CI job. It does not use `continue-on-error`. Any failure in layout contracts, update ABI compatibility, formatter compatibility, packaging tests, ARM linking or the 32 KiB binary-size gate makes CI fail.
+The bootloader is a hard CI job. It does not use `continue-on-error`. Any failure in the PlatformIO bootloader test suites, layout contracts, update ABI compatibility, formatter compatibility, packaging tests, ARM linking or the 32 KiB binary-size gate makes CI fail.
 
 From Munich with <img src="../manual/assets/blue-heart.svg" alt="blue heart" width="14">

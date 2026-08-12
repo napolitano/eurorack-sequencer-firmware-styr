@@ -71,6 +71,17 @@ toolchain/
 assets/
 └── fonts/                  editable/generated font source assets
 
+test/
+├── bootloader/             PlatformIO + Unity bootloader test suites
+├── core/                   PlatformIO + Unity shared-core test suites
+└── sequencer/              PlatformIO + Unity product test suites
+
+src/simulator/tests/
+├── framework/              simulator-only legacy host test helpers
+├── unit/                   simulator lifecycle CTest coverage
+├── integration/            simulator driver/filesystem harnesses
+└── manual/                 simulator manual-test tooling
+
 docs/
 ├── manual/
 │   ├── assets/             generated LCD screenshots + manual-owned images
@@ -90,13 +101,13 @@ docs/
 
 Owner: root `platformio.ini` plus `toolchain/scripts/platformio/` build glue.
 
-PlatformIO owns compiler/toolchain selection, STM32F405 target configuration, linker scripts, application/bootloader/HWCONFIG/tester environments, ST-Link deployment and SD-update packaging. There is no embedded CMake or Make entry point.
+PlatformIO owns compiler/toolchain selection, STM32F405 target configuration, linker scripts, application/bootloader/HWCONFIG/tester environments, ST-Link deployment, SD-update packaging and all tests whose subject is PlatformIO-built product code. Native product tests live below `test/` and use PlatformIO's built-in Unity framework directly; there is no embedded CMake or Make test entry point and no Styr-specific PlatformIO assertion/runner layer.
 
 ### Simulator
 
 Owner: `src/simulator/CMakeLists.txt`.
 
-The simulator is a standalone CMake project. It compiles `src/sequencer` plus the small generic `src/shared` layer directly and has no dependency on the embedded toolchain. Native tests are part of its fast development loop.
+The simulator is a standalone CMake project. It compiles `src/sequencer` plus the small generic `src/shared` layer directly and has no dependency on the embedded toolchain. CMake/CTest owns only tests whose subject is the simulator itself; it is not a second runner for product-code unit tests.
 
 ### Font tools
 
@@ -109,7 +120,9 @@ Font conversion/editor utilities remain an independent host-side tool project.
 ```text
 edit src/sequencer
      |
-     +--> src/simulator: CMake build + native tests
+     +--> PlatformIO + Unity native product tests
+     |
+     +--> src/simulator: CMake build + simulator-specific tests
      |
      +--> PlatformIO firmware build
              |

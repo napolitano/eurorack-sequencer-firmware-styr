@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(STYR_BUILD_TESTS "Build native unit and integration tests" ON)
+option(STYR_BUILD_TESTS "Build simulator-specific host tests" ON)
 option(STYR_SIM_ENABLE_PYTHON "Build Python simulator bindings" OFF)
 set(STYR_DOC_SCREENSHOT_SCALE "3" CACHE STRING
     "Integer nearest-neighbour scale for generated manual LCD screenshots")
@@ -25,7 +25,7 @@ endif()
 
 set(STYR_SHARED_DIR "${STYR_ROOT}/src/shared")
 set(STYR_SEQUENCER_DIR "${STYR_ROOT}/src/sequencer")
-set(STYR_TEST_FRAMEWORK_DIR "${STYR_ROOT}/tests/framework")
+set(STYR_TEST_FRAMEWORK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/framework")
 set(STYR_THIRD_PARTY_COMMON_DIR "${STYR_ROOT}/third_party/common")
 set(STYR_THIRD_PARTY_SIM_DIR "${STYR_ROOT}/third_party/simulator")
 set(STYR_SIM_PLATFORM_DIR "${CMAKE_CURRENT_SOURCE_DIR}/platform")
@@ -321,7 +321,7 @@ endif()
 
 if(STYR_BUILD_TESTS AND NOT CMAKE_SYSTEM_NAME MATCHES "Emscripten")
     enable_testing()
-    add_subdirectory(${STYR_ROOT}/tests ${CMAKE_CURRENT_BINARY_DIR}/tests)
+    add_subdirectory(tests)
 endif()
 
 if(STYR_SIM_ENABLE_PYTHON AND NOT CMAKE_SYSTEM_NAME MATCHES "Emscripten")

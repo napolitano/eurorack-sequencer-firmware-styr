@@ -110,7 +110,7 @@ embedded docs/manual/assets/<capture-name>.png
 
 It also checks for duplicate capture names and the required manual footer.
 
-The Linux simulator CI explicitly builds `styr_manual_screenshots` before running the native tests, so compile errors in the documentation tool can no longer remain hidden behind `EXCLUDE_FROM_ALL`.
+The Linux simulator CI explicitly builds `styr_manual_screenshots` before running the simulator-specific tests, so compile errors in the documentation tool can no longer remain hidden behind `EXCLUDE_FROM_ALL`.
 
 ## Manual structure
 

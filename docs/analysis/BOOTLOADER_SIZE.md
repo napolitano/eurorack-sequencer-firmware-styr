@@ -29,7 +29,7 @@ This keeps the established bootloader behavior relevant to update handling, disp
 
 ## Verification
 
-The formatter is covered by the checked-in `TestBootloaderFormat` host regression suite, including version strings, hexadecimal MD5 bytes, padded flash addresses, progress percentages, bounded-buffer truncation, return-value semantics and malformed trailing-percent handling. `toolchain/check_bootloader_formats.py` additionally rejects format conversions outside the deliberately small supported subset.
+The formatter is covered by the checked-in `TestBootloaderFormat` PlatformIO-native regression suite, including version strings, hexadecimal MD5 bytes, padded flash addresses, progress percentages, bounded-buffer truncation, return-value semantics and malformed trailing-percent handling. `toolchain/check_bootloader_formats.py` additionally rejects format conversions outside the deliberately small supported subset.
 
 The authoritative size check remains the STM32 PlatformIO build with the pinned GCC ARM Embedded 6.3.1 toolchain. CI now treats this as a hard gate rather than a known/allowed failure:
 

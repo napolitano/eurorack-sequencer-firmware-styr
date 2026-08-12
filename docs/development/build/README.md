@@ -65,7 +65,16 @@ C:\msys64\ucrt64\bin\cmake.exe --build --preset windows-ucrt64-debug
 
 ## Tests
 
-Native unit and integration tests are built with the simulator and executed through CTest. The CI workflow uses the release preset on Linux:
+Tests for PlatformIO-built product code are executed by PlatformIO with its built-in **Unity** framework, even when they run natively on the host:
+
+```sh
+pio test -e test_bootloader_native
+pio test -e test_product_native
+```
+
+The native PlatformIO test environments use normal dependency discovery (`lib_ldf_mode = chain`) so PlatformIO's built-in Unity dependency is visible as `<unity.h>`. Do not copy the embedded `lib_ldf_mode = off` setting into these test environments.
+
+CMake/CTest is reserved for simulator-specific regressions:
 
 ```sh
 cd src/simulator
@@ -74,7 +83,7 @@ cmake --build --preset release
 ctest --preset release --output-on-failure
 ```
 
-See [`docs/testing/README.md`](../../testing/README.md) for verification policy rather than build mechanics.
+See [`docs/testing/README.md`](../../testing/README.md) for the enforced ownership boundary and verification policy.
 
 ## Documentation screenshots
 

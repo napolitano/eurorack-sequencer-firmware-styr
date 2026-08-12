@@ -25,12 +25,10 @@ jobs:
         run: python toolchain/check_update_abi.py
       - name: Test bootloader packaging and gates
         run: python -m unittest toolchain.tests.test_bootloader_tooling -v
-      - name: Configure bootloader host tests
-        run: cmake -S tests/bootloader -B build/bootloader-host-tests -DCMAKE_BUILD_TYPE=Release
-      - name: Build bootloader host tests
-        run: cmake --build build/bootloader-host-tests --config Release
-      - name: Run bootloader host tests
-        run: ctest --test-dir build/bootloader-host-tests -C Release --output-on-failure
+      - name: Validate bootloader Unity coverage contract
+        run: python toolchain/check_bootloader_test_coverage.py
+      - name: Run bootloader product tests with PlatformIO
+        run: pio test -e test_bootloader_native
       - name: Build bootloader (hard 32 KiB linker gate)
         run: pio run -e bootloader
       - name: Bootloader linker diagnostics on failure
@@ -63,6 +61,12 @@ jobs:
         run: python -m pip install -r toolchain/requirements-platformio.txt
       - name: Validate PlatformIO configuration
         run: pio project config --lint
+      - name: Validate test-runner ownership
+        run: python toolchain/check_test_ownership.py
+      - name: Validate repository source cleanliness
+        run: python toolchain/check_repository_cleanliness.py
+      - name: Run shared core and sequencer product tests with PlatformIO
+        run: pio test -e test_product_native
       - name: Build embedded targets
         run: >-
           pio run
@@ -87,7 +91,7 @@ jobs:
           --update dist/application/UPDATE.DAT
 
   simulator_linux:
-    name: Simulator and native tests (Linux)
+    name: Simulator tests (Linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -104,7 +108,7 @@ jobs:
         run: cmake --build --preset release --target styr_manual_screenshots
       - name: Validate documentation screenshot mapping
         run: python3 toolchain/check_manual_screenshots.py
-      - name: Test
+      - name: Run simulator-specific CTest suite
         working-directory: src/simulator
         run: ctest --preset release --output-on-failure
 

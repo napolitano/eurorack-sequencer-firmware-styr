@@ -14,7 +14,8 @@ Styr is an experimental modernization of the MIT-licensed Westlicht Performer fi
 - `src/shared/` — small generic support layer only (`core/`, `os/`). Do not place sequencer product logic here merely because the simulator uses it.
 - `src/bootloader/`, `src/hwconfig/`, `src/tester/` — separate embedded targets.
 - `third_party/` — imported code. Do not move third-party code into `src/`.
-- `tests/` — unit, integration and simulator tests.
+- `test/` — PlatformIO + Unity tests for bootloader, shared core and sequencer product code.
+- `src/simulator/tests/` — simulator-only CMake/CTest tests and host integration harnesses.
 - `src/tools/fonts/` — standalone host-side font utilities. Font data belongs under `assets/fonts/`.
 - `toolchain/` — PlatformIO board metadata, linker scripts and build/package integration. Product code does not belong here.
 - `assets/` — first-party non-code inputs and generated source assets.

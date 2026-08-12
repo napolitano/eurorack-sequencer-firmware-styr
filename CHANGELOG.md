@@ -1,5 +1,57 @@
 # Changelog
 
+## Step 6.23 — Windows native runtime bundle regression fix
+
+- removes the Step 6.22 full `-static` native-test link workaround after it regressed a previously passing baseline suite (`core/io/test_serialization`) on Windows;
+- keeps the selected MSYS2 UCRT64 toolchain deterministic without global `PATH` dependence by inspecting each native PE with `objdump` and staging the transitive toolchain-DLL closure directly beside `program.exe` before PlatformIO executes it;
+- validates the same local-runtime arrangement up front with a small `std::vector` probe, preserving early detection of the `STATUS_ENTRYPOINT_NOT_FOUND` failure class;
+- retains the separate `stb_image_write` support archive required by `Simulator.cpp` and the strengthened repository-cleanliness checks from Step 6.22.
+
+## Step 6.20 — Native test link isolation and simulator test relocation
+
+- fixes PlatformIO native bootloader suites so production support is linked through static archives; each Unity executable now pulls only the bootloader objects it actually references, preventing unrelated `Console`/FatFs dependencies from contaminating independent tests such as MD5;
+- removes the ambiguous repository-root `tests/` tree and relocates all CMake/CTest-only simulator tests to `src/simulator/tests/`;
+- updates the test-ownership gate so `test/` is the sole repository-root test directory and remains exclusively owned by PlatformIO + Unity.
+
+
+### Step 6.19 — PlatformIO Unity dependency resolution fix
+
+- fixes native PlatformIO Unity builds failing with `fatal error: unity.h: No such file or directory`; the test environments had inherited an inappropriate manual dependency mode (`lib_ldf_mode = off`), so PlatformIO installed/detected Unity but did not add it to the compile dependency graph;
+- enables normal `chain` dependency discovery only for `test_bootloader_native` and `test_product_native`; embedded environments retain their explicit/manual dependency graph;
+- extends the test-ownership gate so a Unity-owned PlatformIO environment can no longer be configured with LDF disabled;
+- removes duplicate native warning/section compiler flags from `native_product_sources.py`; those flags remain canonically declared in `platformio.ini`, while the adapter contributes only the C++11 language requirement;
+- retains the Step 6.18 bootloader coverage expansion (43 Unity cases), Curve artifact cleanup and repository-cleanliness gates unchanged.
+
+### Step 6.18 — Bootloader coverage, native Windows test reliability and artifact cleanup
+
+- hardens PlatformIO native tests on Windows by resolving the project-standard MSYS2 UCRT64 GCC explicitly, exporting the compiler/runtime paths into SCons and probing `g++ --version` before any Unity suite is compiled; this turns the previous diagnostic-free per-object `Error 1` failure mode into one actionable toolchain error;
+- expands release-critical bootloader Unity coverage across formatter multi-argument/boundary behavior, MD5 RFC/padding/1024-byte chunk boundaries, FatFs partial/zero-length reads, minimum/maximum update sizes, bounded error strings, flash-word rounding, `size_t` extremes and all STM32F405 sector boundaries;
+- reuses the tested flash-word rounding policy in the production bootloader programming loop instead of keeping an untested arithmetic expression in `Bootloader.cpp`;
+- removes the inherited Curve markdown/PNG renderer from the PlatformIO product test suite and replaces it with functional Unity assertions for all 17 curve types, representative values, normalization, symmetry, resets and monotonic families;
+- removes accidental `shape-001.png` … `shape-017.png` package artifacts and adds `toolchain/check_repository_cleanliness.py` plus test-ownership checks so documentation-image generation cannot silently re-enter product unit tests or repository-root packages;
+- documents the native Windows toolchain contract and the expanded bootloader verification matrix.
+
+### Step 6.17 — PlatformIO Unity test migration
+
+- migrates all 44 PlatformIO-owned product test suites to PlatformIO's built-in Unity framework: 5 bootloader, 6 shared-core and 33 sequencer suites, currently registering 356 Unity test cases;
+- removes the Styr-specific PlatformIO custom test runner and the inherited assertion framework from the PlatformIO test graph; product tests now include `unity.h` directly and use `UNITY_BEGIN`, `RUN_TEST`, Unity assertions and `UNITY_END`;
+- keeps the inherited lightweight `UnitTest`/`IntegrationTest` helpers only below `src/simulator/tests/framework/`, where they remain implementation detail of simulator-only CMake/CTest coverage rather than a second product-test framework;
+- removes direct inclusion of production `.cpp` files from PlatformIO tests so product sources have one normal compilation path and are linked into the Unity test executables instead;
+- renames the remaining native source-graph build adapter to `native_product_sources.py` and documents that it performs build integration only; test discovery, assertions, execution and result parsing are provided by PlatformIO/Unity;
+- strengthens `toolchain/check_test_ownership.py` to require Unity for PlatformIO product environments, reject custom PlatformIO runners/frameworks and legacy assertion tokens, require conventional Unity suite lifecycle functions, reject production `.cpp` inclusion, and prevent product tests from leaking back into CMake/CTest;
+- updates testing, build and architecture documentation to make the PlatformIO/Unity versus simulator/CMake ownership boundary explicit.
+
+### Step 6.16 — PlatformIO-owned product tests
+
+- makes PlatformIO the canonical test runner for all code that is also built as embedded/product firmware, while CMake/CTest is restricted to simulator-specific host behavior;
+- migrates 44 checked-in product test suites into PlatformIO's hierarchical `test/` tree: 5 bootloader, 6 shared-core and 33 sequencer suites;
+- adds pinned native PlatformIO test environments for bootloader and product logic;
+- adapts the inherited lightweight product-test framework to PlatformIO through a temporary custom runner, preserving the existing test semantics as an intermediate migration step;
+- separates shared STM32 build configuration into the custom `[embedded]` section so native host-test environments do not accidentally inherit MCU, board, upload or ARM-toolchain settings;
+- moves the simulator reboot regression and simulator driver/filesystem integration programs below `src/simulator/tests/`, leaving CMake/CTest with simulator-only ownership;
+- adds `toolchain/check_test_ownership.py` as a CI gate that rejects product-test leakage back into CMake and verifies the expected PlatformIO suite inventory;
+- updates CI and developer/testing documentation so bootloader tests run with `pio test -e test_bootloader_native` and shared-core/sequencer tests with `pio test -e test_product_native`.
+
 ### Step 6.15 — README name rationale
 
 - integrates the “Why Styr?” section into the GitHub landing page directly after the acknowledgement and project introduction, while keeping Simon Kallweit’s authorship acknowledgement at the top of the README;

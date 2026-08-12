@@ -17,6 +17,7 @@
 #include "VersionTag.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 
 namespace BootloaderUpdate {
@@ -24,6 +25,15 @@ namespace BootloaderUpdate {
 static const std::size_t ChecksumSize = 16;
 static const std::size_t MinimumPayloadSize = CONFIG_VERSION_TAG_OFFSET + sizeof(VersionTag);
 static const std::size_t MaximumPayloadSize = CONFIG_APPLICATION_SIZE;
+static const std::size_t FlashWordSize = sizeof(uint32_t);
+
+inline std::size_t programWordCount(std::size_t byteCount) {
+    return byteCount / FlashWordSize + (byteCount % FlashWordSize != 0 ? 1u : 0u);
+}
+
+inline std::size_t programmedSize(std::size_t byteCount) {
+    return programWordCount(byteCount) * FlashWordSize;
+}
 
 /**
  * Convert a complete UPDATE.DAT size into its firmware payload size.
@@ -39,7 +49,8 @@ inline bool payloadSize(std::size_t fileSize, std::size_t &payloadSizeOut) {
     }
 
     const std::size_t candidate = fileSize - ChecksumSize;
-    if (candidate < MinimumPayloadSize || candidate > MaximumPayloadSize) {
+    if (candidate < MinimumPayloadSize || candidate > MaximumPayloadSize ||
+        programmedSize(candidate) > MaximumPayloadSize) {
         return false;
     }
 
