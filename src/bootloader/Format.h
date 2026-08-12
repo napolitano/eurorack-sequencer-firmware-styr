@@ -24,7 +24,7 @@ extern "C" {
  * subset it uses itself. Keeping the formatter local avoids pulling a generic
  * printf implementation into the fixed 32 KiB image.
  */
-int printf(const char *format, ...) __attribute__((__format__(__printf__, 1, 2)));
+int bootPrintf(const char *format, ...) __attribute__((__format__(__printf__, 1, 2)));
 
 /**
  * Write a formatted message to a bounded character buffer.
@@ -32,7 +32,7 @@ int printf(const char *format, ...) __attribute__((__format__(__printf__, 1, 2))
  * Supported conversions: %% %s %d %u %x plus the l length modifier and
  * decimal field width with optional zero padding (for example %02x, %08lx).
  */
-int snprintf(char *buffer, std::size_t size, const char *format, ...)
+int bootSnprintf(char *buffer, std::size_t size, const char *format, ...)
     __attribute__((__format__(__printf__, 3, 4)));
 
 } // extern "C"

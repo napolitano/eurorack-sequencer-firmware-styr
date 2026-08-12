@@ -19,6 +19,7 @@
 #include "System.h"
 #include "Console.h"
 #include "Format.h"
+#include "FlashLayout.h"
 #include "Encoder.h"
 #include "Lcd.h"
 #include "Canvas.h"
@@ -36,30 +37,6 @@
 
 // version tag of firmware in flash
 const VersionTag &currentVersion = *reinterpret_cast<VersionTag *>(CONFIG_APPLICATION_ADDR + CONFIG_VERSION_TAG_OFFSET);
-
-static uint32_t flashSectorAddr[] = {
-    0x08000000, // Sector 0, 16 Kbytes
-    0x08004000, // Sector 1, 16 Kbytes
-    0x08008000, // Sector 2, 16 Kbytes
-    0x0800C000, // Sector 3, 16 Kbytes
-    0x08010000, // Sector 4, 64 Kbytes
-    0x08020000, // Sector 5, 128 Kbytes
-    0x08040000, // Sector 6, 128 Kbytes
-    0x08060000, // Sector 7, 128 Kbytes
-    0x08080000, // Sector 8, 128 Kbytes
-    0x080A0000, // Sector 9, 128 Kbytes
-    0x080C0000, // Sector 10, 128 Kbytes
-    0x080E0000, // Sector 11, 128 Kbytes
-};
-
-static int flashSectorIndex(uint32_t addr) {
-    for (size_t i = 0; i < sizeof(flashSectorAddr) / sizeof(flashSectorAddr[0]); ++i) {
-        if (addr == flashSectorAddr[i]) {
-            return i;
-        }
-    }
-    return -1;
-}
 
 extern "C" {
 
@@ -92,9 +69,13 @@ static void deinit() {
 
 static void formatVersion(const VersionTag &version, char *str, size_t len) {
     if (version.isValid()) {
-        snprintf(str, len, "%s (%d.%d.%d)", version.name, version.major, version.minor, version.revision);
+        // A damaged application tag must never let %s read beyond name[24].
+        char safeName[sizeof(version.name) + 1];
+        memcpy(safeName, version.name, sizeof(version.name));
+        safeName[sizeof(version.name)] = '\0';
+        bootSnprintf(str, len, "%s (%d.%d.%d)", safeName, version.major, version.minor, version.revision);
     } else {
-        snprintf(str, len, "invalid image");
+        bootSnprintf(str, len, "invalid image");
     }
 }
 
@@ -125,7 +106,7 @@ static void jumpToApplication(void) {
 static void startApplication() {
     char str[32];
     formatVersion(currentVersion, str, sizeof(str));
-    printf("loading %s ...\n\n\n", str);
+    bootPrintf("loading %s ...\n\n\n", str);
 
     jumpToApplication();
 }
@@ -139,7 +120,7 @@ static void clearScreen() {
 
 static void drawScreen(const char *current, const char *update, const char *message = "\0") {
     char title[32];
-    snprintf(title, sizeof(title), "bootloader %d.%d", CONFIG_VERSION_MAJOR, CONFIG_VERSION_MINOR);
+    bootSnprintf(title, sizeof(title), "bootloader %d.%d", CONFIG_VERSION_MAJOR, CONFIG_VERSION_MINOR);
 
     Canvas::setColor(0);
     Canvas::fill();
@@ -167,12 +148,12 @@ static void bootloader() {
     char errorStr[32];
 
     formatVersion(currentVersion, currentStr, sizeof(currentStr));
-    snprintf(updateStr, sizeof(updateStr), "checking ...");
+    bootSnprintf(updateStr, sizeof(updateStr), "checking ...");
 
     drawScreen(currentStr, updateStr);
 
-    printf("current image: %s\n", currentStr);
-    printf("checking for update image ...\n");
+    bootPrintf("current image: %s\n", currentStr);
+    bootPrintf("checking for update image ...\n");
 
     VersionTag updateVersion;
     size_t updateSize;
@@ -183,20 +164,20 @@ static void bootloader() {
     // log update image status
     if (success) {
         formatVersion(updateVersion, updateStr, sizeof(updateStr));
-        printf("found update image: %s\n", updateStr);
-        printf("size: %lu bytes\n", static_cast<unsigned long>(updateSize));
-        printf("md5sum: ");
+        bootPrintf("found update image: %s\n", updateStr);
+        bootPrintf("size: %lu bytes\n", static_cast<unsigned long>(updateSize));
+        bootPrintf("md5sum: ");
         for (size_t i = 0; i < sizeof(updateMd5); ++i) {
-            printf("%02x", updateMd5[i]);
+            bootPrintf("%02x", updateMd5[i]);
         }
-        printf("\n");
+        bootPrintf("\n");
     } else {
-        printf("no update image found: %s\n", errorStr);
+        bootPrintf("no update image found: %s\n", errorStr);
     }
 
     // verify update image md5sum
     if (success) {
-        printf("verifying update image ...\n");
+        bootPrintf("verifying update image ...\n");
 
         MD5 md5;
 
@@ -204,7 +185,7 @@ static void bootloader() {
         size_t bytesLeft = updateSize;
         while (bytesLeft > 0) {
             int progress = ((updateSize - bytesLeft) * 100) / updateSize;
-            snprintf(updateStr, sizeof(updateStr), "verifying image %d%%", progress);
+            bootSnprintf(updateStr, sizeof(updateStr), "verifying image %d%%", progress);
             drawScreen(currentStr, updateStr);
             size_t chunkSize = bytesLeft < sizeof(buf) ? bytesLeft : sizeof(buf);
             if (!UpdateFile::read(buf, chunkSize, errorStr, sizeof(errorStr))) {
@@ -220,18 +201,18 @@ static void bootloader() {
         MD5::Sum computedMd5;
         md5.finish(computedMd5);
 
-        printf("computed md5sum: ");
+        bootPrintf("computed md5sum: ");
         for (size_t i = 0; i < sizeof(computedMd5); ++i) {
-            printf("%02x", computedMd5[i]);
+            bootPrintf("%02x", computedMd5[i]);
         }
-        printf("\n");
+        bootPrintf("\n");
 
         success = memcmp(updateMd5, computedMd5, sizeof(MD5::Sum)) == 0;
         if (success) {
-            printf("valid image\n");
+            bootPrintf("valid image\n");
         } else {
-            printf("invalid image (md5sum mismatch)\n");
-            snprintf(errorStr, sizeof(errorStr), "invalid checksum");
+            bootPrintf("invalid image (md5sum mismatch)\n");
+            bootSnprintf(errorStr, sizeof(errorStr), "invalid checksum");
         }
     }
 
@@ -257,7 +238,7 @@ static void bootloader() {
     }
 
     if (success && writeUpdate) {
-        printf("writing update image to 0x%08lx ...\n", static_cast<unsigned long>(CONFIG_APPLICATION_ADDR));
+        bootPrintf("writing update image to 0x%08lx ...\n", static_cast<unsigned long>(CONFIG_APPLICATION_ADDR));
 
         flash_unlock();
 
@@ -267,7 +248,7 @@ static void bootloader() {
 
         while (bytesLeft > 0) {
             int progress = ((updateSize - bytesLeft) * 100) / updateSize;
-            snprintf(updateStr, sizeof(updateStr), "writing image %d%%", progress);
+            bootSnprintf(updateStr, sizeof(updateStr), "writing image %d%%", progress);
             drawScreen(currentStr, updateStr);
             size_t chunkSize = bytesLeft < sizeof(buf) ? bytesLeft : sizeof(buf);
             if (!UpdateFile::read(buf, chunkSize, errorStr, sizeof(errorStr))) {
@@ -275,12 +256,12 @@ static void bootloader() {
                 break;
             }
 
-            int sector = flashSectorIndex(addr);
+            int sector = BootloaderFlash::sectorIndex(addr);
             if (sector >= 0) {
-                printf("erasing sector %d at 0x%08lx ... ", sector, addr);
+                bootPrintf("erasing sector %d at 0x%08lx ... ", sector, addr);
                 flash_erase_sector(sector, 2);
                 flash_wait_for_last_operation();
-                printf("done\n");
+                bootPrintf("done\n");
             }
 
             for (size_t i = 0; i < (chunkSize + 3) / 4; ++i) {
@@ -295,15 +276,15 @@ static void bootloader() {
         flash_lock();
 
         if (success) {
-            printf("write successful\n");
+            bootPrintf("write successful\n");
         } else {
-            printf("failed to write update image: %s\n", errorStr);
+            bootPrintf("failed to write update image: %s\n", errorStr);
         }
     }
 
     // verify written image
     if (success && writeUpdate) {
-        printf("verifying written image ...\n");
+        bootPrintf("verifying written image ...\n");
         drawScreen(currentStr, "verifying");
 
         MD5 md5;
@@ -311,19 +292,19 @@ static void bootloader() {
         MD5::Sum computedMd5;
         md5.finish(computedMd5);
 
-        printf("computed md5sum: ");
+        bootPrintf("computed md5sum: ");
         for (size_t i = 0; i < sizeof(computedMd5); ++i) {
-            printf("%02x", computedMd5[i]);
+            bootPrintf("%02x", computedMd5[i]);
         }
-        printf("\n");
+        bootPrintf("\n");
 
         success = memcmp(updateMd5, computedMd5, sizeof(MD5::Sum)) == 0;
         if (success) {
-            printf("verify successful\n");
-            snprintf(updateStr, sizeof(updateStr), "successful");
+            bootPrintf("verify successful\n");
+            bootSnprintf(updateStr, sizeof(updateStr), "successful");
         } else {
-            printf("verify failed (md5sum mismatch)\n");
-            snprintf(errorStr, sizeof(errorStr), "writing image failed");
+            bootPrintf("verify failed (md5sum mismatch)\n");
+            bootSnprintf(errorStr, sizeof(errorStr), "writing image failed");
 
             // invalidate version tag
             flash_unlock();
@@ -351,7 +332,7 @@ int main(void) {
 
     clearScreen();
 
-    printf("\nbootloader %d.%d\n", CONFIG_VERSION_MAJOR, CONFIG_VERSION_MINOR);
+    bootPrintf("\nbootloader %d.%d\n", CONFIG_VERSION_MAJOR, CONFIG_VERSION_MINOR);
 
     // enter bootloader mode if encoder is pressed or no valid image is found
     if (Encoder::down() || !currentVersion.isValid()) {

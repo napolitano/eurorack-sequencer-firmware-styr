@@ -1,5 +1,22 @@
 # Changelog
 
+### Step 6.15 — README name rationale
+
+- integrates the “Why Styr?” section into the GitHub landing page directly after the acknowledgement and project introduction, while keeping Simon Kallweit’s authorship acknowledgement at the top of the README;
+- adds the section to the README index and explains the Swedish/Germanic name origin in relation to the sequencer’s role;
+- updates the bootloader status text in the README to match the current hard CI gate rather than the superseded temporary `continue-on-error` state.
+
+### Step 6.14 — bootloader safety tests and hard gates
+
+- adds a standalone, simulator-independent CMake/CTest bootloader suite with dedicated regression tests for the compact formatter, update-image size policy, production `UpdateFile` parsing through a fault-injectable fake FatFs backend, STM32F405 flash-sector mapping and the MD5 implementation used by `UPDATE.DAT`;
+- adds deterministic packaging/tooling tests for raw MD5 trailers and the explicit bootloader binary-size gate;
+- adds static CI contracts that cross-check PlatformIO/linker/config flash layout and reject unsupported formatter conversions before target compilation;
+- adds compile-time `VersionTag` size/field-offset assertions plus a bootloader/application ABI gate that checks magic, fixed tag offset and application identity, validates built application images, verifies the raw MD5 trailer, and requires the `UPDATE.DAT` payload to be byte-identical to the firmware binary;
+- makes the bootloader a dedicated hard CI job: `continue-on-error` is removed, the actual ARM build must link inside 32 KiB, and the emitted binary is independently checked against 32,768 bytes;
+- prevents unsigned underflow for malformed `UPDATE.DAT` files shorter than the checksum trailer, uses the FatFs-native `UINT` read-count ABI instead of relying on 32-bit `size_t`, and rejects undersized, oversized, invalid-magic or non-NUL-terminated version-tag update images before they can be accepted;
+- extracts and tests the STM32F405 flash-sector mapping used by the updater, explicitly protecting sectors 0–3 from application erase selection;
+- fixes trailing-`%` handling in the compact formatter so malformed input cannot loop forever, gives the bootloader formatter explicit `bootPrintf`/`bootSnprintf` symbols rather than overriding libc names, and bounds formatting of the currently installed image name even when flash contains a damaged/non-terminated tag.
+
 ### Step 6.13 — bootloader size repair
 
 - replaces the generic `stb_sprintf` implementation in the fixed 32 KiB bootloader with a bootloader-local formatter that implements only the conversions actually used by the bootloader (`%s`, `%d`, `%u`, `%x`, `%%`, `l`, field width and zero padding);

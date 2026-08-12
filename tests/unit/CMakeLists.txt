@@ -16,4 +16,5 @@ function(register_test test file)
 endfunction()
 
 add_subdirectory(core)
+add_subdirectory(bootloader)
 add_subdirectory(sequencer)

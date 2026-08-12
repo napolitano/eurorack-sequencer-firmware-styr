@@ -5,6 +5,50 @@ on:
   pull_request:
 
 jobs:
+  bootloader:
+    name: Bootloader safety gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: toolchain/requirements-platformio.txt
+      - name: Install PlatformIO Core
+        run: python -m pip install -r toolchain/requirements-platformio.txt
+      - name: Validate bootloader memory layout
+        run: python toolchain/check_bootloader_layout.py
+      - name: Validate compact formatter contract
+        run: python toolchain/check_bootloader_formats.py
+      - name: Validate bootloader/application update ABI
+        run: python toolchain/check_update_abi.py
+      - name: Test bootloader packaging and gates
+        run: python -m unittest toolchain.tests.test_bootloader_tooling -v
+      - name: Configure bootloader host tests
+        run: cmake -S tests/bootloader -B build/bootloader-host-tests -DCMAKE_BUILD_TYPE=Release
+      - name: Build bootloader host tests
+        run: cmake --build build/bootloader-host-tests --config Release
+      - name: Run bootloader host tests
+        run: ctest --test-dir build/bootloader-host-tests -C Release --output-on-failure
+      - name: Build bootloader (hard 32 KiB linker gate)
+        run: pio run -e bootloader
+      - name: Bootloader linker diagnostics on failure
+        if: failure()
+        run: |
+          if [ -f .pio/build/bootloader/bootloader.map ]; then
+            echo "--- Memory Configuration ---"
+            grep -A 12 "Memory Configuration" .pio/build/bootloader/bootloader.map || true
+            echo "--- Linker map tail ---"
+            tail -n 120 .pio/build/bootloader/bootloader.map || true
+          else
+            echo "bootloader.map was not produced"
+          fi
+      - name: Verify bootloader binary size
+        run: python toolchain/check_bootloader_size.py .pio/build/bootloader/bootloader.bin
+      - name: Report bootloader section sizes
+        run: cat .pio/build/bootloader/bootloader.size
+
   firmware:
     name: Firmware (PlatformIO)
     runs-on: ubuntu-latest
@@ -34,11 +78,13 @@ jobs:
           -e hwconfig_reverse_encoder_dac8568a
           -e hwconfig_reverse_encoder_invert_leds
           -e hwconfig_reverse_encoder_invert_leds_dac8568a
-      - name: Build bootloader (known size migration blocker)
-        continue-on-error: true
-        run: pio run -e bootloader
       - name: Build SD update bundle
         run: pio run -e application -t sd-update
+      - name: Verify application / UPDATE.DAT bootloader ABI
+        run: >-
+          python toolchain/check_update_abi.py
+          --application .pio/build/application/styr.bin
+          --update dist/application/UPDATE.DAT
 
   simulator_linux:
     name: Simulator and native tests (Linux)

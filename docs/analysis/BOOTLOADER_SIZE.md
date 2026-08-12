@@ -29,15 +29,21 @@ This keeps the established bootloader behavior relevant to update handling, disp
 
 ## Verification
 
-The formatter has been host-tested against the format patterns used by the current bootloader, including version strings, hexadecimal MD5 bytes, padded flash addresses, progress percentages, truncating `snprintf` behavior and unsigned image sizes.
+The formatter is covered by the checked-in `TestBootloaderFormat` host regression suite, including version strings, hexadecimal MD5 bytes, padded flash addresses, progress percentages, bounded-buffer truncation, return-value semantics and malformed trailing-percent handling. `toolchain/check_bootloader_formats.py` additionally rejects format conversions outside the deliberately small supported subset.
 
-The authoritative size check remains the STM32 PlatformIO build with the pinned GCC ARM Embedded 6.3.1 toolchain:
+The authoritative size check remains the STM32 PlatformIO build with the pinned GCC ARM Embedded 6.3.1 toolchain. CI now treats this as a hard gate rather than a known/allowed failure:
 
 ```sh
 pio run -e bootloader
 ```
 
-The build must link without changing the 32 KiB region in `toolchain/linker/bootloader.ld`. After a successful target build, inspect:
+The build must link without changing the 32 KiB region in `toolchain/linker/bootloader.ld`, after which an independent binary-size gate is run:
+
+```sh
+python toolchain/check_bootloader_size.py .pio/build/bootloader/bootloader.bin
+```
+
+After a successful target build, inspect:
 
 ```text
 .pio/build/bootloader/bootloader.map

@@ -83,6 +83,12 @@ static int format(Output &out, const char *fmt, va_list args) {
         }
 
         ++fmt;
+        if (*fmt == '\0') {
+            // Preserve a trailing '%' literally and terminate. The previous
+            // implementation stepped back to the '%' and could loop forever.
+            out.put('%');
+            break;
+        }
         if (*fmt == '%') {
             out.put('%');
             ++fmt;
@@ -130,10 +136,6 @@ static int format(Output &out, const char *fmt, va_list args) {
                                  : va_arg(args, unsigned int),
                           conversion == 'x' ? 16u : 10u, width, pad);
             break;
-        case '\0':
-            out.put('%');
-            --fmt;
-            break;
         default:
             out.put('%');
             out.put(conversion);
@@ -149,7 +151,7 @@ static int format(Output &out, const char *fmt, va_list args) {
 
 extern "C" {
 
-int printf(const char *formatString, ...) {
+int bootPrintf(const char *formatString, ...) {
     Output out{nullptr, 0, 0, true};
     va_list args;
     va_start(args, formatString);
@@ -158,7 +160,7 @@ int printf(const char *formatString, ...) {
     return result;
 }
 
-int snprintf(char *buffer, std::size_t size, const char *formatString, ...) {
+int bootSnprintf(char *buffer, std::size_t size, const char *formatString, ...) {
     Output out{buffer, size, 0, false};
     va_list args;
     va_start(args, formatString);
