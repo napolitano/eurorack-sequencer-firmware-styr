@@ -17,6 +17,16 @@ Styr is an independent continuation and modernization of that foundation. It is 
 
 Styr modernizes the build, simulator, tests, documentation and selected firmware functionality while retaining explicit provenance to the original PER|FORMER project.
 
+## Why Styr?
+
+**Styr** comes from the Swedish verb *styra*: to steer, guide, direct, or control. *Styr* is its present-tense form — roughly, *steers* or *controls*. The word reaches further back into the Germanic languages: Old Norse *stýra* carried much the same meaning, with relatives still visible in English *steer* and German *steuern*.
+
+That felt appropriate for a sequencer.
+
+Styr provides timing, structure, modulation, probability, routing and generative tools, but it is not intended to make musical decisions for you. The direction remains yours. It is there to steer a performance rather than define it.
+
+The name is also deliberately short and functional: four letters for a device whose job is to keep a fairly complex musical system under control.
+
 > [!IMPORTANT]
 > Styr is an independent project. Westlicht and PER|FORMER identify the upstream hardware and firmware on which inherited parts of this repository are based; they are not Styr branding and are not presented as property of this project.
 
@@ -26,6 +36,7 @@ Styr modernizes the build, simulator, tests, documentation and selected firmware
 ## Index
 
 - [Acknowledgement](#acknowledgement)
+- [Why Styr?](#why-styr)
 - [Project goals](#project-goals)
 - [Current status](#current-status)
 - [Quick start](#quick-start)
@@ -59,14 +70,14 @@ Styr focuses on preserving a capable Eurorack sequencing platform while making c
 |---|---|---|
 | Application firmware | Active | PlatformIO build is part of CI. |
 | SD-card update bundle | Active | Recommended installation path for end users. |
-| Bootloader | Migration blocker | The legacy 32 KiB size constraint is still under investigation. |
+| Bootloader | Critical / gated | The bootloader must link within 32 KiB; host tests, ABI checks and a hard CI size gate protect it. |
 | Native simulator | Active | CMake-based; Windows UCRT64 and Linux workflows are maintained. |
 | Native tests | Active | Unit and integration tests run in CI. |
 | Manual screenshots | Active | Deterministic LCD captures generated from simulator state. |
 | End-user manual | In progress | Screen and feature documentation is being expanded incrementally. |
 
 > [!NOTE]
-> The bootloader build is intentionally allowed to fail in CI while its remaining size delta is investigated. See [`docs/analysis/BOOTLOADER_SIZE.md`](docs/analysis/BOOTLOADER_SIZE.md).
+> The bootloader is release-critical and no longer allowed to fail silently in CI. Its ARM build must fit within 32 KiB and pass the dedicated bootloader verification gates. See [`docs/analysis/BOOTLOADER_SIZE.md`](docs/analysis/BOOTLOADER_SIZE.md).
 
 ## Quick start
 
