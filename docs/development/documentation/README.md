@@ -159,3 +159,24 @@ cmake.exe --build --preset windows-ucrt64-debug --target manual-screenshots
 7. Generate the PNGs and inspect them visually before committing.
 
 From Munich with <img src="../../manual/assets/blue-heart.svg" alt="blue heart" width="14">
+
+## User-manual publication
+
+The maintained user-manual source is Markdown. Release formatting is intentionally non-agentic: agents may update reviewed Markdown before a release, but the tagged commit is converted mechanically to ODT and then PDF.
+
+Publication configuration lives in `docs/manual/manual.toml`, visual parameters in `docs/manual/style/theme.toml`, and the Writer style/master-page reference in `docs/manual/style/styr-reference.odt`. The reference ODT contains no font binaries. Ubuntu 0.83 classic fonts are a pinned ephemeral build dependency prepared by `toolchain/manual/fetch_ubuntu_fonts.py`; strict PDF generation fails on font substitution.
+
+Local style smoke test (with the required fonts already installed):
+
+```bash
+python toolchain/manual/check_manual_pipeline.py
+python toolchain/manual/build_manual.py --smoke --version 0.1.4 --output-dir /tmp/styr-manual-smoke
+python toolchain/manual/check_manual_artifact.py \
+  --odt /tmp/styr-manual-smoke/styr-user-manual.en.0.1.4.odt \
+  --pdf /tmp/styr-manual-smoke/styr-user-manual.en.0.1.4.pdf \
+  --version 0.1.4 --locale en-US --language-code en
+```
+
+For layout debugging only, `build_manual.py --allow-font-substitution` permits a PDF to be rendered without Ubuntu installed. Such an artifact is not release-valid.
+
+`toolchain/manual/build_all_manuals.py` enumerates enabled locales from `manual.toml`, so future languages do not require separate release jobs. The public filename contract is `styr-user-manual.<ISO-639-1>.<tag-version>.pdf`.

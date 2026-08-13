@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Axel Napolitano
+# SPDX-License-Identifier: CC-BY-NC-4.0
+
+[colors]
+# Primary configurable Styr manual accent. The supplied design used blue in a
+# small number of inherited/link styles; Styr intentionally uses black.
+accent = "#000000"
+text = "#1a1a1a"
+secondary_text = "#6e6e6e"
+warning = "#f07d1a"
+warning_background = "#fcebd7"
+positive = "#37b45a"
+negative = "#e23b2e"
+
+[fonts]
+body = "Ubuntu Light"
+heading = "Ubuntu"
+required_families = ["Ubuntu", "Ubuntu Light"]
+
+[page]
+width_mm = 99.01
+height_mm = 210.01
+content_margin_left_mm = 9.0
+content_margin_right_mm = 9.0
+content_margin_top_mm = 12.49
+content_margin_bottom_mm = 12.49

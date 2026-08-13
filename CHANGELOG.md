@@ -29,6 +29,7 @@
 - CI actions and developer workflows were modernized while preserving the established STM32 flash layout, ST-Link path and SD-card update format.
 
 #### Development
+- Added the deterministic user-manual publication foundation: a Styr Writer reference ODT derived from the supplied design template, configurable black theme, pinned ephemeral Ubuntu/Ubuntu Light font preparation, Markdown -> ODT -> PDF tooling, artifact validation, locale-driven naming, and a CI publication smoke test.
 - Simplified documentation-agent orchestration to one maintainer assignment: an authorized sync issue is assigned once to a Styr Documentation Orchestrator, which delegates Analyst -> SME -> Technical Reviewer -> US-English Editor through GitHub's custom-agent `agent` tool inside the same Draft-PR task; specialist handoffs stay in agent context instead of becoming repository analysis files.
 - Added a conservative one-way repository-layout migration for retired public documentation-control artifacts; archive overlays can now be cleaned explicitly without weakening CI checks for stale tracked files.
 - Added transparent README disclosure for agent-assisted user-manual maintenance and replaced the public documentation-sync issue form with a maintainer-only manual workflow that creates explicitly authorized documentation-sync issues without auto-starting Copilot.

@@ -67,6 +67,10 @@ jobs:
         run: python toolchain/check_repository_cleanliness.py
       - name: Validate documentation agent controls
         run: python toolchain/check_documentation_agent_control.py
+      - name: Validate manual publication contract
+        run: python toolchain/manual/check_manual_pipeline.py
+      - name: Test manual publication tooling
+        run: python -m unittest toolchain.tests.test_manual_tooling -v
       - name: Validate first-party source documentation
         run: python toolchain/check_source_documentation.py
       - name: Run complete native product tests with PlatformIO

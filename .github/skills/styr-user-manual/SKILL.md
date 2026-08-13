@@ -206,3 +206,19 @@ The documentation roles have different authority:
 - **Styr Manual US English Editor:** improves user-facing language while preserving established semantics and returns final editorial status to the Orchestrator.
 
 Do not collapse these stages by letting the editorial pass reinterpret technical behavior or the technical-review pass perform an unnecessary stylistic rewrite.
+
+## Publication semantics
+
+The maintained source is Markdown; agents must not add ODT/PDF layout instructions such as explicit colors, point sizes, page geometry, or manual page numbers to ordinary prose. Publication styling is owned by `docs/manual/style/styr-reference.odt`, `docs/manual/style/theme.toml`, and `toolchain/manual/`.
+
+Use normal Markdown headings for hierarchy. Top-level headings become numbered manual chapters during ODT publication. Figures use standard Markdown image/caption syntax. When a callout is necessary, use the semantic Writer custom style:
+
+```markdown
+::: {custom-style="StyrNote"}
+**NOTE**
+
+User-facing note text.
+:::
+```
+
+Do not emulate the callout with HTML, inline color attributes, or hard-coded spacing. The source locale remains `en-US`; the public release artifact uses the locale manifest's ISO 639-1 code (`en` currently). Manual version numbers and artifact filenames come from the release tag, not from hand-maintained Markdown metadata.

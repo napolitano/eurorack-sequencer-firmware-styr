@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Axel Napolitano
+# SPDX-License-Identifier: CC-BY-NC-4.0
+
+[manual]
+title = "Styr User Manual"
+source_locale = "en-US"
+output_basename = "styr-user-manual"
+reference_document = "docs/manual/style/styr-reference.odt"
+theme_document = "docs/manual/style/theme.toml"
+repository_url = "https://github.com/napolitano/eurorack-sequencer-firmware-styr"
+
+# The current repository has only the canonical en-US source locale enabled.
+# Future locales add another table with their own ISO 639-1 release code and
+# ordered chapter list; the build workflow itself must not hard-code languages.
+[locales."en-US"]
+enabled = true
+language_code = "en"
+language_name = "English"
+chapters = [
+  "docs/manual/README.md",
+]
