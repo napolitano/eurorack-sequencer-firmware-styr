@@ -81,31 +81,25 @@ For the planned GitHub Wiki publishing model, see [`WIKI.md`](WIKI.md). The Wiki
 
 Repository-scoped GitHub Copilot custom agents live under `.github/agents/`. They are deliberately manual-only (`disable-model-invocation: true`) and do not run on pushes or pull requests. The shared Styr manual subject-matter and writing contract lives in `.github/skills/styr-user-manual/SKILL.md`.
 
-The intended bundled workflow is:
+The operational workflow is documented in [`AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md). The important execution rule is that the maintainer-created documentation-sync issue is **not assigned to Copilot**. It records authorization and parameters only. Each specialist is started from the GitHub Agents panel/tab as a branch-only prompt session, and every later stage uses the previous agent branch as its base.
 
-1. run the maintainer-only **Create documentation sync issue** workflow (`workflow_dispatch`) from the Actions tab; explicitly select `full-regeneration` or `incremental-release-sync`, then record the target ref, baseline where required, and base branch;
-2. the workflow creates an issue carrying the `internal:documentation-sync` authorization label; do not treat an arbitrary public issue as an agent trigger;
-3. run **Styr Release Documentation Analyst** first. It produces the evidence-backed coverage/impact set and does not author manual prose;
-4. assign/select **Styr Manual SME** to produce one coherent en-US manual change set on its task branch/PR;
-5. run **Styr Manual Technical Reviewer** against the same documentation bundle to verify product facts, values, timing, UI behavior and screenshot consistency;
-6. run **Styr Manual US English Editor** last to normalize readability and language without changing established technical meaning;
-7. merge only after deterministic documentation checks pass and a human has reviewed the bundled result.
+The linear sequence is **Release Documentation Analyst -> Manual SME -> Manual Technical Reviewer -> US-English Editor -> human-created bundled Draft PR**. Intermediate agents do not open PRs. Their temporary handoffs live under `.github/documentation-sync/work/issue-<N>/` only on the chained work branches; the Editor removes that workspace before the final PR is opened.
 
 `full-regeneration` reconstructs the complete current manual and is intended for initial bootstrap, completeness testing and deliberate audits. Its result is review material and must not automatically replace the maintained manual. `incremental-release-sync` is the normal release mode after bootstrap: it preserves unaffected structure, stable documentation identities and unaffected prose while applying only the user-visible release delta and its transitive effects.
 
-The incremental release flow also maintains two distinct user-facing release surfaces: `What's New` covers only the previous-release-to-target interval, while a cumulative version history receives one concise narrative entry per released version. The engineering changelog is an input to this process, not a replacement for either user-facing view.
+The incremental release flow maintains two distinct user-facing release surfaces: `What's New` covers only the previous-release-to-target interval, while a cumulative version history receives one concise narrative entry per released version. The engineering changelog is an input to this process, not a replacement for either user-facing view.
 
-The agents must not merge their own changes or write directly to the protected/base branch. The author may update `docs/manual/**` and, when required for documentation coverage, deterministic capture states in `src/simulator/tools/manual_screenshots.cpp`. The reviewers are more restricted: technical review corrects documentation facts, while the final editorial pass edits only user-facing prose under `docs/manual/**`.
+The agents must not merge their own changes or write directly to the protected/base branch. The author may update `docs/manual/**`, factual manual-Brain modules, and, when required for documentation coverage, deterministic capture states in `src/simulator/tools/manual_screenshots.cpp`. Technical review may correct factual manual/Brain content. The final editorial pass edits only user-facing prose and transient handoff state.
 
 This agent workflow maintains documentation sources; it is not the publication pipeline. Release artifacts must still be produced deterministically from the merged release commit.
 
 ### Documentation-agent authorization
 
-The public issue tracker is **not** an agent-control API. The supported issue-driven entry point is the manually dispatched `.github/workflows/create-documentation-sync.yml` workflow. GitHub requires repository write access to manually run a `workflow_dispatch` workflow, so ordinary external users cannot create an authorized documentation-agent task through this path.
+The public issue tracker is **not** an agent-control API. The supported entry point is the manually dispatched `.github/workflows/create-documentation-sync.yml` workflow. It creates an authorized control issue carrying `internal:documentation-sync`; it does not assign or start Copilot.
 
-The workflow creates the issue itself and applies `internal:documentation-sync`. For defense in depth, issue-driven documentation agents must refuse to make documentation changes when that label is absent. Maintainers may still start an agent directly from GitHub's agent UI, but a public issue, mention, or copied issue body never constitutes authorization by itself.
+The workflow grants only `contents: read` and `issues: write` to its `GITHUB_TOKEN`, does not check out or execute repository code, and leaves agent selection as an explicit maintainer action. The control issue itself warns against assigning it to Copilot because issue assignment opens a PR immediately and bypasses the required branch-only specialist chain.
 
-The workflow grants only `contents: read` and `issues: write` to its `GITHUB_TOKEN`, does not check out or execute repository code, and does not assign Copilot automatically. Agent selection remains an explicit maintainer action.
+When upgrading a working tree from an earlier documentation-agent layout, run `python toolchain/migrate_repository_layout.py` once before committing. Archive overlays cannot delete retired files; the migration removes only known obsolete public-repository paths such as the former `documentation_sync.yml` issue form, `PROVENANCE.md`, and `docs/analysis/`. CI deliberately does not perform this cleanup automatically: stale tracked files must be visible as repository changes and removed in the commit.
 
 ## Screenshot output ownership
 

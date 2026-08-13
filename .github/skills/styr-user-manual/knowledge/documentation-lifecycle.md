@@ -10,6 +10,8 @@ active-locales: [en-US]
 
 The Styr manual is a versioned product artifact, not disposable generated prose. Agent-assisted authoring therefore has two explicit modes with different stability rules.
 
+Both modes use the branch-only multi-agent handoff defined in [`orchestration.md`](orchestration.md). The documentation-sync issue is a control/status record and must not be assigned to Copilot; intermediate agent stages intentionally run without a pull request.
+
 ## Mode 1: Full regeneration
 
 `full-regeneration` reconstructs the complete source-locale manual for a selected target ref from authoritative product evidence.

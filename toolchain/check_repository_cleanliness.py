@@ -41,6 +41,16 @@ for internal_path in (ROOT / "PROVENANCE.md", ROOT / "docs" / "analysis"):
     if internal_path.exists():
         errors.append(f"internal-only documentation packaged in repository: {internal_path.relative_to(ROOT)}")
 
+# Documentation-agent handoff files are intentionally transient. They may
+# exist on chained agent work branches, but the final PR/release tree must not
+# contain them.
+doc_sync_work = ROOT / ".github" / "documentation-sync" / "work"
+if doc_sync_work.exists():
+    errors.append(
+        "transient documentation-sync workspace packaged in repository: "
+        f"{doc_sync_work.relative_to(ROOT)}/"
+    )
+
 for cache_dir in ROOT.rglob("__pycache__"):
     if cache_dir.is_dir():
         errors.append(f"Python bytecode cache in repository: {cache_dir.relative_to(ROOT)}/")
@@ -71,3 +81,4 @@ print(" - no Python __pycache__/ or .pyc artifacts")
 print(" - no build/coverage binaries in repository root")
 print(" - no documentation-image writers in PlatformIO product tests")
 print(" - no internal docs/analysis or root PROVENANCE.md packaged")
+print(" - no transient .github/documentation-sync/work/ handoff workspace packaged")

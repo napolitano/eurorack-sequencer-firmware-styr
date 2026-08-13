@@ -11,6 +11,8 @@ Use this map to locate all mutually affected manual areas before editing.
 | Concept | Primary manual source | Related screen family |
 |---|---|---|
 | Manual entry point | `docs/manual/README.md` | all |
+| What's New (single release interval) | `docs/manual/whats-new.md` | relevant changed screens |
+| Version history | `docs/manual/releases/README.md` and per-release entries | none required by default |
 | Display anatomy | `docs/manual/screens/interface/README.md` | `interface/*` |
 | Tempo / clock / project / patterns / performance | `docs/manual/screens/global/README.md` | `global/*` |
 | Note Track | `docs/manual/screens/note/README.md` | `note/*` |

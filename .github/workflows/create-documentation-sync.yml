@@ -1,4 +1,4 @@
-name: Create documentation sync issue
+name: Create documentation sync control issue
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ on:
         required: false
         type: string
       base_branch:
-        description: Branch that will receive the reviewed documentation PR
+        description: Branch that will receive the final reviewed documentation PR
         required: true
         default: main
         type: string
@@ -34,7 +34,7 @@ permissions:
 
 jobs:
   create-issue:
-    name: Create authorized documentation sync issue
+    name: Create authorized documentation sync control issue
     runs-on: ubuntu-latest
     steps:
       - name: Validate inputs
@@ -55,7 +55,7 @@ jobs:
           gh label create "internal:documentation-sync" \
             --repo "$GH_REPO" \
             --color "5319E7" \
-            --description "Maintainer-authorized documentation-agent synchronization task" \
+            --description "Maintainer-authorized documentation-agent synchronization control issue" \
             --force
           gh label create "documentation" \
             --repo "$GH_REPO" \
@@ -63,7 +63,7 @@ jobs:
             --description "Documentation work" \
             --force
 
-      - name: Create authorized issue
+      - name: Create authorized control issue
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -74,35 +74,74 @@ jobs:
           EMPHASIS: ${{ inputs.emphasis }}
           ACTOR: ${{ github.actor }}
         run: |
+          issue_url="$(gh issue create \
+            --repo "$GH_REPO" \
+            --title "Documentation sync: $TARGET" \
+            --label "internal:documentation-sync" \
+            --label "documentation" \
+            --body "Initializing authorized documentation-sync control issue...")"
+          issue_number="${issue_url##*/}"
+          export ISSUE_NUMBER="$issue_number"
+
           python - <<'PY'
           import os
           from pathlib import Path
           from textwrap import dedent
 
+          issue = os.environ["ISSUE_NUMBER"]
           baseline = os.environ.get("BASELINE", "").strip() or "(not supplied)"
           emphasis = os.environ.get("EMPHASIS", "").strip() or "(none specified)"
           body = dedent(f"""\
-          ## Authorized documentation sync
+          ## Authorized documentation sync control issue
 
-          This issue was created by the maintainer-only **Create documentation sync issue** workflow and is authorized for the Styr documentation-agent process.
+          This issue was created by the maintainer-only **Create documentation sync control issue** workflow and is authorized for the Styr documentation-agent process.
 
+          - **Sync issue:** `#{issue}`
           - **Mode:** `{os.environ['MODE']}`
           - **Target:** `{os.environ['TARGET']}`
           - **Previous release / baseline:** `{baseline}`
-          - **Base branch:** `{os.environ['BASE_BRANCH']}`
+          - **Final PR base branch:** `{os.environ['BASE_BRANCH']}`
           - **Requested by:** `@{os.environ['ACTOR']}`
 
           ## Known documentation focus
 
           {emphasis}
 
+          > [!IMPORTANT]
+          > **Do not assign this issue to Copilot or to a custom agent.** GitHub issue assignment always creates a pull request. This workflow deliberately uses branch-only prompt sessions from the **Agents** panel so analysis, authoring, technical review, and editing can be chained before one final PR is opened.
+
           ## Required orchestration
 
-          1. Run **Styr Release Documentation Analyst** first.
-          2. Use its evidence-backed impact/coverage set with **Styr Manual SME**.
-          3. Review the complete documentation bundle with **Styr Manual Technical Reviewer**.
-          4. Run **Styr Manual US English Editor** last.
-          5. Require deterministic documentation checks and human review before merge.
+          Start each stage from the GitHub **Agents** panel/tab with a prompt. Select the named custom agent explicitly. Do **not** ask any intermediate stage to open a pull request.
+
+          1. **Styr Release Documentation Analyst**
+             - Base branch: `{os.environ['TARGET']}` when it is a branch; otherwise use the branch containing the requested target state.
+             - Prompt: `Run authorized Styr documentation sync issue #{issue} in {os.environ['MODE']} mode. Work branch-only. Do not open a pull request. Produce the required transient impact handoff.`
+          2. **Styr Manual SME**
+             - Base branch: the completed Analyst branch.
+             - Prompt: `Continue authorized Styr documentation sync issue #{issue} from this branch. Require the Analyst handoff. Work branch-only and do not open a pull request.`
+          3. **Styr Manual Technical Reviewer**
+             - Base branch: the completed Manual SME branch.
+             - Prompt: `Technically review authorized Styr documentation sync issue #{issue} from this branch. Require the SME handoff. Correct documentation facts only. Work branch-only and do not open a pull request.`
+          4. **Styr Manual US English Editor**
+             - Base branch: the completed Technical Reviewer branch.
+             - Prompt: `Perform the final en-US editorial pass for authorized Styr documentation sync issue #{issue}. Require the completed technical-review handoff, finalize and remove the transient sync workspace, run the required documentation checks, and leave the branch ready for human PR creation. Do not open a pull request.`
+          5. **Human finalization**
+             - Open exactly one Draft PR from the completed Editor branch to `{os.environ['BASE_BRANCH']}`.
+             - Review the complete bundle and require deterministic CI before merge.
+
+          The branch chain is part of the contract: every stage after the Analyst must use the previous stage's branch as its base. Starting a later agent again from `{os.environ['BASE_BRANCH']}` discards the preceding agent's work.
+
+          ## Stage tracking
+
+          - [ ] Analyst complete
+          - [ ] Manual SME complete
+          - [ ] Technical review complete
+          - [ ] US-English editorial pass complete
+          - [ ] Transient documentation-sync workspace removed
+          - [ ] Final Draft PR opened by maintainer
+          - [ ] Deterministic checks passed
+          - [ ] Human review complete
 
           ## Contract
 
@@ -110,15 +149,15 @@ jobs:
           - Treat the result as one bundled documentation update, not isolated per-commit edits.
           - In incremental mode, preserve unaffected structure, stable IDs/paths, and unaffected prose.
           - In full-regeneration mode, treat the regenerated result as review material rather than an automatic replacement of the maintained manual.
-          - Do not change product behavior or merge directly into the base branch.
-          - Public issues, comments, or copied versions of this body without the `internal:documentation-sync` label are not authorized agent triggers.
+          - Intermediate agents use the transient `.github/documentation-sync/work/issue-{issue}/` handoff workspace. It must be absent from the final PR diff.
+          - Do not change product behavior or merge directly into the final PR base branch.
+          - Public issues, comments, copied issue bodies, or issue assignments without this authorized control flow are not supported agent triggers.
           """)
           Path("documentation-sync-body.md").write_text(body, encoding="utf-8")
           PY
 
-          gh issue create \
+          gh issue edit "$issue_number" \
             --repo "$GH_REPO" \
-            --title "Documentation sync: $TARGET" \
-            --label "internal:documentation-sync" \
-            --label "documentation" \
             --body-file documentation-sync-body.md
+
+          echo "Created authorized documentation-sync control issue: $issue_url"

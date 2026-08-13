@@ -36,6 +36,7 @@ Evidence priority remains:
 | [`timing-and-transport.md`](timing-and-transport.md) | Clock, transport, external synchronization, microtiming, and boundary behavior relevant to users. |
 | [`change-catalog.md`](change-catalog.md) | User-visible Styr changes that documentation agents must consider during release synchronization. |
 | [`documentation-lifecycle.md`](documentation-lifecycle.md) | Full-regeneration versus incremental-release modes, stable identities, What's New, version history, and regeneration testing. |
+| [`orchestration.md`](orchestration.md) | Prompt-driven branch chaining, transient handoffs, stage gates, and the single final PR contract. |
 | [`documentation-map.md`](documentation-map.md) | Mapping from concepts to maintained manual sections and deterministic screenshot families. |
 | [`terminology.md`](terminology.md) | Canonical English terms and stable term IDs for authoring and future localization. |
 | [`localization.md`](localization.md) | Rules for future localized manuals without creating parallel technical truths. |

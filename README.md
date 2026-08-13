@@ -246,7 +246,7 @@ The documentation is intentionally organized by **audience and purpose**, not by
 
 Styr uses repository-scoped AI agents to help analyze, draft, review, and edit the end-user manual. The process is deliberately transparent and review-driven: agent-produced documentation is version-controlled like any other source change, is checked against the implementation, tests, and deterministic screenshots, and requires human review before it becomes part of a release. Release documentation is built from the reviewed repository sources; agents are not used to rewrite the manual at release time.
 
-Documentation-agent work is maintainer-triggered. Public issues or comments are not treated as authorization to run an agent or modify the manual. See [`docs/development/documentation/README.md`](docs/development/documentation/README.md) for the maintenance and authorization model.
+Documentation-agent work is maintainer-triggered. Public issues or comments are not treated as authorization to run an agent or modify the manual. The authorized control issue is not assigned to Copilot; specialist agents run as an explicit branch-only chain before a maintainer opens one bundled documentation PR. See [`docs/development/documentation/AGENT_WORKFLOW.md`](docs/development/documentation/AGENT_WORKFLOW.md) for the operational workflow and [`docs/development/documentation/README.md`](docs/development/documentation/README.md) for the documentation architecture.
 
 ### How the documentation is organized
 
