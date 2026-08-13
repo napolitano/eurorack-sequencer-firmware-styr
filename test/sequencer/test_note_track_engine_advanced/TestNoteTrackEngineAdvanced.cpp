@@ -639,6 +639,38 @@ void test_18_overdub_mode_records_note_after_deterministic_boundary_progression(
         engine.monitorMidi((2 * divisor) + 1, MidiMessage::makeNoteOff(0, 72));
     
 }
+
+void test_19_first_completed_step_live_recording_does_not_underflow_quantization_window() {
+    SequencerHarness harness;
+    auto &app = harness.app();
+    auto &project = app.model.project();
+    auto &engine = app.engine;
+    auto &noteEngine = prepareTwoStepSequence(app);
+    auto &sequence = project.track(0).noteTrack().sequence(0);
+    const uint32_t divisor = sequenceDivisorTicks(sequence);
+
+    project.setSelectedTrackIndex(0);
+    project.setRecordMode(Types::RecordMode::Overdub);
+    engine.setRecording(true);
+
+    sequence.step(0).clear();
+    sequence.step(1).clear();
+
+    noteEngine.tick(0);
+    noteEngine.monitorMidi(1, MidiMessage::makeNoteOn(0, 72, 100));
+
+    // The first completed step begins at tick 0.  The old unsigned
+    // (stepStart - margin) expression wrapped to UINT32_MAX and rejected this
+    // note; it must be quantized to step 0 at the very next boundary.
+    noteEngine.tick(divisor);
+
+    TEST_ASSERT_TRUE(sequence.step(0).gate());
+    TEST_ASSERT_TRUE(sequence.step(0).length() > 0);
+    TEST_ASSERT_FALSE(sequence.step(1).gate());
+
+    noteEngine.monitorMidi(divisor + 1, MidiMessage::makeNoteOff(0, 72));
+}
+
 void setUp() {}
 
 void tearDown() {}
@@ -663,6 +695,7 @@ int main() {
     RUN_TEST(test_16_slide_enabled_step_updates_cv_gradually_during_update);
     RUN_TEST(test_17_negative_note_and_length_variation_ranges_execute_variation_inversion_paths);
     RUN_TEST(test_18_overdub_mode_records_note_after_deterministic_boundary_progression);
+    RUN_TEST(test_19_first_completed_step_live_recording_does_not_underflow_quantization_window);
     return UNITY_END();
 }
 

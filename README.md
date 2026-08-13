@@ -39,6 +39,11 @@ The name is also deliberately short and functional: four letters for a device wh
 - [Why Styr?](#why-styr)
 - [Project goals](#project-goals)
 - [Current status](#current-status)
+- [Changes from PER|FORMER](#changes-from-performer)
+  - [Fixed upstream bugs](#fixed-upstream-bugs)
+  - [Implemented upstream TODOs](#implemented-upstream-todos)
+  - [Improvements](#improvements)
+  - [New features](#new-features)
 - [Quick start](#quick-start)
   - [Firmware](#firmware)
   - [Simulator](#simulator)
@@ -77,7 +82,63 @@ Styr focuses on preserving a capable Eurorack sequencing platform while making c
 | End-user manual | In progress | Screen and feature documentation is being expanded incrementally. |
 
 > [!NOTE]
-> The bootloader is release-critical and no longer allowed to fail silently in CI. Its ARM build must fit within 32 KiB and pass the dedicated bootloader verification gates. See [`docs/analysis/BOOTLOADER_SIZE.md`](docs/analysis/BOOTLOADER_SIZE.md).
+> The bootloader is release-critical and no longer allowed to fail silently in CI. Its ARM build must fit within 32 KiB and pass the dedicated bootloader verification gates. See [`docs/testing/bootloader.md`](docs/testing/bootloader.md).
+
+
+## Changes from PER|FORMER
+
+Styr keeps user-visible changes separate by type. The **Fixed upstream bugs** table contains only defects verified in the original Westlicht PER|FORMER v0.1.42 source. Styr-specific regressions are fixed as normal maintenance and are not attributed to upstream.
+
+### Fixed upstream bugs
+
+| Area | Inherited issue | What Styr does |
+|---|---|---|
+| External clock | The first real BPM measurement required a third edge because timestamp `0` also meant “no previous edge”. | Uses explicit edge-valid state, so the second edge already gives a real tempo measurement. |
+| External clock | Initial slave BPM was strongly pulled toward zero by the startup filter. | Locks the first valid period immediately, then applies tracking to later measurements. |
+| External clock | Alternating swing biased BPM because individual BPM values were smoothed instead of pulse periods. | Estimates tempo in the period domain and tracks swing phase separately. |
+| External clock | Auto mode always used a 500 ms loss-of-clock timeout. | Uses an acquisition window and a timeout derived from the measured pulse period. |
+| External clock | Phase recovery used unsigned time subtraction, so a future deadline could look massively overdue. | Uses wrap-safe signed/modular deadline comparisons. |
+| External clock | Swing interpolation predicted the next interval from the interval that had just ended. | Learns the short/long pair and predicts the opposite interval. |
+| External clock | Slave sub-tick deadlines were unsafe across the 32-bit microsecond rollover. | Uses rollover-safe time comparisons. |
+| External clock | Stop/Continue could retain pending interpolated ticks. | Clears stale interpolation state before transport resumes. |
+| External clock | Disabling the active MIDI/USB clock source could leave the clock stuck running. | Stops and releases the active slave source immediately. |
+| Clock output | Pulse width was derived from master BPM even while slaved. | Derives pulse timing from the tempo source that is actually active. |
+| Sequence | Single-step aligned PingPong could divide/modulo by zero. | Treats a one-step range as a stable one-step sequence. |
+| Sequence | Single-step Free PingPong could temporarily leave its only valid step. | Keeps the playhead on the sole valid step. |
+| Note track | Recording the first completed step could underflow its quantization window. | Uses a bounded first-step recording window without unsigned wraparound. |
+| Note track | A positive gate could quantize to zero ticks at the fastest routed divisor. | Keeps every logically present gate at least one engine tick long. |
+| Note track | Retrigger high pulses could quantize to zero ticks at small divisors. | Limits realized retrigger density to timing that can actually be represented. |
+| Curve track | Free mode could jump phase when its divisor changed. | Keeps a local free-running phase and applies divisor changes without snapping to the transport grid. |
+| Curve track | Next Pattern fill mixed current-pattern gate data with next-pattern curve data. | Evaluates gate and curve from the same next-pattern step. |
+| Curve track | Next Pattern fill used the current pattern's shape-variation probability. | Uses the selected next-pattern step consistently for variation decisions. |
+| Curve track | Step equality ignored gate and gate-probability data, so gate-only edits could appear unchanged. | Compares the complete Curve step state. |
+| Curve track | A present Curve gate could quantize to a zero-tick pulse at the fastest divisor. | Keeps every present Curve gate at least one engine tick long. |
+
+### Implemented upstream TODOs
+
+| Upstream TODO / gap | What Styr does |
+|---|---|
+| Negative Note Gate Offset was explicitly left for future implementation. | Adds signed microtiming with deterministic look-ahead where the next event is knowable, and safe boundary fallback where it is not. |
+
+### Improvements
+
+| Area | What changed |
+|---|---|
+| External clock robustness | Isolated early/late pulses are distinguished from confirmed tempo changes, reducing reactions to double-triggers and single missing pulses. |
+| Note microtiming | Future gate events are scheduled chronologically and generation-owned, so an old Gate-Off cannot cut short a newer pre-triggered gate. |
+| Microtiming boundaries | Forward/Backward loop wraps can pre-trigger exactly; transport start, Reset Measure, linked tracks, pending pattern changes, dynamic Fill and non-deterministic modes use conservative boundary timing instead of guessing. |
+| Simulator timing | Host clock timers now account for the full requested simulated wait interval, including the first millisecond after enable/re-enable. |
+| Build and verification | Firmware tests are owned by PlatformIO/Unity; simulator-only tests remain under CMake/CTest, with hard bootloader and repository-cleanliness gates. |
+
+### New features
+
+| Feature | What it adds |
+|---|---|
+| LFO track | Dedicated Free/Sync modulation track with eight waveforms, voltage range control, clipping and preview support. |
+| Acid Bassline generator | Deterministic acid-style Note patterns with seed, root, length, density and legato controls plus preview/commit workflow. |
+| Overview mini map | Compact indication of the active pattern segment in the overview. |
+| Overview note labels | Note tracks can show note names directly in the overview. |
+| Advanced Settings | Adds a dedicated system page for advanced configuration. |
 
 ## Quick start
 
@@ -176,9 +237,7 @@ The documentation is intentionally organized by **audience and purpose**, not by
 | Understand persistent formats | [`docs/development/formats/README.md`](docs/development/formats/README.md) | Project, settings and user-scale file formats. |
 | Work on sequencer internals | [`docs/development/sequencer/README.md`](docs/development/sequencer/README.md) | Track models, layers and song internals. |
 | Verify behavior | [`docs/testing/README.md`](docs/testing/README.md) | Test strategy and verification procedures. |
-| Read technical investigations | [`docs/analysis/README.md`](docs/analysis/README.md) | Audits, migration notes and unresolved technical investigations. |
 | Consult upstream historical docs | [`docs/legacy/performer/`](docs/legacy/performer/) | Original PER|FORMER technical documents retained as historical reference. |
-| Check authorship and provenance | [`PROVENANCE.md`](PROVENANCE.md) | Relationship between inherited PER|FORMER code and Styr changes. |
 
 ### How the documentation is organized
 
@@ -196,7 +255,6 @@ docs/
 │   ├── formats/            persistent file formats
 │   └── sequencer/          sequencer implementation details
 ├── testing/                test strategy and verification procedures
-├── analysis/               audits, migration work and technical investigations
 └── legacy/performer/       inherited upstream documentation kept unchanged where possible
 ```
 
@@ -207,10 +265,9 @@ The placement rules are:
 3. **Feature guides and screen references are complementary.** Feature guides explain workflows and concepts; screen pages document concrete UI states and controls.
 4. **Developer material belongs in `docs/development/`.** Architecture, formats, source ownership and implementation details should not leak into the user manual unless needed to operate the module.
 5. **Verification belongs in `docs/testing/`.** Test policy and procedures stay separate from implementation design notes.
-6. **Investigations belong in `docs/analysis/`.** These documents may describe unresolved findings and should not be treated as normative user documentation.
-7. **Inherited PER|FORMER documents stay under `docs/legacy/performer/`.** They remain historical/upstream references and retain their original provenance.
-8. **Assets live with the documentation area that owns them.** There is deliberately no generic `docs/assets/` bucket; manual images live in `docs/manual/assets/`.
-9. **Root-level operational READMEs are exceptional entry points.** Firmware update and screenshot-generation procedures stay at repository root because they are frequently used directly from the GitHub landing page.
+6. **Inherited PER|FORMER documents stay under `docs/legacy/performer/`.** They remain historical/upstream references and retain their original provenance.
+7. **Assets live with the documentation area that owns them.** There is deliberately no generic `docs/assets/` bucket; manual images live in `docs/manual/assets/`.
+8. **Root-level operational READMEs are exceptional entry points.** Firmware update and screenshot-generation procedures stay at repository root because they are frequently used directly from the GitHub landing page.
 
 > [!TIP]
 > When adding a new feature, start with a feature README under `docs/manual/features/`, add dedicated screen references under `docs/manual/screens/` for relevant UI states, and add deterministic screenshots to `docs/manual/assets/` where they materially improve the explanation.
@@ -261,7 +318,7 @@ Repository policies live under [`.github/`](.github/):
 
 ## Licensing and provenance
 
-Inherited PER|FORMER source remains MIT-licensed. The root [`LICENSE`](LICENSE), [`LICENSES/MIT.txt`](LICENSES/MIT.txt) and [`PROVENANCE.md`](PROVENANCE.md) describe the software baseline and attribution model. Third-party code retains its own upstream licenses.
+Inherited PER|FORMER source remains MIT-licensed. The root [`LICENSE`](LICENSE) and [`LICENSES/MIT.txt`](LICENSES/MIT.txt), together with file-level authorship/SPDX headers, preserve the software licensing and attribution boundary. Third-party code retains its own upstream licenses.
 
 New Styr-authored documentation is licensed separately under **CC BY-NC 4.0**; see [`docs/LICENSE`](docs/LICENSE). Inherited PER|FORMER documentation under `docs/legacy/performer/` retains its upstream provenance and license.
 

@@ -89,7 +89,6 @@ The checked-in tasks provide the shortest native loop:
 
 CMake/Ninja recompiles only affected translation units. **Simulator: Test Debug** runs the test suite without changing the embedded build.
 
-A possible deeper VSCodium integration using a WebAssembly simulator inside a webview is evaluated in [`docs/analysis/VSCODIUM_SIMULATOR_EXTENSION.md`](../../docs/analysis/VSCODIUM_SIMULATOR_EXTENSION.md).
 
 ## WebAssembly
 

@@ -26,5 +26,6 @@ endfunction()
 # This test is specifically about simulator target recreation and host-side
 # observer/callback lifecycle behavior, so CTest remains the correct owner.
 register_simulator_test(TestSimulatorReboot unit/TestSimulatorReboot.cpp)
+register_simulator_test(TestClockTimer unit/TestClockTimer.cpp)
 
 add_subdirectory(integration)

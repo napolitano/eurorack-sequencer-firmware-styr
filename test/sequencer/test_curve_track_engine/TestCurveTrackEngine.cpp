@@ -575,6 +575,123 @@ void test_19_linked_follower_ignores_non_boundary_relative_tick() {
         TEST_ASSERT_TRUE((followerResult) == (TrackEngine::TickResult::NoUpdate));
     
 }
+
+void test_20_free_mode_divisor_change_keeps_local_phase_instead_of_snapping_to_absolute_grid() {
+    SequencerHarness harness;
+    auto &app = harness.app();
+    auto &engine = configureCurveTrack(app, 0);
+    auto &curveTrack = app.model.project().track(0).curveTrack();
+    auto &sequence = curveTrack.sequence(0);
+
+    sequence.setLastStep(1);
+    curveTrack.setPlayMode(Types::PlayMode::Free);
+    engine.reset();
+
+    engine.tick(0);
+    TEST_ASSERT_TRUE((engine.currentStep()) == (0));
+
+    // With the original 48-tick divisor, advance well beyond the future
+    // 32-tick divisor before changing it.  Free mode should finish its local
+    // phase and trigger the next step on the following tick, rather than wait
+    // for the next absolute 32-tick grid line at tick 64.
+    for (uint32_t t = 1; t < 40; ++t) engine.tick(t);
+    sequence.setDivisor(8); // 8 * (192/48) = 32 engine ticks
+
+    engine.tick(40);
+    TEST_ASSERT_TRUE((engine.currentStep()) == (0));
+    engine.tick(41);
+    TEST_ASSERT_TRUE((engine.currentStep()) == (1));
+}
+
+void test_21_fill_nextpattern_uses_next_pattern_gate_data_not_base_pattern_gate_data() {
+    SequencerHarness harness;
+    auto &app = harness.app();
+    auto &engine = configureCurveTrack(app, 0);
+    auto &project = app.model.project();
+    auto &curveTrack = project.track(0).curveTrack();
+
+    curveTrack.sequence(0).step(0).setGate(0);
+    curveTrack.sequence(1).step(0).setGate(0b0001);
+    curveTrack.sequence(1).step(0).setGateProbability(CurveSequence::GateProbability::Max);
+    curveTrack.setFillMode(CurveTrack::FillMode::NextPattern);
+    project.playState().trackState(0).setFillAmount(100);
+    project.playState().fillTrack(0, true);
+    app.engine.update();
+
+    engine.reset();
+    auto result = engine.tick(0);
+    TEST_ASSERT_TRUE((result & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(engine.gateOutput(0));
+}
+
+void test_22_fill_nextpattern_uses_next_pattern_shape_variation_probability() {
+    SequencerHarness harness;
+    auto &app = harness.app();
+    auto &engine = configureCurveTrack(app, 0);
+    auto &project = app.model.project();
+    auto &curveTrack = project.track(0).curveTrack();
+
+    auto &base = curveTrack.sequence(0).step(0);
+    base.setShape(0);
+    base.setShapeVariation(0);
+    base.setShapeVariationProbability(0);
+
+    auto &fill = curveTrack.sequence(1).step(0);
+    fill.setShape(0);
+    fill.setShapeVariation(1);
+    fill.setShapeVariationProbability(8);
+    fill.setMinNormalized(0.f);
+    fill.setMaxNormalized(1.f);
+
+    curveTrack.setFillMode(CurveTrack::FillMode::NextPattern);
+    project.playState().trackState(0).setFillAmount(100);
+    project.playState().fillTrack(0, true);
+    app.engine.update();
+
+    const uint32_t divisor = sequenceDivisorTicks(engine.sequence());
+    engine.reset();
+    engine.tick(0);
+    engine.tick(divisor / 4);
+    engine.update(0.f);
+
+    TEST_ASSERT_TRUE(engine.cvOutput(0) > 0.f);
+}
+
+void test_23_fastest_routed_divisor_preserves_one_tick_curve_gate_pulse() {
+    SequencerHarness harness;
+    auto &app = harness.app();
+    auto &engine = configureCurveTrack(app, 0);
+    auto &sequence = app.model.project().track(0).curveTrack().sequence(0);
+    sequence.setDivisor(1);
+    engine.reset();
+
+    auto on = engine.tick(0);
+    TEST_ASSERT_TRUE((on & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(engine.gateOutput(0));
+
+    auto off = engine.tick(1);
+    TEST_ASSERT_TRUE((off & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_FALSE(engine.gateOutput(0));
+}
+
+void test_24_curve_sequence_gate_only_edit_is_reported_as_edited() {
+    CurveSequence sequence;
+    sequence.clear();
+    TEST_ASSERT_FALSE(sequence.isEdited());
+
+    sequence.step(0).setGate(1);
+    TEST_ASSERT_TRUE(sequence.isEdited());
+}
+
+void test_25_curve_sequence_gate_probability_only_edit_is_reported_as_edited() {
+    CurveSequence sequence;
+    sequence.clear();
+    TEST_ASSERT_FALSE(sequence.isEdited());
+
+    sequence.step(0).setGateProbability(CurveSequence::GateProbability::Max - 1);
+    TEST_ASSERT_TRUE(sequence.isEdited());
+}
+
 void setUp() {}
 
 void tearDown() {}
@@ -600,6 +717,12 @@ int main() {
     RUN_TEST(test_17_shape_probability_bias_forces_shape_variation_branch);
     RUN_TEST(test_18_fill_active_with_zero_amount_keeps_fill_mode_at_none);
     RUN_TEST(test_19_linked_follower_ignores_non_boundary_relative_tick);
+    RUN_TEST(test_20_free_mode_divisor_change_keeps_local_phase_instead_of_snapping_to_absolute_grid);
+    RUN_TEST(test_21_fill_nextpattern_uses_next_pattern_gate_data_not_base_pattern_gate_data);
+    RUN_TEST(test_22_fill_nextpattern_uses_next_pattern_shape_variation_probability);
+    RUN_TEST(test_23_fastest_routed_divisor_preserves_one_tick_curve_gate_pulse);
+    RUN_TEST(test_24_curve_sequence_gate_only_edit_is_reported_as_edited);
+    RUN_TEST(test_25_curve_sequence_gate_probability_only_edit_is_reported_as_edited);
     return UNITY_END();
 }
 

@@ -1,117 +1,35 @@
 # Changelog
 
-## Step 6.23 — Windows native runtime bundle regression fix
+## Unreleased
 
-- removes the Step 6.22 full `-static` native-test link workaround after it regressed a previously passing baseline suite (`core/io/test_serialization`) on Windows;
-- keeps the selected MSYS2 UCRT64 toolchain deterministic without global `PATH` dependence by inspecting each native PE with `objdump` and staging the transitive toolchain-DLL closure directly beside `program.exe` before PlatformIO executes it;
-- validates the same local-runtime arrangement up front with a small `std::vector` probe, preserving early detection of the `STATUS_ENTRYPOINT_NOT_FOUND` failure class;
-- retains the separate `stb_image_write` support archive required by `Simulator.cpp` and the strengthened repository-cleanliness checks from Step 6.22.
+#### Fixes
+- Reworked external clock acquisition, BPM estimation, swing handling, loss-of-clock timeout and phase tracking; inherited PER|FORMER clock defects are now covered by focused regression tests.
+- Fixed Note/Curve edge cases including single-step PingPong, first-step live-record quantization, zero-width gates/retriggers at very fast divisors, Curve Free divisor changes, Next Pattern consistency and Curve gate edit detection.
+- Reworked negative Note Gate Offset scheduling so deterministic Forward/Backward look-ahead survives loop wraps without stale Gate-Off events cutting newer pre-triggered gates; uncertain future state falls back safely to the boundary.
+- Made `TapTempo.h` self-contained instead of relying on `Clock.h` to include `MovingAverage` first.
+- Fixed simulator clock-timer stepping so a requested simulated wait includes the full first millisecond after timer enable/re-enable; this also stabilizes external-clock relock timing tests.
+- Fixed native Windows test startup by staging the selected MSYS2 UCRT64 runtime DLL closure beside each PlatformIO test executable instead of relying on the global `PATH`.
+- Fixed native PlatformIO link isolation so focused tests pull only the production objects they reference; added the missing `stb_image_write` support archive used by simulator-backed product tests.
+- Fixed PlatformIO Unity dependency discovery for the native product environments.
+- Reduced and hardened the 32 KiB bootloader with a bootloader-local formatter, strict update-image validation, flash-layout/ABI checks and expanded updater/MD5/formatter regression coverage.
+- Fixed simulator callback, observer and periodic-task lifetimes across target destruction/reboot; simulator-owned callbacks now deregister safely.
+- Fixed the LFO function-key mapping for the five-key hardware and several documentation-screenshot navigation/build regressions.
 
-## Step 6.20 — Native test link isolation and simulator test relocation
+#### Improvements
+- External clock tracking now separates isolated bad edges from confirmed tempo changes and keeps detected slave tempo independent from project/master tempo.
+- PlatformIO is the canonical test runner for embedded/product code; CMake/CTest is restricted to simulator-only behavior. The repository currently contains 44 PlatformIO Unity suites with 410 registered product regression cases.
+- Product tests live only under `test/`; simulator-only tests live under `src/simulator/tests/`, with CI ownership and repository-cleanliness gates preventing the two test worlds from drifting together again.
+- Bootloader verification is a hard CI gate: flash layout, UPDATE.DAT ABI, binary size and release-critical native tests are checked explicitly.
+- Native Windows simulator/test builds use the MSYS2 UCRT64 toolchain deterministically and stage required runtime DLLs beside host executables.
+- Manual screenshots are generated headlessly from real simulator state, grouped by feature/screen, validated one-to-one against maintained documentation and scaled with pixel-exact integer nearest-neighbour replication.
+- Repository structure, build glue, third-party boundaries and documentation ownership were reorganized to keep product source under `src/sequencer/`, generic support under `src/shared/`, and build metadata under `toolchain/`.
+- CI actions and developer workflows were modernized while preserving the established STM32 flash layout, ST-Link path and SD-card update format.
 
-- fixes PlatformIO native bootloader suites so production support is linked through static archives; each Unity executable now pulls only the bootloader objects it actually references, preventing unrelated `Console`/FatFs dependencies from contaminating independent tests such as MD5;
-- removes the ambiguous repository-root `tests/` tree and relocates all CMake/CTest-only simulator tests to `src/simulator/tests/`;
-- updates the test-ownership gate so `test/` is the sole repository-root test directory and remains exclusively owned by PlatformIO + Unity.
-
-
-### Step 6.19 — PlatformIO Unity dependency resolution fix
-
-- fixes native PlatformIO Unity builds failing with `fatal error: unity.h: No such file or directory`; the test environments had inherited an inappropriate manual dependency mode (`lib_ldf_mode = off`), so PlatformIO installed/detected Unity but did not add it to the compile dependency graph;
-- enables normal `chain` dependency discovery only for `test_bootloader_native` and `test_product_native`; embedded environments retain their explicit/manual dependency graph;
-- extends the test-ownership gate so a Unity-owned PlatformIO environment can no longer be configured with LDF disabled;
-- removes duplicate native warning/section compiler flags from `native_product_sources.py`; those flags remain canonically declared in `platformio.ini`, while the adapter contributes only the C++11 language requirement;
-- retains the Step 6.18 bootloader coverage expansion (43 Unity cases), Curve artifact cleanup and repository-cleanliness gates unchanged.
-
-### Step 6.18 — Bootloader coverage, native Windows test reliability and artifact cleanup
-
-- hardens PlatformIO native tests on Windows by resolving the project-standard MSYS2 UCRT64 GCC explicitly, exporting the compiler/runtime paths into SCons and probing `g++ --version` before any Unity suite is compiled; this turns the previous diagnostic-free per-object `Error 1` failure mode into one actionable toolchain error;
-- expands release-critical bootloader Unity coverage across formatter multi-argument/boundary behavior, MD5 RFC/padding/1024-byte chunk boundaries, FatFs partial/zero-length reads, minimum/maximum update sizes, bounded error strings, flash-word rounding, `size_t` extremes and all STM32F405 sector boundaries;
-- reuses the tested flash-word rounding policy in the production bootloader programming loop instead of keeping an untested arithmetic expression in `Bootloader.cpp`;
-- removes the inherited Curve markdown/PNG renderer from the PlatformIO product test suite and replaces it with functional Unity assertions for all 17 curve types, representative values, normalization, symmetry, resets and monotonic families;
-- removes accidental `shape-001.png` … `shape-017.png` package artifacts and adds `toolchain/check_repository_cleanliness.py` plus test-ownership checks so documentation-image generation cannot silently re-enter product unit tests or repository-root packages;
-- documents the native Windows toolchain contract and the expanded bootloader verification matrix.
-
-### Step 6.17 — PlatformIO Unity test migration
-
-- migrates all 44 PlatformIO-owned product test suites to PlatformIO's built-in Unity framework: 5 bootloader, 6 shared-core and 33 sequencer suites, currently registering 356 Unity test cases;
-- removes the Styr-specific PlatformIO custom test runner and the inherited assertion framework from the PlatformIO test graph; product tests now include `unity.h` directly and use `UNITY_BEGIN`, `RUN_TEST`, Unity assertions and `UNITY_END`;
-- keeps the inherited lightweight `UnitTest`/`IntegrationTest` helpers only below `src/simulator/tests/framework/`, where they remain implementation detail of simulator-only CMake/CTest coverage rather than a second product-test framework;
-- removes direct inclusion of production `.cpp` files from PlatformIO tests so product sources have one normal compilation path and are linked into the Unity test executables instead;
-- renames the remaining native source-graph build adapter to `native_product_sources.py` and documents that it performs build integration only; test discovery, assertions, execution and result parsing are provided by PlatformIO/Unity;
-- strengthens `toolchain/check_test_ownership.py` to require Unity for PlatformIO product environments, reject custom PlatformIO runners/frameworks and legacy assertion tokens, require conventional Unity suite lifecycle functions, reject production `.cpp` inclusion, and prevent product tests from leaking back into CMake/CTest;
-- updates testing, build and architecture documentation to make the PlatformIO/Unity versus simulator/CMake ownership boundary explicit.
-
-### Step 6.16 — PlatformIO-owned product tests
-
-- makes PlatformIO the canonical test runner for all code that is also built as embedded/product firmware, while CMake/CTest is restricted to simulator-specific host behavior;
-- migrates 44 checked-in product test suites into PlatformIO's hierarchical `test/` tree: 5 bootloader, 6 shared-core and 33 sequencer suites;
-- adds pinned native PlatformIO test environments for bootloader and product logic;
-- adapts the inherited lightweight product-test framework to PlatformIO through a temporary custom runner, preserving the existing test semantics as an intermediate migration step;
-- separates shared STM32 build configuration into the custom `[embedded]` section so native host-test environments do not accidentally inherit MCU, board, upload or ARM-toolchain settings;
-- moves the simulator reboot regression and simulator driver/filesystem integration programs below `src/simulator/tests/`, leaving CMake/CTest with simulator-only ownership;
-- adds `toolchain/check_test_ownership.py` as a CI gate that rejects product-test leakage back into CMake and verifies the expected PlatformIO suite inventory;
-- updates CI and developer/testing documentation so bootloader tests run with `pio test -e test_bootloader_native` and shared-core/sequencer tests with `pio test -e test_product_native`.
-
-### Step 6.15 — README name rationale
-
-- integrates the “Why Styr?” section into the GitHub landing page directly after the acknowledgement and project introduction, while keeping Simon Kallweit’s authorship acknowledgement at the top of the README;
-- adds the section to the README index and explains the Swedish/Germanic name origin in relation to the sequencer’s role;
-- updates the bootloader status text in the README to match the current hard CI gate rather than the superseded temporary `continue-on-error` state.
-
-### Step 6.14 — bootloader safety tests and hard gates
-
-- adds a standalone, simulator-independent CMake/CTest bootloader suite with dedicated regression tests for the compact formatter, update-image size policy, production `UpdateFile` parsing through a fault-injectable fake FatFs backend, STM32F405 flash-sector mapping and the MD5 implementation used by `UPDATE.DAT`;
-- adds deterministic packaging/tooling tests for raw MD5 trailers and the explicit bootloader binary-size gate;
-- adds static CI contracts that cross-check PlatformIO/linker/config flash layout and reject unsupported formatter conversions before target compilation;
-- adds compile-time `VersionTag` size/field-offset assertions plus a bootloader/application ABI gate that checks magic, fixed tag offset and application identity, validates built application images, verifies the raw MD5 trailer, and requires the `UPDATE.DAT` payload to be byte-identical to the firmware binary;
-- makes the bootloader a dedicated hard CI job: `continue-on-error` is removed, the actual ARM build must link inside 32 KiB, and the emitted binary is independently checked against 32,768 bytes;
-- prevents unsigned underflow for malformed `UPDATE.DAT` files shorter than the checksum trailer, uses the FatFs-native `UINT` read-count ABI instead of relying on 32-bit `size_t`, and rejects undersized, oversized, invalid-magic or non-NUL-terminated version-tag update images before they can be accepted;
-- extracts and tests the STM32F405 flash-sector mapping used by the updater, explicitly protecting sectors 0–3 from application erase selection;
-- fixes trailing-`%` handling in the compact formatter so malformed input cannot loop forever, gives the bootloader formatter explicit `bootPrintf`/`bootSnprintf` symbols rather than overriding libc names, and bounds formatting of the currently installed image name even when flash contains a damaged/non-terminated tag.
-
-### Step 6.13 — bootloader size repair
-
-- replaces the generic `stb_sprintf` implementation in the fixed 32 KiB bootloader with a bootloader-local formatter that implements only the conversions actually used by the bootloader (`%s`, `%d`, `%u`, `%x`, `%%`, `l`, field width and zero padding);
-- removes `stb_sprintf.c` from the bootloader build graph while retaining the imported source under `third_party/` for provenance;
-- corrects the update-size diagnostic to print `size_t` through an explicit 32-bit `unsigned long` conversion on the STM32F405 target;
-- keeps application/runtime formatting unchanged; the size reduction is isolated to the bootloader;
-- verifies the compact formatter against the bootloader's active format patterns and records the size repair in `docs/analysis/BOOTLOADER_SIZE.md`.
-
-### Step 6.12 — simulator task lifecycle and reboot regression fix
-
-- fixes the remaining `TestSimulatorReboot` segmentation fault by removing the simulator file task from static header lifetime and making it an explicit `SequencerApp`-owned periodic task;
-- adds RAII registration/deregistration for simulator `os::PeriodicTask` callbacks, so task callbacks cannot survive destruction of the object graph they reference;
-- makes OS callback dispatch removal-safe through stable callback IDs;
-- keeps the standalone simulator callback regression valid without requiring a filesystem volume, and adds progress markers so any future reboot failure is localized to a specific stage/iteration;
-- verified the full reboot regression in a native Linux minimal simulator/sequencer build: both cases pass, including 12 complete target destroy/recreate cycles.
-
-### Step 6.11 — simulator update callback lifecycle fix
-
-- added stable callback IDs and explicit removal for simulator-owned update callbacks;
-- made `ClockTimer` and `ClockSource` deregister their callbacks on destruction;
-- completed frontend observer cleanup during teardown.
-
-### Step 6.10 — CI simulator reboot test link fix
-
-- fixes the Linux CI link failure for `TestSimulatorReboot` by linking the regression test against `styr_sequencer`, matching every other test that instantiates sequencer application types;
-- leaves production firmware and simulator behavior unchanged; this is a test build-graph correction only.
-
-### Step 6.9 — screenshot section isolation and acknowledgement placement
-
-- moves the Simon Kallweit / Westlicht PER|FORMER acknowledgement directly below the repository badges so upstream authorship is explicit before the Styr project description;
-- runs each manual screenshot group in a fresh `styr_manual_screenshots` process while retaining one transactional staging directory;
-- adds section-selective screenshot generation for focused debugging and clearer failure localization;
-- documents the section-isolated screenshot workflow.
-
-## Step 6.7 - GitHub README and documentation index
-
-- Fixed simulator reboot observer lifetime: simulator input drivers now unregister on destruction, preventing dangling observer pointers and access violations during multi-section manual screenshot generation.
-- Added `TestSimulatorReboot` regression coverage for repeated simulator target recreation.
-
-- reworked the root README as a GitHub-oriented project landing page with CI/license/toolchain badges, GitHub alerts, a table of contents, quick-start commands and explicit project status;
-- added a repository-level documentation index and documented the audience/purpose-based documentation layout;
-- expanded `docs/README.md` with a documentation tree, placement rules and operational entry points;
-- kept badge claims limited to workflows, licenses and build/target facts that are actually present in the repository.
+#### Development
+- Removed the experimental Algorithmic Track and retained project serialization version 32 with LFO persistence.
+- Added Windows UCRT64 CMake presets, VSCodium convenience tasks and pinned historical simulator dependency resolution.
+- Expanded the maintained user manual, deterministic screenshot coverage, firmware-update guidance, community-health files and file-level source attribution/SPDX headers.
+- Removed internal analysis/provenance working notes from the public repository; public change attribution is summarized in the README and source attribution remains in file headers and license texts.
 
 ## v0.1.47 (05 April 2026)
 

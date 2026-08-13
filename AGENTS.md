@@ -59,4 +59,4 @@ The simulator is an independent CMake project. Portable hosts use the `debug`/`r
 
 ## Provenance
 
-Moving or refactoring an inherited file does not change its provenance. Follow `PROVENANCE.md` and `docs/development/SOURCE_HEADERS.md`; third-party code keeps its own license, inherited Performer code retains MIT provenance, and future Styr-native licensing is tracked separately. First-party source files must keep their purpose/authorship/SPDX header current when code ownership changes.
+Moving or refactoring an inherited file does not change its provenance. Follow `docs/development/SOURCE_HEADERS.md`; third-party code keeps its own license, inherited Performer code retains MIT attribution in file headers, and Styr-native files keep their own authorship/SPDX metadata. First-party source files must keep their purpose/authorship/SPDX header current when code ownership changes.

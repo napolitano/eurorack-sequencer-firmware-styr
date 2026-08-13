@@ -623,6 +623,222 @@ void test_30_muted_track_suppresses_gate_cv_outputs_while_gate_event_still_gets_
         TEST_ASSERT_FALSE(eng.gateOutput(0));
     
 }
+
+// ── 18. Negative microtiming boundary and overlap regressions ─────────
+
+void test_31_second_step_negative_offset_pretriggers_exactly_before_its_first_boundary() {
+    SequencerHarness h;
+    const int offset = -4;
+    auto &eng = prepareTwoStepEngine(h.app(), 0, offset, 0);
+    const uint32_t divisor = eng.sequence().divisor() * (CONFIG_PPQN / CONFIG_SEQUENCE_PPQN);
+    const uint32_t expected = divisor + gateOnTick(eng.sequence(), offset);
+
+    eng.tick(0);
+    for (uint32_t t = 1; t < expected; ++t) {
+        auto r = eng.tick(t);
+        TEST_ASSERT_FALSE((r & TrackEngine::TickResult::GateUpdate) != 0 && eng.gateOutput(0));
+    }
+
+    auto r = eng.tick(expected);
+    TEST_ASSERT_TRUE((r & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+
+    r = eng.tick(divisor);
+    TEST_ASSERT_FALSE((r & TrackEngine::TickResult::GateUpdate) != 0 && eng.gateOutput(0));
+}
+
+void test_32_forward_wrap_pretriggers_negative_first_step_before_loop_boundary() {
+    SequencerHarness h;
+    const int offset = -4;
+    auto &eng = prepareTwoStepEngine(h.app(), offset, 0, 0);
+    const uint32_t divisor = eng.sequence().divisor() * (CONFIG_PPQN / CONFIG_SEQUENCE_PPQN);
+    const uint32_t expected = 2 * divisor + gateOnTick(eng.sequence(), offset);
+
+    eng.tick(0);
+    for (uint32_t t = 1; t < expected; ++t) eng.tick(t);
+
+    auto r = eng.tick(expected);
+    TEST_ASSERT_TRUE((r & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+
+    r = eng.tick(2 * divisor);
+    TEST_ASSERT_FALSE((r & TrackEngine::TickResult::GateUpdate) != 0 && eng.gateOutput(0));
+}
+
+void test_33_backward_wrap_pretriggers_negative_last_step_before_loop_boundary() {
+    SequencerHarness h;
+    const int offset = -4;
+    auto &eng = prepareTwoStepEngine(h.app(), 0, offset, 0);
+    auto &seq = h.app().model.project().track(0).noteTrack().sequence(0);
+    seq.setRunMode(Types::RunMode::Backward);
+    eng.reset();
+
+    const uint32_t divisor = seq.divisor() * (CONFIG_PPQN / CONFIG_SEQUENCE_PPQN);
+    const uint32_t expected = 2 * divisor + gateOnTick(seq, offset);
+
+    eng.tick(0);       // step 1
+    eng.tick(divisor); // step 0, reserves wrapped step 1
+    for (uint32_t t = divisor + 1; t < expected; ++t) eng.tick(t);
+
+    auto r = eng.tick(expected);
+    TEST_ASSERT_TRUE((r & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+
+    r = eng.tick(2 * divisor);
+    TEST_ASSERT_FALSE((r & TrackEngine::TickResult::GateUpdate) != 0 && eng.gateOutput(0));
+}
+
+void test_34_stale_gate_off_cannot_cut_short_a_newer_pretriggered_gate() {
+    SequencerHarness h;
+    auto &eng = prepareTwoStepEngine(h.app(), 4, -2, NoteSequence::Length::Max);
+
+    // step 0: on @ +24, off @ +72; step 1: pretrigger on @ 36, off @ 84.
+    // The old step-0 gate-off at 72 must not lower the newer step-1 gate.
+    for (uint32_t t = 0; t < 72; ++t) eng.tick(t);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+
+    auto staleOff = eng.tick(72);
+    TEST_ASSERT_FALSE((staleOff & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+
+    auto realOff = eng.tick(84);
+    TEST_ASSERT_TRUE((realOff & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_FALSE(eng.gateOutput(0));
+}
+
+void test_35_reset_measure_is_a_lookahead_barrier_and_clamps_first_postreset_negative_event() {
+    SequencerHarness h;
+    auto &eng = prepareTwoStepEngine(h.app(), -4, 0, 0);
+    auto &seq = h.app().model.project().track(0).noteTrack().sequence(0);
+    seq.setResetMeasure(1);
+    eng.reset();
+
+    const uint32_t divisor = seq.divisor() * (CONFIG_PPQN / CONFIG_SEQUENCE_PPQN);
+    const uint32_t resetTick = h.app().engine.measureDivisor();
+    const uint32_t pretriggerTick = resetTick + gateOnTick(seq, -4);
+    const uint32_t previousBoundary = resetTick - divisor;
+
+    eng.tick(previousBoundary);
+    for (uint32_t t = previousBoundary + 1; t < resetTick; ++t) {
+        auto r = eng.tick(t);
+        if (t >= pretriggerTick) {
+            TEST_ASSERT_FALSE((r & TrackEngine::TickResult::GateUpdate) != 0 && eng.gateOutput(0));
+        }
+    }
+
+    auto atReset = eng.tick(resetTick);
+    TEST_ASSERT_TRUE((atReset & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+}
+
+void test_36_pending_pattern_request_blocks_speculative_negative_lookahead() {
+    SequencerHarness h;
+    auto &eng = prepareTwoStepEngine(h.app(), 0, -4, 0);
+    auto &project = h.app().model.project();
+    const uint32_t divisor = eng.sequence().divisor() * (CONFIG_PPQN / CONFIG_SEQUENCE_PPQN);
+    const uint32_t pretriggerTick = divisor + gateOnTick(eng.sequence(), -4);
+
+    project.playState().selectTrackPattern(0, 1, PlayState::Synced);
+    eng.reset();
+    eng.tick(0);
+
+    for (uint32_t t = 1; t < divisor; ++t) {
+        auto r = eng.tick(t);
+        if (t >= pretriggerTick) {
+            TEST_ASSERT_FALSE((r & TrackEngine::TickResult::GateUpdate) != 0 && eng.gateOutput(0));
+        }
+    }
+
+    auto boundary = eng.tick(divisor);
+    TEST_ASSERT_TRUE((boundary & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+}
+
+void test_37_linked_track_treats_negative_offset_as_boundary_fallback_not_speculative_prediction() {
+    SequencerHarness h;
+    auto &project = h.app().model.project();
+
+    auto &sourceSeq = project.track(0).noteTrack().sequence(0);
+    sourceSeq.clearSteps();
+    sourceSeq.setFirstStep(0);
+    sourceSeq.setLastStep(1);
+    for (int i = 0; i < 2; ++i) {
+        auto &step = sourceSeq.step(i);
+        step.setGate(true);
+        step.setGateProbability(NoteSequence::GateProbability::Max);
+        step.setLength(0);
+        step.setGateOffset(0);
+    }
+
+    auto &followerSeq = project.track(1).noteTrack().sequence(0);
+    followerSeq.clearSteps();
+    followerSeq.setFirstStep(0);
+    followerSeq.setLastStep(1);
+    followerSeq.setRunMode(Types::RunMode::Backward); // intentionally differs from leader
+    for (int i = 0; i < 2; ++i) {
+        auto &step = followerSeq.step(i);
+        step.setGate(true);
+        step.setGateProbability(NoteSequence::GateProbability::Max);
+        step.setLength(0);
+        step.setGateOffset(i == 1 ? -4 : 0);
+    }
+
+    project.track(1).setLinkTrack(0);
+    h.app().engine.update();
+    auto &source = h.app().engine.trackEngine(0).as<NoteTrackEngine>();
+    auto &follower = h.app().engine.trackEngine(1).as<NoteTrackEngine>();
+    source.reset();
+    follower.reset();
+
+    const uint32_t divisor = sourceSeq.divisor() * (CONFIG_PPQN / CONFIG_SEQUENCE_PPQN);
+    source.tick(0);
+    follower.tick(0);
+
+    // Follower must not invent the leader's future state from its own Backward run mode.
+    for (uint32_t t = 1; t < divisor; ++t) {
+        source.tick(t);
+        auto r = follower.tick(t);
+        TEST_ASSERT_FALSE((r & TrackEngine::TickResult::GateUpdate) != 0 && follower.gateOutput(0));
+    }
+
+    source.tick(divisor);
+    auto boundary = follower.tick(divisor);
+    TEST_ASSERT_TRUE((boundary & TrackEngine::TickResult::GateUpdate) != 0);
+}
+
+void test_38_fastest_routed_divisor_preserves_one_tick_minimum_note_gate() {
+    SequencerHarness h;
+    auto &eng = prepareSingleStepEngine(h.app(), 0, 0);
+    auto &seq = h.app().model.project().track(0).noteTrack().sequence(0);
+    seq.setDivisor(1);
+    eng.reset();
+
+    auto on = eng.tick(0);
+    TEST_ASSERT_TRUE((on & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+
+    auto off = eng.tick(1);
+    TEST_ASSERT_TRUE((off & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_FALSE(eng.gateOutput(0));
+}
+
+void test_39_fastest_routed_divisor_limits_retrigger_density_to_resolvable_one_tick_pulses() {
+    SequencerHarness h;
+    auto &eng = prepareSingleStepEngine(h.app(), 0, NoteSequence::Length::Max, true, 3);
+    auto &seq = h.app().model.project().track(0).noteTrack().sequence(0);
+    seq.setDivisor(1);
+    eng.reset();
+
+    TEST_ASSERT_TRUE((eng.tick(0) & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+    TEST_ASSERT_TRUE((eng.tick(1) & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_FALSE(eng.gateOutput(0));
+    TEST_ASSERT_TRUE((eng.tick(2) & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_TRUE(eng.gateOutput(0));
+    TEST_ASSERT_TRUE((eng.tick(3) & TrackEngine::TickResult::GateUpdate) != 0);
+    TEST_ASSERT_FALSE(eng.gateOutput(0));
+}
+
 void setUp() {}
 
 void tearDown() {}
@@ -659,6 +875,15 @@ int main() {
     RUN_TEST(test_28_swing_shifts_gate_event_timing_from_raw_gateoffset_tick);
     RUN_TEST(test_29_fill_mode_gates_injects_gate_at_gateoffset_tick_even_when_step_gate_is_off);
     RUN_TEST(test_30_muted_track_suppresses_gate_cv_outputs_while_gate_event_still_gets_processed);
+    RUN_TEST(test_31_second_step_negative_offset_pretriggers_exactly_before_its_first_boundary);
+    RUN_TEST(test_32_forward_wrap_pretriggers_negative_first_step_before_loop_boundary);
+    RUN_TEST(test_33_backward_wrap_pretriggers_negative_last_step_before_loop_boundary);
+    RUN_TEST(test_34_stale_gate_off_cannot_cut_short_a_newer_pretriggered_gate);
+    RUN_TEST(test_35_reset_measure_is_a_lookahead_barrier_and_clamps_first_postreset_negative_event);
+    RUN_TEST(test_36_pending_pattern_request_blocks_speculative_negative_lookahead);
+    RUN_TEST(test_37_linked_track_treats_negative_offset_as_boundary_fallback_not_speculative_prediction);
+    RUN_TEST(test_38_fastest_routed_divisor_preserves_one_tick_minimum_note_gate);
+    RUN_TEST(test_39_fastest_routed_divisor_limits_retrigger_density_to_resolvable_one_tick_pulses);
     return UNITY_END();
 }
 

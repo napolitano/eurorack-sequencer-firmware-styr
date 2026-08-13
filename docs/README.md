@@ -3,7 +3,7 @@
 
 # Styr documentation
 
-This directory contains the maintained documentation for Styr. It is organized by **audience and purpose** so that end-user instructions, implementation details, verification procedures, investigations and inherited upstream material remain clearly separated.
+This directory contains the maintained public documentation for Styr. It is organized by **audience and purpose** so that end-user instructions, implementation details, verification procedures and inherited upstream material remain clearly separated.
 
 > [!IMPORTANT]
 > Markdown under the maintained Styr documentation tree is hand-maintained source material. Documentation tooling may regenerate owned assets such as screenshots, but must not overwrite the Markdown pages themselves.
@@ -23,7 +23,6 @@ This directory contains the maintained documentation for Styr. It is organized b
 | `manual/` | End users | Operation, features, UI screens, controls and manual-owned assets. | [`manual/README.md`](manual/README.md) |
 | `development/` | Developers | Architecture, build workflows, formats, documentation tooling, fonts and sequencer internals. | [`development/README.md`](development/README.md) |
 | `testing/` | Developers / maintainers | Test strategy, regression procedures and verification guidance. | [`testing/README.md`](testing/README.md) |
-| `analysis/` | Maintainers / contributors | Audits, migration notes, technical investigations and unresolved findings. | [`analysis/README.md`](analysis/README.md) |
 | `legacy/performer/` | Historical reference | Inherited PER|FORMER technical documentation. | [`legacy/performer/`](legacy/performer/) |
 
 ## Documentation tree
@@ -42,7 +41,6 @@ docs/
 │   ├── formats/            persistent file formats
 │   └── sequencer/          sequencer implementation details
 ├── testing/                verification and test documentation
-├── analysis/               audits and investigations
 └── legacy/performer/       inherited upstream documents
 ```
 
@@ -53,9 +51,8 @@ docs/
 3. **Keep Markdown stable.** Screenshot generation replaces PNG files only; it never regenerates or overwrites the corresponding Markdown pages.
 4. **Put implementation details in `development/`.** Architecture, source ownership, formats and internal behavior belong there.
 5. **Put verification in `testing/`.** Test strategy and procedures should remain distinct from implementation documentation.
-6. **Put unresolved work in `analysis/`.** Analysis documents may become outdated as investigations conclude and therefore are not normative user documentation.
-7. **Keep inherited documentation isolated.** `legacy/performer/` preserves original PER|FORMER documentation as historical and technical reference rather than silently folding it into Styr-authored material.
-8. **Keep assets local to their owner.** Create an `assets/` directory only where images are actually needed. User-manual screenshots therefore live under `manual/assets/`; there is intentionally no global `docs/assets/` directory.
+6. **Keep inherited documentation isolated.** `legacy/performer/` preserves original PER|FORMER documentation as historical and technical reference rather than silently folding it into Styr-authored material.
+7. **Keep assets local to their owner.** Create an `assets/` directory only where images are actually needed. User-manual screenshots therefore live under `manual/assets/`; there is intentionally no global `docs/assets/` directory.
 
 > [!TIP]
 > For a new user-visible feature, normally add a feature guide under `manual/features/`, dedicated screen/state documents under `manual/screens/`, and deterministic screenshots under `manual/assets/` where they help explain the UI.

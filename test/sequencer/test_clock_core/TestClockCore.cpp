@@ -16,6 +16,7 @@
  */
 #include <unity.h>
 
+#include "engine/TapTempo.h" // header self-containment regression: include before Clock.h
 #include "engine/Clock.h"
 
 #include "core/Simulator.h"
@@ -305,11 +306,22 @@ void test_11_slave_transport_calls_are_ignored_while_master_clock_is_running() {
     
 }
 
-void test_12_avgslaveperiod_returns_zero_before_any_samples() {
+void test_12_second_slave_edge_produces_first_real_bpm_measurement() {
         ClockHarness harness;
         auto &clock = harness.clock();
 
-        TEST_ASSERT_TRUE((clock.avgSlavePeriod()) == (uint32_t(0)));
+        // 48 internal ticks per external edge corresponds to the default
+        // four external pulses per quarter note.
+        clock.setMasterBpm(60.f);
+        clock.slaveConfigure(0, 48, true);
+        clock.slaveStart(0);
+        harness.drainEvents();
+
+        clock.slaveTick(0);
+        harness.waitMs(125);
+        clock.slaveTick(0);
+
+        TEST_ASSERT_FLOAT_WITHIN(1.0f, 120.f, clock.bpm());
     
 }
 
@@ -328,21 +340,22 @@ void test_13_slavestart_on_already_active_slave_keeps_slave_running() {
     
 }
 
-void test_14_slave_period_window_rollover_and_averaging_path_remain_stable() {
+void test_14_slave_timing_remains_stable_over_many_realistic_edges() {
         ClockHarness harness;
         auto &clock = harness.clock();
 
-        clock.slaveConfigure(0, 12, true);
+        clock.slaveConfigure(0, 48, true);
         clock.slaveStart(0);
         harness.drainEvents();
 
+        clock.slaveTick(0);
         for (int i = 0; i < 48; ++i) {
-            harness.waitMs(2);
+            harness.waitMs(125);
             clock.slaveTick(0);
         }
 
         TEST_ASSERT_TRUE((clock.activeMode()) == (Clock::Mode::Slave));
-        TEST_ASSERT_TRUE(clock.bpm() > 0.f);
+        TEST_ASSERT_FLOAT_WITHIN(0.75f, 120.f, clock.bpm());
     
 }
 
@@ -359,6 +372,105 @@ void test_15_non_zero_swing_path_executes_during_master_output_scheduling() {
         TEST_ASSERT_TRUE(harness.listener().midi.size() > 0);
     
 }
+
+void test_16_external_edges_do_not_accumulate_one_subtick_of_phase_lag_per_pulse() {
+        ClockHarness harness;
+        auto &clock = harness.clock();
+
+        clock.slaveConfigure(0, 48, true);
+        clock.slaveStart(0);
+        harness.drainEvents();
+        clock.slaveTick(0);
+
+        for (uint32_t edge = 1; edge <= 4; ++edge) {
+            harness.waitMs(125);
+            TEST_ASSERT_EQUAL_UINT32(edge * 48, clock.tick());
+            clock.slaveTick(0);
+        }
+    
+}
+
+void test_17_slave_stop_continue_clears_stale_subtick_backlog() {
+        ClockHarness harness;
+        auto &clock = harness.clock();
+
+        clock.slaveConfigure(0, 48, true);
+        clock.slaveStart(0);
+        harness.drainEvents();
+        clock.slaveTick(0);
+        harness.waitMs(60);
+
+        clock.slaveStop(0);
+        harness.drainEvents();
+        uint32_t stoppedTick = clock.tick();
+
+        clock.slaveContinue(0);
+        harness.drainEvents();
+        harness.waitMs(100);
+
+        // Continue must not replay interpolation ticks left pending before Stop.
+        TEST_ASSERT_EQUAL_UINT32(stoppedTick, clock.tick());
+    
+}
+
+void test_18_disabling_active_slave_source_stops_clock_instead_of_leaving_it_stuck() {
+        ClockHarness harness;
+        auto &clock = harness.clock();
+
+        clock.slaveConfigure(1, 8, true);
+        clock.slaveStart(1);
+        harness.drainEvents();
+        TEST_ASSERT_TRUE(clock.isRunning());
+        TEST_ASSERT_TRUE((clock.activeMode()) == (Clock::Mode::Slave));
+
+        clock.slaveConfigure(1, 8, false);
+
+        TEST_ASSERT_TRUE(clock.isIdle());
+        TEST_ASSERT_TRUE((clock.checkEvent()) == (Clock::Event::Stop));
+
+        // Once disabled and idle, transport/tick calls remain ignored.
+        harness.drainEvents();
+        clock.slaveTick(1);
+        clock.slaveContinue(1);
+        clock.slaveReset(1);
+        TEST_ASSERT_TRUE(clock.isIdle());
+        TEST_ASSERT_TRUE((clock.checkEvent()) == (Clock::Event(0)));
+    
+}
+
+
+void test_19_learned_external_swing_pair_keeps_internal_phase_aligned() {
+        ClockHarness harness;
+        auto &clock = harness.clock();
+
+        clock.slaveConfigure(0, 48, true);
+        clock.slaveStart(0);
+        harness.drainEvents();
+        clock.slaveTick(0);
+
+        // The first 100/150 ms pair teaches the alternating source phase.
+        harness.waitMs(100);
+        clock.slaveTick(0);
+        harness.waitMs(150);
+        clock.slaveTick(0);
+        TEST_ASSERT_EQUAL_UINT32(96, clock.tick());
+
+        // Once the pair is known, each subsequent external edge must land on
+        // the expected 48-tick boundary instead of only regaining phase at the
+        // end of the long/short pair.
+        harness.waitMs(100);
+        TEST_ASSERT_EQUAL_UINT32(144, clock.tick());
+        clock.slaveTick(0);
+
+        harness.waitMs(150);
+        TEST_ASSERT_EQUAL_UINT32(192, clock.tick());
+        clock.slaveTick(0);
+
+        harness.waitMs(100);
+        TEST_ASSERT_EQUAL_UINT32(240, clock.tick());
+    
+}
+
 void setUp() {}
 
 void tearDown() {}
@@ -376,10 +488,14 @@ int main() {
     RUN_TEST(test_09_slave_guard_paths_keep_active_source_unchanged_when_wrong_slave_id_is_used);
     RUN_TEST(test_10_slave_tick_is_ignored_when_source_is_inactive_or_not_active_slave);
     RUN_TEST(test_11_slave_transport_calls_are_ignored_while_master_clock_is_running);
-    RUN_TEST(test_12_avgslaveperiod_returns_zero_before_any_samples);
+    RUN_TEST(test_12_second_slave_edge_produces_first_real_bpm_measurement);
     RUN_TEST(test_13_slavestart_on_already_active_slave_keeps_slave_running);
-    RUN_TEST(test_14_slave_period_window_rollover_and_averaging_path_remain_stable);
+    RUN_TEST(test_14_slave_timing_remains_stable_over_many_realistic_edges);
     RUN_TEST(test_15_non_zero_swing_path_executes_during_master_output_scheduling);
+    RUN_TEST(test_16_external_edges_do_not_accumulate_one_subtick_of_phase_lag_per_pulse);
+    RUN_TEST(test_17_slave_stop_continue_clears_stale_subtick_backlog);
+    RUN_TEST(test_18_disabling_active_slave_source_stops_clock_instead_of_leaving_it_stuck);
+    RUN_TEST(test_19_learned_external_swing_pair_keeps_internal_phase_aligned);
     return UNITY_END();
 }
 

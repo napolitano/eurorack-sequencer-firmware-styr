@@ -69,7 +69,12 @@ private:
         if (!_enabled) {
             return;
         }
-        double ticks = _simulator.ticks();
+
+        // Simulator::step() invokes update callbacks at the beginning of the
+        // 1 ms step and increments its public tick counter at the end. Account
+        // for the interval that is currently being simulated; otherwise the
+        // first wait after enable/re-enable is one millisecond short.
+        double ticks = _simulator.ticks() + 1.0;
         while (ticks - _lastTicks >= _periodTicks) {
             _lastTicks += _periodTicks;
             if (_listener) {

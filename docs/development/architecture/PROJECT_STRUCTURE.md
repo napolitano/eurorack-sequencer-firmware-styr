@@ -89,7 +89,6 @@ docs/
 │   └── screens/            per-area indexes + one Markdown document per captured UI state
 ├── development/            architecture/build/formats/tooling
 ├── testing/                test and verification documentation
-├── analysis/               audits and design investigations
 └── legacy/performer/       inherited historical documentation
 ```
 

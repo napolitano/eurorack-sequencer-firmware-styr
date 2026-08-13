@@ -66,7 +66,7 @@ cmake --build --preset release
 ctest --preset release --output-on-failure
 ```
 
-The CTest suite must not become a second owner of embedded/product unit tests. At present `TestSimulatorReboot` remains there because its subject is specifically simulator target recreation and host-side observer/callback lifecycle behavior.
+The CTest suite must not become a second owner of embedded/product unit tests. At present `TestSimulatorReboot` covers target recreation and host-side observer/callback lifecycle behavior, while `TestClockTimer` covers simulator-only elapsed-time accounting used by host clock tests.
 
 ## Ownership gate
 

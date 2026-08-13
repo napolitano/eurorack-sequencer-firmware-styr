@@ -188,6 +188,10 @@ require("TestSimulatorReboot" in SIM_CMAKE,
         "simulator lifecycle regression must remain in CTest")
 require((SIM_TEST_ROOT / "unit" / "TestSimulatorReboot.cpp").is_file(),
         "missing simulator-specific TestSimulatorReboot source")
+require("TestClockTimer" in SIM_CMAKE,
+        "simulator ClockTimer elapsed-time regression must remain in CTest")
+require((SIM_TEST_ROOT / "unit" / "TestClockTimer.cpp").is_file(),
+        "missing simulator-specific TestClockTimer source")
 
 if errors:
     print("Test ownership validation FAILED:")
@@ -206,4 +210,4 @@ print(" - Windows native runtime: local toolchain DLL probe + transitive runtime
 print(" - Simulator.cpp PNG dependency: stb_image_write implementation linked")
 print(" - custom PlatformIO test runner: none")
 print(" - CMake/CTest product-test references: none")
-print(" - simulator lifecycle CTest: TestSimulatorReboot")
+print(" - simulator CTest regressions: TestSimulatorReboot, TestClockTimer")

@@ -33,6 +33,14 @@ for generated_dir in (ROOT / ".pio", ROOT / "build"):
     if generated_dir.exists():
         errors.append(f"generated build directory in repository root: {generated_dir.name}/")
 
+
+# Maintainer analysis/provenance working notes are intentionally kept outside
+# the public repository. User-facing attribution belongs in README/source
+# headers; detailed audit ledgers remain private working material.
+for internal_path in (ROOT / "PROVENANCE.md", ROOT / "docs" / "analysis"):
+    if internal_path.exists():
+        errors.append(f"internal-only documentation packaged in repository: {internal_path.relative_to(ROOT)}")
+
 for cache_dir in ROOT.rglob("__pycache__"):
     if cache_dir.is_dir():
         errors.append(f"Python bytecode cache in repository: {cache_dir.relative_to(ROOT)}/")
@@ -62,3 +70,4 @@ print(" - no root .pio/ or build/ directories")
 print(" - no Python __pycache__/ or .pyc artifacts")
 print(" - no build/coverage binaries in repository root")
 print(" - no documentation-image writers in PlatformIO product tests")
+print(" - no internal docs/analysis or root PROVENANCE.md packaged")
