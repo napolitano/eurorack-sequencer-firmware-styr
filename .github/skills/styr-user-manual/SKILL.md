@@ -7,6 +7,8 @@ description: Repository-specific subject-matter and writing contract for authori
 
 Use this skill whenever working on the maintained Styr end-user manual or reviewing documentation for user-visible behavior.
 
+Before authoring or reviewing, read `.github/skills/styr-user-manual/knowledge/README.md`. Load the knowledge modules relevant to the task before inspecting implementation detail. The knowledge base is shared across all present and future language agents; it is a curated navigation/fact layer, not a substitute for verifying current product behavior.
+
 ## Product context
 
 Styr is a firmware modernization of the Westlicht PER|FORMER sequencer. It is a performance-oriented Eurorack sequencer with multiple track types, CV/gate and MIDI behavior, pattern/song structure, routing, clocking, generators, and a compact hardware UI.
@@ -50,6 +52,8 @@ Screenshot behavior and validation are described by:
 - `src/simulator/tools/manual_screenshots.cpp`.
 
 Do not treat `docs/development/` as end-user prose. Do not put user-manual prose into C++ API comments.
+
+Shared documentation-agent knowledge lives under `.github/skills/styr-user-manual/knowledge/`. Keep it concise, factual, and locale-neutral in meaning. US English is the canonical source locale; future localized manuals must reuse the same technical knowledge rather than creating language-specific factual forks.
 
 ## Subject-matter model
 

@@ -69,6 +69,14 @@ The intended future documentation build is deliberately staged:
 
 That publishing pipeline is a future task and is **not implemented by the current source-documentation pass**.
 
+## Shared manual knowledge base
+
+The documentation agents share a curated Markdown knowledge base under `.github/skills/styr-user-manual/knowledge/`. It captures the stable product model, interaction concepts, track/timing terminology, documentation map, current change-impact catalog, and localization rules. It is deliberately human-editable and versioned with the product.
+
+The knowledge base is not a generated database and is not the published manual. Current implementation/tests remain authoritative, while the knowledge files provide a compact starting context so authoring and review agents do not need to rediscover the complete product model for every documentation sync. US English is the canonical source locale; future German, French, Italian, or other localization agents must reuse the same technical knowledge rather than create independent factual forks.
+
+For the planned GitHub Wiki publishing model, see [`WIKI.md`](WIKI.md). The Wiki is treated as a derived publication target because GitHub stores it in a separate Git repository. Canonical content remains in the main Styr repository and can later be synchronized explicitly after review.
+
 ## User-manual agents
 
 Repository-scoped GitHub Copilot custom agents live under `.github/agents/`. They are deliberately manual-only (`disable-model-invocation: true`) and do not run on pushes or pull requests. The shared Styr manual subject-matter and writing contract lives in `.github/skills/styr-user-manual/SKILL.md`.
