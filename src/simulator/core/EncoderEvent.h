@@ -18,11 +18,14 @@
 
 namespace sim {
 
+/**
+ * @brief Enumerates the supported encoder event values.
+ */
 enum class EncoderEvent {
-    Left,
-    Right,
-    Down,
-    Up,
+    Left, ///< Selects the left encoder event.
+    Right, ///< Selects the right encoder event.
+    Down, ///< Selects the down encoder event.
+    Up, ///< Selects the up encoder event.
 };
 
 } // namespace sim

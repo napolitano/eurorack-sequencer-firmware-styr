@@ -447,7 +447,7 @@ static std::vector<GlyphBitmap> buildTargetGlyphs(const std::vector<GlyphBitmap>
     }
 
     // If the source table does not contain C64 extended indices, fall back to direct mapping.
-    constexpr int kMaxC64SourceIndexNeeded = 282;
+    constexpr int kMaxC64SourceIndexNeeded = 282; ///< Highest source glyph index required by the C64-to-bitmap-font conversion table. ///< Highest source glyph index required by the C64-to-bitmap-font conversion table.
     if (static_cast<int>(sourceGlyphs.size()) <= kMaxC64SourceIndexNeeded) {
         for (int code = opt.firstChar; code <= opt.lastChar; ++code) {
             const int sourceIndex = code;

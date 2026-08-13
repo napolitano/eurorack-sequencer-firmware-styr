@@ -26,9 +26,12 @@
 namespace {
 
 // Default behavior remains backward compatible with existing 8x8 assets.
-constexpr int kDefaultWidth = 8;
+constexpr int kDefaultWidth = 8; ///< Default glyph width in pixels when the source does not specify one. ///< Default glyph width in pixels when the source does not specify one.
+/// @brief Default glyph height, in pixels.
 constexpr int kDefaultHeight = 8;
+/// @brief Minimum accepted glyph width or height, in pixels.
 constexpr int kMinGlyphDimension = 1;
+/// @brief Maximum accepted glyph width or height, in pixels.
 constexpr int kMaxGlyphDimension = 128;
 
 struct CliOptions {

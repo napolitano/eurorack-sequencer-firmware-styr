@@ -20,8 +20,18 @@
 
 #include "os/os.h"
 
+/**
+ * @brief Tracks repeated/held key presses and emits count-aware press events.
+ */
 class KeyPressEventTracker {
 public:
+    /**
+     * @brief Processes the supplied input for this component.
+     *
+     * @param[in] key Key identifier associated with the input event.
+     *
+     * @return Result of process().
+     */
     KeyPressEvent process(const Key &key) {
         uint32_t currentTicks = os::ticks();
         uint32_t deltaTicks = currentTicks - _lastTicks;
@@ -39,7 +49,13 @@ public:
     }
 
 private:
-    uint8_t _lastCode = Key::None;
-    uint32_t _lastTicks = 0;
-    uint8_t _count = 1;
+    /**
+     * @brief Most recently observed code.
+     */
+    uint8_t _lastCode = Key::None; ///< Key code from the previous key event, used to recognize repeat/hold transitions.
+    /**
+     * @brief Most recently observed ticks.
+     */
+    uint32_t _lastTicks = 0; ///< System tick of the previous key event, used for repeat/hold timing.
+    uint8_t _count = 1; ///< Consecutive press count for the key currently tracked by this helper.
 };

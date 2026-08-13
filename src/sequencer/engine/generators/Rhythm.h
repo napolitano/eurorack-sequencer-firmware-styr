@@ -24,6 +24,14 @@ namespace Rhythm {
 
     typedef RhythmString<CONFIG_STEP_COUNT> Pattern;
 
+    /**
+     * @brief Generates a Euclidean rhythm pattern for the requested beats and steps.
+     *
+     * @param[in] beats Number of active pulses distributed across the Euclidean pattern.
+     * @param[in] steps Fixed-size sequence-step array to modify.
+     *
+     * @return Generated rhythm pattern containing the requested pulse distribution.
+     */
     Pattern euclidean(int beats, int steps);
 
 } // namespace Rhythm

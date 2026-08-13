@@ -99,7 +99,9 @@ static CCMRAM_BSS Engine engine(model, clockTimer, adc, dac, dio, gateOutput, mi
 static CCMRAM_BSS Ui ui(model, engine, lcd, blm, encoder);
 
 
+/// @brief Number of critical runtime tasks participating in the watchdog-alive mask.
 static constexpr uint32_t TaskAliveCount = 4;
+/// @brief Bit mask requiring every critical runtime task to report alive.
 static constexpr uint32_t TaskAliveMask = (1 << TaskAliveCount) - 1;
 static uint32_t taskAliveState;
 

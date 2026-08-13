@@ -18,13 +18,42 @@
 
 #include <string>
 
+/**
+ * @brief Provides the console hardware/platform abstraction.
+ */
 class Console {
 public:
+    /**
+     * @brief Writes the supplied value/data to the destination.
+     *
+     * @param[in] c Character, color, or scalar value as defined by the called interface.
+     */
     static void write(char c);
+    /**
+     * @brief Writes the supplied value/data to the destination.
+     *
+     * @param[in] s String/scalar operand supplied by the caller.
+     */
     static void write(const char *s);
+    /**
+     * @brief Writes the supplied value/data to the destination.
+     *
+     * @param[in] s String/scalar operand supplied by the caller.
+     * @param[in] length Number of bytes or elements covered by the operation.
+     */
     static void write(const char *s, size_t length);
+    /**
+     * @brief Writes the supplied value/data to the destination.
+     *
+     * @param[in] s String/scalar operand supplied by the caller.
+     */
     static void write(const std::string &s);
 
 private:
+    /**
+     * @brief Sends the supplied data through this transport/interface.
+     *
+     * @param[in] c Character, color, or scalar value as defined by the called interface.
+     */
     static void send(char c);
 };

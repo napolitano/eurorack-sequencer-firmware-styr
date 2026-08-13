@@ -20,6 +20,16 @@
 
 namespace SequenceUtils {
 
+/**
+ * @brief Rotates a step index within an inclusive sequence range with wrap-around.
+ *
+ * @param[in] step Edit step size or zero-based sequence step as defined by the operation.
+ * @param[in] firstStep First inclusive active sequence-step index.
+ * @param[in] lastStep Last inclusive active sequence-step index.
+ * @param[in] rotate Signed number of steps by which to rotate the position.
+ *
+ * @return Computed result in the domain described by this function.
+ */
 static int rotateStep(int step, int firstStep, int lastStep, int rotate) {
     ASSERT(firstStep <= lastStep, "invalid first/last step");
 

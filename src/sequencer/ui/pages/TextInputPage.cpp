@@ -25,7 +25,7 @@
 
 #include <cstring>
 
-static const char characterSet[] = TXT_CHARACTER_SET;
+static const char characterSet[] = TXT_CHARACTER_SET; ///< Character repertoire available to the on-device text editor. ///< Character repertoire available to the on-device text editor.
 
 enum class Function {
     Backspace   = 0,

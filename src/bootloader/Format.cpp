@@ -43,6 +43,7 @@ struct Output {
 };
 
 static void writeUnsigned(Output &out, uint32_t value, unsigned base, unsigned width, char pad) {
+    /// @brief Lowercase hexadecimal digit table used by the bootloader formatter.
     static const char digits[] = "0123456789abcdef";
     char reversed[10];
     unsigned used = 0;

@@ -23,18 +23,42 @@
 
 namespace sim {
 
+/**
+ * @brief Provides clock source behavior for the desktop simulator.
+ */
 class ClockSource {
 public:
+    /**
+     * @brief Constructs a ClockSource instance.
+     *
+     * @param[in] simulator Simulator instance associated with the frontend/platform object.
+     * @param[in] handler Callback invoked when the associated event occurs.
+     */
     ClockSource(Simulator &simulator, std::function<void()> handler) :
+        /**
+         * @brief Returns the simulator.
+         */
         _simulator(simulator),
+        /**
+         * @brief Returns the handler.
+         */
         _handler(handler),
         _updateCallbackId(_simulator.addUpdateCallback([this] () { update(); }))
+    /**
+     * @brief Destroys the ClockSource instance.
+     */
     {}
 
+    /**
+     * @brief Destroys the ClockSource instance.
+     */
     ~ClockSource() {
         _simulator.removeUpdateCallback(_updateCallbackId);
     }
 
+    /**
+     * @brief Toggles the current state.
+     */
     void toggle() {
         _active = !_active;
         if (_active) {
@@ -43,28 +67,63 @@ public:
             _pulseIndex = 0;
         }
     }
+    /**
+     * @brief Returns the active.
+     *
+     * @return `true` if active; otherwise `false`.
+     */
     bool active() const {
         return _active;
     }
 
+    /**
+     * @brief Returns the ppqn.
+     *
+     * @return Sequencer clock resolution in pulses per quarter note (PPQN).
+     */
     int ppqn() const {
         return _ppqn;
     }
 
+    /**
+     * @brief Sets the ppqn.
+     *
+     * @param[in] ppqn New clock resolution in pulses per quarter note to store or apply.
+     */
     void setPpqn(int ppqn) {
         _ppqn = std::max(1, ppqn);
     }
 
+    /**
+     * @brief Returns the bpm.
+     *
+     * @return Tempo in beats per minute.
+     */
     double bpm() const {
         return _bpm;
     }
 
+    /**
+     * @brief Sets the bpm.
+     *
+     * @param[in] bpm Tempo in beats per minute.
+     */
     void setBpm(double bpm) {
         _bpm = std::max(1.0, bpm);
     }
 
+    /**
+     * @brief Returns the swing.
+     *
+     * @return Configured swing amount in the model-defined percentage/range.
+     */
     int swing() const { return _swing; }
 
+    /**
+     * @brief Sets the swing.
+     *
+     * @param[in] swing Swing setting in the model-defined range.
+     */
     void setSwing(int swing) {
         int newSwing = std::max(0, std::min(100, swing));
         if (newSwing != _swing) {
@@ -73,6 +132,9 @@ public:
         }
     }
 
+    /**
+     * @brief Updates the ClockSource for the current service cycle.
+     */
     void update() {
         if (_active) {
             double currentTicks = _simulator.ticks();
@@ -112,28 +174,59 @@ public:
     }
 
 private:
+    /**
+     * @brief Returns the clock interval.
+     *
+     * @return Current host clock interval used by the clock source.
+     */
     double clockInterval() {
         return 60.0 / (_bpm * _ppqn);
     }
 
-    Simulator &_simulator;
-    std::function<void()> _handler;
-    Simulator::UpdateCallbackId _updateCallbackId;
+    /**
+     * @brief Reference to simulator owned by another component.
+     */
+    Simulator &_simulator; ///< Reference to simulator owned by another component.
+    /**
+     * @brief Returns the stored callable or opaque platform value.
+     *
+     * @return The void value.
+     */
+    std::function<void()> _handler; ///< Callback invoked for each generated clock pulse.
+    Simulator::UpdateCallbackId _updateCallbackId; ///< Simulator callback identifier used to unregister the clock-source update hook.
 
-    bool _active = false;
+    /**
+     * @brief Whether  is currently active.
+     */
+    bool _active = false; ///< Whether this object is currently active.
     // Default PPQN must match engine expected external pulse rate.
     // Formula: CONFIG_SEQUENCE_PPQN (48) / clockInputDivisor (default 12) = 4
     // clockInputDivisor=12 (1/16) = 4 ext pulses per QN
     // clockInputDivisor=24 (1/8)  = 2 ext pulses per QN
     // clockInputDivisor=6  (1/32) = 8 ext pulses per QN
-    int _ppqn = 4;
-    double _bpm = 120.0;
+    int _ppqn = 4; ///< Sequencer clock resolution in pulses per quarter note (PPQN).
+    /**
+     * @brief Bpm, in beats per minute.
+     */
+    double _bpm = 120.0; ///< Bpm, in beats per minute.
 
-    int _swing = 50; // 0..100, 50 == no swing
+    /**
+     * @brief Simulator value representing swing.
+     */
+    int _swing = 50; ///< Clock swing amount in percent, where 50 represents straight timing.
 
-    double _lastTicks = 0.0;
-    double _nextTick = 0.0;
-    int _pulseIndex = 0;
+    /**
+     * @brief Most recently observed ticks.
+     */
+    double _lastTicks = 0.0; ///< Host-time timestamp of the previous clock-source update.
+    /**
+     * @brief Next tick scheduled or expected by this component.
+     */
+    double _nextTick = 0.0; ///< Next tick scheduled or expected by this component.
+    /**
+     * @brief Zero-based pulse index; a negative/sentinel value represents no selection where applicable.
+     */
+    int _pulseIndex = 0; ///< Zero-based pulse index; a negative/sentinel value represents no selection where applicable.
 };
 
 } // namespace sim

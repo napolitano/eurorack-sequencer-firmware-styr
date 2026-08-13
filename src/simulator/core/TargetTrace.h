@@ -53,14 +53,28 @@ namespace stream {
 
 } // namespace stream
 
+/**
+ * @brief Provides state trace behavior for the desktop simulator.
+ */
 template<typename T>
 class StateTrace {
 public:
     typedef T Record;
     typedef std::pair<uint32_t, T> Item;
 
+    /**
+     * @brief Returns the items.
+     *
+     * @return Reference to the stored item collection.
+     */
     const std::vector<Item> &items() const { return _items; }
 
+    /**
+     * @brief Executes write.
+     *
+     * @param[in] time Time used by the operation.
+     * @param[in] state New state or logical level to apply.
+     */
     void write(uint32_t time, const T &state) {
         if (_items.empty()) {
             _items.emplace_back(time, state);
@@ -71,6 +85,11 @@ public:
         }
     }
 
+    /**
+     * @brief Writes stream.
+     *
+     * @param[in] stream Stream used by the operation.
+     */
     void writeStream(std::ostream &stream) const {
         stream::write<uint32_t>(_items.size(), stream);
         for (const auto &item : _items) {
@@ -78,6 +97,11 @@ public:
         }
     }
 
+    /**
+     * @brief Reads stream.
+     *
+     * @param[in] stream Stream used by the operation.
+     */
     void readStream(std::istream &stream) {
         _items.resize(stream::read<uint32_t>(stream));
         for (auto &item : _items) {
@@ -86,21 +110,40 @@ public:
     }
 
 private:
-    std::vector<Item> _items;
+    std::vector<Item> _items; ///< Chronologically ordered timestamp/value records in this trace.
 };
 
+/**
+ * @brief Provides event trace behavior for the desktop simulator.
+ */
 template<typename T>
 class EventTrace {
 public:
     typedef T Record;
     typedef std::pair<uint32_t, T> Item;
 
+    /**
+     * @brief Returns the items.
+     *
+     * @return Reference to the stored item collection.
+     */
     const std::vector<Item> &items() const { return _items; }
 
+    /**
+     * @brief Executes write.
+     *
+     * @param[in] time Time used by the operation.
+     * @param[in] event Event to process.
+     */
     void write(uint32_t time, const T &event) {
         _items.emplace_back(time, event);
     }
 
+    /**
+     * @brief Writes stream.
+     *
+     * @param[in] stream Stream used by the operation.
+     */
     void writeStream(std::ostream &stream) const {
         stream::write<uint32_t>(_items.size(), stream);
         for (const auto &item : _items) {
@@ -108,6 +151,11 @@ public:
         }
     }
 
+    /**
+     * @brief Reads stream.
+     *
+     * @param[in] stream Stream used by the operation.
+     */
     void readStream(std::istream &stream) {
         _items.resize(stream::read<uint32_t>(stream));
         for (auto &item : _items) {
@@ -116,7 +164,7 @@ public:
     }
 
 private:
-    std::vector<Item> _items;
+    std::vector<Item> _items; ///< Chronologically ordered timestamp/value records in this trace.
 };
 
 typedef StateTrace<ButtonState> ButtonTrace;
@@ -131,28 +179,56 @@ typedef StateTrace<LcdState> LcdTrace;
 typedef EventTrace<EncoderEvent> EncoderTrace;
 typedef EventTrace<MidiEvent> MidiTrace;
 
+/**
+ * @brief Provides target trace behavior for the desktop simulator.
+ */
 struct TargetTrace {
     // state traces
-    ButtonTrace button;
-    AdcTrace adc;
-    DigitalInputTrace digitalInput;
-    LedTrace led;
-    GateOutputTrace gateOutput;
-    DacTrace dac;
-    DigitalOutputTrace digitalOutput;
-    LcdTrace lcd;
+    ButtonTrace button; ///< Trace channel recording timestamped button activity.
+    AdcTrace adc; ///< Trace channel recording timestamped adc activity.
+    DigitalInputTrace digitalInput; ///< Trace channel recording timestamped digital input activity.
+    LedTrace led; ///< Trace channel recording timestamped led activity.
+    GateOutputTrace gateOutput; ///< Current digital gate output state.
+    DacTrace dac; ///< Trace channel recording timestamped dac activity.
+    DigitalOutputTrace digitalOutput; ///< Trace channel recording timestamped digital output activity.
+    LcdTrace lcd; ///< Trace channel recording timestamped lcd activity.
 
     // event traces
-    EncoderTrace encoder;
-    MidiTrace midiInput;
-    MidiTrace midiOutput;
+    EncoderTrace encoder; ///< Trace channel recording timestamped encoder activity.
+    MidiTrace midiInput; ///< Trace channel recording timestamped midi input activity.
+    MidiTrace midiOutput; ///< Trace channel recording timestamped midi output activity.
 
+    /**
+     * @brief Writes stream.
+     *
+     * @param[in] stream Stream used by the operation.
+     */
     void writeStream(std::ostream &stream) const;
+    /**
+     * @brief Reads stream.
+     *
+     * @param[in] stream Stream used by the operation.
+     */
     void readStream(std::istream &stream);
 
+    /**
+     * @brief Saves to file.
+     *
+     * @param[in] filename Filename identifying the file or path used by the operation.
+     */
     void saveToFile(const std::string &filename) const;
+    /**
+     * @brief Loads from file.
+     *
+     * @param[in] filename Filename identifying the file or path used by the operation.
+     */
     void loadFromFile(const std::string &filename);
 
+    /**
+     * @brief Saves to text.
+     *
+     * @param[in] filename Filename identifying the file or path used by the operation.
+     */
     void saveToText(const std::string &filename) const;
 };
 

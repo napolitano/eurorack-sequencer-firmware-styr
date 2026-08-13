@@ -20,28 +20,67 @@
 
 namespace sim {
 
+/**
+ * @brief Represents the encoder component and its associated state.
+ */
 class Encoder : public Widget {
 public:
     typedef std::shared_ptr<Encoder> Ptr;
 
+    /**
+     * @brief Constructs a Encoder instance.
+     *
+     * @param[in] pos Pos supplied to the operation.
+     * @param[in] size Number of bytes or elements covered by the operation.
+     * @param[in] keycode Keycode supplied to the operation.
+     */
     Encoder(const Vector2f &pos, const Vector2f &size, SDL_Keycode keycode = -1) :
+        /**
+         * @brief Returns the widget.
+         */
         Widget(pos, size),
+        /**
+         * @brief Returns the keycode.
+         */
         _keycode(keycode)
     {}
 
+    /**
+     * @brief Returns the pressed.
+     *
+     * @return `true` when pressed; otherwise `false`.
+     */
     bool pressed() const { return _pressed; }
 
+    /**
+     * @brief Sets the button callback.
+     *
+     * @param[in] callback Callback supplied to the operation.
+     */
     void setButtonCallback(std::function<void(bool)> callback) {
         _buttonCallback = callback;
     }
 
+    /**
+     * @brief Sets the value callback.
+     *
+     * @param[in] callback Callback supplied to the operation.
+     */
     void setValueCallback(std::function<void(int)> callback) {
         _valueCallback = callback;
     }
 
+    /**
+     * @brief Updates the Encoder for the current service cycle.
+     */
     virtual void update() override {
     }
 
+    /**
+     * @brief Performs the render operation for this Encoder.
+     *
+     * @param[in] renderer Renderer supplied to the operation.
+     */
     virtual void render(Renderer &renderer) override {
         renderer.setColor(Color(_hovered ? 0.75f : 0.5f, 1.f));
 
@@ -60,6 +99,11 @@ public:
         renderer.drawLine(center, pointOnCircle(_value * TWO_PI / Ticks));
     }
 
+    /**
+     * @brief Performs the on key down operation for this Encoder.
+     *
+     * @param[in] e E supplied to the operation.
+     */
     virtual void onKeyDown(KeyEvent &e) override {
         if (!_pressed && e.keycode() == _keycode) {
             setPressed(true);
@@ -67,6 +111,11 @@ public:
         }
     }
 
+    /**
+     * @brief Performs the on key up operation for this Encoder.
+     *
+     * @param[in] e E supplied to the operation.
+     */
     virtual void onKeyUp(KeyEvent &e) override {
         if (_pressed && e.keycode() == _keycode) {
             setPressed(false);
@@ -74,6 +123,11 @@ public:
         }
     }
 
+    /**
+     * @brief Performs the on mouse move operation for this Encoder.
+     *
+     * @param[in] e E supplied to the operation.
+     */
     virtual void onMouseMove(MouseMoveEvent &e) override {
         _hovered = isInside(e.pos());
         if (_pressed) {
@@ -85,6 +139,11 @@ public:
         }
     }
 
+    /**
+     * @brief Performs the on mouse down operation for this Encoder.
+     *
+     * @param[in] e E supplied to the operation.
+     */
     virtual void onMouseDown(MouseButtonEvent &e) override {
         if (!_pressed && e.button() == MouseButtonEvent::Left && isInside(e.pos())) {
             SDL_CaptureMouse(SDL_TRUE);
@@ -94,6 +153,11 @@ public:
         }
     }
 
+    /**
+     * @brief Performs the on mouse up operation for this Encoder.
+     *
+     * @param[in] e E supplied to the operation.
+     */
     virtual void onMouseUp(MouseButtonEvent &e) override {
         if (_pressed && e.button() == MouseButtonEvent::Left) {
             SDL_CaptureMouse(SDL_FALSE);
@@ -102,6 +166,11 @@ public:
         }
     }
 
+    /**
+     * @brief Performs the on mouse wheel operation for this Encoder.
+     *
+     * @param[in] e E supplied to the operation.
+     */
     virtual void onMouseWheel(MouseWheelEvent &e) override {
         _deltaValue += e.scroll().y();
         setValue(_value + _deltaValue / ScrollDivider);
@@ -109,6 +178,11 @@ public:
     }
 
 private:
+    /**
+     * @brief Sets the pressed.
+     *
+     * @param[in] pressed Whether pressed is enabled for this operation.
+     */
     void setPressed(bool pressed) {
         if (pressed != _pressed) {
             _pressed = pressed;
@@ -118,6 +192,11 @@ private:
         }
     }
 
+    /**
+     * @brief Sets the value.
+     *
+     * @param[in] value Value to apply.
+     */
     void setValue(int value) {
         if (value != _value) {
             int delta = value - _value;
@@ -128,18 +207,53 @@ private:
         }
     }
 
-    static const int ScrollDivider = 4;
-    static const int Ticks = 24;
+    /**
+     * @brief Scroll divider constant used by this component.
+     */
+    static const int ScrollDivider = 4; ///< Scroll divider used by this component.
+    /**
+     * @brief Ticks constant used by this component.
+     */
+    static const int Ticks = 24; ///< Ticks used by this component.
 
-    SDL_Keycode _keycode;
-    bool _pressed = false;
-    bool _hovered = false;
-    int _value = 0;
-    int _deltaValue = 0;
-    Vector2i _lastPos;
+    SDL_Keycode _keycode; ///< Keycode maintained by this component.
+    /**
+     * @brief Whether pressed is true in the current state.
+     */
+    bool _pressed = false; ///< Whether pressed is active or enabled.
+    /**
+     * @brief Whether hovered is true in the current state.
+     */
+    bool _hovered = false; ///< Whether hovered is active or enabled.
+    /**
+     * @brief Simulator value representing value.
+     */
+    int _value = 0; ///< Value maintained by this component.
+    /**
+     * @brief Simulator value representing delta value.
+     */
+    int _deltaValue = 0; ///< Delta value maintained by this component.
+    /**
+     * @brief Most recently observed pos.
+     */
+    Vector2i _lastPos; ///< Last pos maintained by this component.
 
-    std::function<void(bool)> _buttonCallback;
-    std::function<void(int)> _valueCallback;
+    /**
+     * @brief Computes the void result.
+     *
+     * @note Includes an unnamed `bool` input parameter as declared by the inherited/interface signature.
+     *
+     * @return Current void.
+     */
+    std::function<void(bool)> _buttonCallback; ///< Callback invoked when the encoder push button changes state.
+    /**
+     * @brief Computes the void result.
+     *
+     * @note Includes an unnamed `int` input parameter as declared by the inherited/interface signature.
+     *
+     * @return Current void.
+     */
+    std::function<void(int)> _valueCallback; ///< Callback invoked with relative encoder movement.
 };
 
 } // namespace sim

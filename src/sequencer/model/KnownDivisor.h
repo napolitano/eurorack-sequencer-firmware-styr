@@ -53,12 +53,15 @@
 // 288,    // 1.
 // 576,    // 2.
 
+/**
+ * @brief Stores and manipulates known divisor model data.
+ */
 struct KnownDivisor {
-    uint16_t divisor;       // divisor value with respect to CONFIG_SEQUENCE_PPQN
-    uint8_t numerator;      // note value numerator
-    uint8_t denominator;    // note value denominator
+    uint16_t divisor;       // divisor value with respect to CONFIG_SEQUENCE_PPQN ///< Persisted divisor setting stored with the owning model.
+    uint8_t numerator;      // note value numerator ///< Persisted numerator setting stored with the owning model.
+    uint8_t denominator;    // note value denominator ///< Persisted denominator setting stored with the owning model.
     char type;              // note type (straight, triplet, dotted)
-    int8_t index;           // index [0..15] for selecting via step keys
+    int8_t index;           // index [0..15] for selecting via step keys ///< Zero-based index; a negative/sentinel value represents no selection where applicable.
 };
 
 // divisors based on 48 PPQN

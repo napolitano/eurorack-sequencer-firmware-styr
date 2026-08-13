@@ -22,29 +22,48 @@
 
 #include "model/Routing.h"
 
+/**
+ * @brief Provides list data and editing behavior for route.
+ */
 class RouteListModel : public ListModel {
 public:
+    /**
+     * @brief Enumerates the supported item values.
+     */
     enum Item {
-        Target,
-        Min,
-        Max,
-        Tracks,
-        Source,
-        FirstSource,
-        CvRange = FirstSource,
-        MidiSource = FirstSource,
-        MidiEvent,
-        FirstMidiEventConfig,
-        MidiControlNumber = FirstMidiEventConfig,
-        MidiNote = FirstMidiEventConfig,
-        MidiNoteRange,
-        Last
+        Target, ///< Selects the target item.
+        Min, ///< Selects the min item.
+        Max, ///< Selects the max item.
+        Tracks, ///< Selects the tracks item.
+        Source, ///< Selects the source item.
+        FirstSource, ///< Selects the first source item.
+        CvRange = FirstSource, ///< Selects the cv range item.
+        MidiSource = FirstSource, ///< Selects the midi source item.
+        MidiEvent, ///< Selects the midi event item.
+        FirstMidiEventConfig, ///< Selects the first midi event config item.
+        MidiControlNumber = FirstMidiEventConfig, ///< Selects the midi control number item.
+        MidiNote = FirstMidiEventConfig, ///< Selects the midi note item.
+        MidiNoteRange, ///< Selects the midi note range item.
+        Last ///< Sentinel marking the end of the valid enumeration range.
     };
 
+    /**
+     * @brief Constructs a RouteListModel instance.
+     *
+     * @param[in] route Routing entry displayed or edited by the list model.
+     */
     RouteListModel(Routing::Route &route) :
+        /**
+         * @brief Returns the route.
+         */
         _route(route)
     {}
 
+    /**
+     * @brief Returns the rows.
+     *
+     * @return Number of rows represented by this object.
+     */
     virtual int rows() const override {
         bool isEmpty = _route.target() == Routing::Target::None;
         bool isCvSource = Routing::isCvSource(_route.source());
@@ -62,10 +81,22 @@ public:
         }
     }
 
+    /**
+     * @brief Returns the columns.
+     *
+     * @return Number of columns represented by this object.
+     */
     virtual int columns() const override {
         return 2;
     }
 
+    /**
+     * @brief Returns the cell at the requested row and column.
+     *
+     * @param[in] row Zero-based row index.
+     * @param[in] column Zero-based column index.
+     * @param[out] str String builder that receives the formatted representation.
+     */
     virtual void cell(int row, int column, StringBuilder &str) const override {
         if (column == 0) {
             formatName(Item(row), str);
@@ -74,6 +105,14 @@ public:
         }
     }
 
+    /**
+     * @brief Applies a UI edit delta to the currently addressed value.
+     *
+     * @param[in] row Zero-based row index.
+     * @param[in] column Zero-based column index.
+     * @param[in] value Value to apply, store, compare, or encode as defined by the operation.
+     * @param[in] shift UI modifier or coarse-adjustment value supplied by the caller.
+     */
     virtual void edit(int row, int column, int value, bool shift) override {
         if (column == 1) {
             editValue(Item(row), value, shift);
@@ -81,6 +120,13 @@ public:
     }
 
 private:
+    /**
+     * @brief Returns the display name for item.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     *
+     * @return Pointer to the item name; `nullptr` when no value is available.
+     */
     const char *itemName(Item item) const {
         switch (item) {
         case Target:        return TXT_LIST_LABEL_TARGET;
@@ -100,10 +146,22 @@ private:
         return nullptr;
     }
 
+    /**
+     * @brief Formats the name for display.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[out] str String builder that receives the formatted representation.
+     */
     void formatName(Item item, StringBuilder &str) const {
         str(itemName(item));
     }
 
+    /**
+     * @brief Formats the value for display.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[out] str String builder that receives the formatted representation.
+     */
     void formatValue(Item item, StringBuilder &str) const {
         switch (item) {
         case Target:
@@ -148,6 +206,13 @@ private:
         }
     }
 
+    /**
+     * @brief Adjusts the value from a UI edit delta.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[in] value Value to apply, store, compare, or encode as defined by the operation.
+     * @param[in] shift UI modifier or coarse-adjustment value supplied by the caller.
+     */
     void editValue(Item item, int value, bool shift) {
         switch (item) {
         case Target:
@@ -192,5 +257,8 @@ private:
         }
     }
 
-    Routing::Route &_route;
+    /**
+     * @brief Reference to route owned by another component.
+     */
+    Routing::Route &_route; ///< Reference to route owned by another component.
 };

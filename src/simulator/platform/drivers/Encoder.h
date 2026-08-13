@@ -22,29 +22,57 @@
 
 #include <deque>
 
+/**
+ * @brief Provides the encoder hardware/platform abstraction.
+ */
 class Encoder : private sim::TargetInputHandler {
 public:
+    /**
+     * @brief Enumerates the supported event values.
+     */
     enum Event {
-        Left,   // encoder turned left
-        Right,  // encoder turned right
-        Down,   // encoder pressed
-        Up,     // encoder released
+        Left,   ///< Encoder rotation toward decreasing values.
+        Right,  ///< Encoder rotation toward increasing values.
+        Down,   ///< Encoder push switch transitioned to pressed.
+        Up,     ///< Encoder push switch transitioned to released.
     };
 
+    /**
+     * @brief Constructs a Encoder instance.
+     */
     Encoder() :
+        /**
+         * @brief Returns the simulator.
+         */
         _simulator(sim::Simulator::instance())
     {
         _simulator.registerTargetInputObserver(this);
     }
 
+    /**
+     * @brief Destroys the Encoder instance.
+     */
     ~Encoder() {
         _simulator.unregisterTargetInputObserver(this);
     }
 
+    /**
+     * @brief Initializes the Encoder and its runtime resources.
+     */
     void init() {}
 
+    /**
+     * @brief Processes the supplied input for this component.
+     */
     void process() {}
 
+    /**
+     * @brief Returns next event.
+     *
+     * @param[in] event Event to process.
+     *
+     * @return `true` if next event; otherwise `false`.
+     */
     bool nextEvent(Event &event) {
         if (_events.empty()) {
             return false;
@@ -55,6 +83,11 @@ public:
     }
 
 private:
+    /**
+     * @brief Writes encoder.
+     *
+     * @param[in] event Event to process.
+     */
     void writeEncoder(sim::EncoderEvent event) override {
         switch (event) {
         case sim::EncoderEvent::Left:   _events.emplace_back(Left);     break;
@@ -64,6 +97,9 @@ private:
         }
     }
 
-    sim::Simulator &_simulator;
-    std::deque<Event> _events;
+    /**
+     * @brief Reference to simulator owned by another component.
+     */
+    sim::Simulator &_simulator; ///< Reference to simulator owned by another component.
+    std::deque<Event> _events; ///< Queued simulated encoder rotations/button transitions waiting to be consumed by the driver.
 };

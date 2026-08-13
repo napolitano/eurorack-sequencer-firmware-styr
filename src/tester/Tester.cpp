@@ -454,7 +454,9 @@ private:
     }
 
     void updateCvOutputs() {
+        // Positive calibration reference voltage measured for the tester fixture, in volts.
         static constexpr float volts0 = 5.17f;
+        // Negative calibration reference voltage measured for the tester fixture, in volts.
         static constexpr float volts1 = -5.25f;
 
         for (int i = 0; i < 8; ++i) {

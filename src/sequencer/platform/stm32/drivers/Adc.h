@@ -21,16 +21,35 @@
 #include <cstdint>
 #include <cstdlib>
 
+/**
+ * @brief Provides the adc hardware/platform abstraction.
+ */
 class Adc {
 public:
-    static constexpr int Channels = CONFIG_ADC_CHANNELS;
+    /**
+     * @brief Channels constant used by this component.
+     */
+    static constexpr int Channels = CONFIG_ADC_CHANNELS; ///< Number of physical ADC input channels configured for this hardware.
 
+    /**
+     * @brief Initializes the Adc and its runtime resources.
+     */
     void init();
 
+    /**
+     * @brief Returns channel.
+     *
+     * @param[in] index Zero-based channel index.
+     *
+     * @return MIDI channel in the standard 0..15 internal representation.
+     */
     uint16_t channel(int index) const {
         return _channels[index];
     }
 
 private:
-    uint16_t _channels[Channels];
+    /**
+     * @brief Driver value representing channels.
+     */
+    uint16_t _channels[Channels]; ///< Most recent ADC sample for each configured input channel.
 };

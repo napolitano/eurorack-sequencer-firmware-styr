@@ -22,15 +22,29 @@
 
 namespace BootloaderUpdate {
 
-static const std::size_t ChecksumSize = 16;
-static const std::size_t MinimumPayloadSize = CONFIG_VERSION_TAG_OFFSET + sizeof(VersionTag);
-static const std::size_t MaximumPayloadSize = CONFIG_APPLICATION_SIZE;
-static const std::size_t FlashWordSize = sizeof(uint32_t);
+static const std::size_t ChecksumSize = 16; ///< Size of the MD5 checksum appended to an update file, in bytes. ///< Size of the MD5 checksum appended to an update file, in bytes.
+static const std::size_t MinimumPayloadSize = CONFIG_VERSION_TAG_OFFSET + sizeof(VersionTag); ///< Smallest payload that can contain the complete version tag at its fixed application offset, in bytes. ///< Smallest payload that can contain the complete version tag at its fixed application offset, in bytes.
+static const std::size_t MaximumPayloadSize = CONFIG_APPLICATION_SIZE; ///< Largest update payload that fits in the application flash partition, in bytes. ///< Largest update payload that fits in the application flash partition, in bytes.
+static const std::size_t FlashWordSize = sizeof(uint32_t); ///< Programming granularity used when rounding update payload sizes, in bytes. ///< Programming granularity used when rounding update payload sizes, in bytes.
 
+/**
+ * @brief Returns the number of flash programming words required for a byte count.
+ *
+ * @param[in] byteCount Number of bytes that must fit in flash programming words.
+ *
+ * @return Computed result in the domain described by this function.
+ */
 inline std::size_t programWordCount(std::size_t byteCount) {
     return byteCount / FlashWordSize + (byteCount % FlashWordSize != 0 ? 1u : 0u);
 }
 
+/**
+ * @brief Returns the flash-programmed size after rounding a byte count to whole flash words.
+ *
+ * @param[in] byteCount Number of bytes that must fit in flash programming words.
+ *
+ * @return Computed result in the domain described by this function.
+ */
 inline std::size_t programmedSize(std::size_t byteCount) {
     return programWordCount(byteCount) * FlashWordSize;
 }

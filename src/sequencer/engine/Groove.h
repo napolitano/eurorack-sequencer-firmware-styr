@@ -22,10 +22,28 @@
 
 namespace Groove {
 
+/**
+ * @brief Rescales an unsigned value from one integer range into another.
+ *
+ * @param[in] value Input value to clamp, adjust, format or convert.
+ * @param[in] range Input integer range represented by `value`.
+ * @param[in] newRange Output integer range into which `value` is rescaled.
+ *
+ * @return Computed result in the domain described by this function.
+ */
 static uint32_t remap(uint32_t value, uint32_t range, uint32_t newRange) {
     return (value * newRange) / range;
 }
 
+/**
+ * @brief Maps an unswung tick position onto the configured swing timing curve.
+ *
+ * @param[in] tick Tick position to remap within the swing period.
+ * @param[in] swing Configured swing amount in percent/model swing units.
+ * @param[in] base Half-period/base timing interval used by the swing mapping.
+ *
+ * @return Computed result in the domain described by this function.
+ */
 static uint32_t applySwing(uint32_t tick, int swing, uint32_t base = CONFIG_PPQN / 4) {
     uint32_t period = 2 * base;
 

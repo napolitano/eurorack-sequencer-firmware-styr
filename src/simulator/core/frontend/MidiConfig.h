@@ -20,11 +20,26 @@
 
 namespace sim {
 
+/**
+ * @brief Stores and edits midi config configuration.
+ */
 struct MidiConfig {
-    const char *portIn;
-    const char *portOut;
-    uint16_t vendorId;
-    uint16_t productId;
+    /**
+     * @brief Pointer to port in; `nullptr` denotes that no object/resource is assigned.
+     */
+    const char *portIn; ///< Pointer to port in; `nullptr` denotes that no object/resource is assigned.
+    /**
+     * @brief Pointer to port out; `nullptr` denotes that no object/resource is assigned.
+     */
+    const char *portOut; ///< Pointer to port out; `nullptr` denotes that no object/resource is assigned.
+    /**
+     * @brief USB vendor identifier.
+     */
+    uint16_t vendorId; ///< USB vendor identifier.
+    /**
+     * @brief USB product identifier.
+     */
+    uint16_t productId; ///< USB product identifier.
 };
 
 static const MidiConfig midiPortConfig = {

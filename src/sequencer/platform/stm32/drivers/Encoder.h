@@ -23,21 +23,45 @@
 
 #include <cstdint>
 
+/**
+ * @brief Provides the encoder hardware/platform abstraction.
+ */
 class Encoder {
 public:
+    /**
+     * @brief Enumerates the supported event values.
+     */
     enum Event {
-        Left,   // encoder turned left
-        Right,  // encoder turned right
-        Down,   // encoder pressed
-        Up,     // encoder released
+        Left,   ///< Encoder rotation toward decreasing values.
+        Right,  ///< Encoder rotation toward increasing values.
+        Down,   ///< Encoder push switch transitioned to pressed.
+        Up,     ///< Encoder push switch transitioned to released.
     };
 
+    /**
+     * @brief Constructs a Encoder instance.
+     *
+     * @param[in] reverse Whether reverse is enabled for this operation.
+     */
     Encoder(bool reverse = false);
 
+    /**
+     * @brief Initializes the Encoder and its runtime resources.
+     */
     void init();
 
+    /**
+     * @brief Processes the supplied input for this component.
+     */
     void process();
 
+    /**
+     * @brief Returns next event.
+     *
+     * @param[in] event Event to process.
+     *
+     * @return `true` if next event; otherwise `false`.
+     */
     inline bool nextEvent(Event &event) {
         if (_events.readable() < 1) {
             return false;
@@ -47,11 +71,20 @@ public:
     }
 
 private:
-    bool _reverse;
+    /**
+     * @brief Whether reverse is true in the current state.
+     */
+    bool _reverse; ///< True when encoder direction is reversed to match the installed hardware orientation.
 
-    RingBuffer<uint8_t, 32> _events;
+    RingBuffer<uint8_t, 32> _events; ///< Fixed-capacity FIFO holding pending events.
 
-    Debouncer<3> _switchDebouncer;
-    bool _switchState = false;
-    uint8_t _encoderState = 0;
+    Debouncer<3> _switchDebouncer; ///< Debouncer state used to reject switch transitions that have not remained stable long enough.
+    /**
+     * @brief Whether switch state is true in the current state.
+     */
+    bool _switchState = false; ///< Last sampled logical state of the encoder push switch.
+    /**
+     * @brief Driver value representing encoder state.
+     */
+    uint8_t _encoderState = 0; ///< Last sampled quadrature state used to detect encoder transitions.
 };

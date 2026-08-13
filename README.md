@@ -129,6 +129,7 @@ Styr keeps user-visible changes separate by type. The **Fixed upstream bugs** ta
 | Microtiming boundaries | Forward/Backward loop wraps can pre-trigger exactly; transport start, Reset Measure, linked tracks, pending pattern changes, dynamic Fill and non-deterministic modes use conservative boundary timing instead of guessing. |
 | Simulator timing | Host clock timers now account for the full requested simulated wait interval, including the first millisecond after enable/re-enable. |
 | Build and verification | Firmware tests are owned by PlatformIO/Unity; simulator-only tests remain under CMake/CTest, with hard bootloader and repository-cleanliness gates. |
+| Source documentation | First-party APIs, state, constants and enums use structured US-English Doxygen documentation, enforced by a source-documentation quality gate and prepared for HTML/XML technical-reference generation. |
 
 ### New features
 
@@ -235,6 +236,7 @@ The documentation is intentionally organized by **audience and purpose**, not by
 | Install/update firmware | [`README_FIRMWARE_UPDATE.md`](README_FIRMWARE_UPDATE.md) | SD-card update workflow and ST-Link service/development procedure. |
 | Regenerate manual images | [`README_SCREENSHOTS.md`](README_SCREENSHOTS.md) | Deterministic screenshot generation and validation. |
 | Understand the architecture | [`docs/development/README.md`](docs/development/README.md) | Build, architecture, formats, sequencer internals and developer workflows. |
+| Source/API documentation rules | [`docs/development/documentation/README.md`](docs/development/documentation/README.md) | US-English Doxygen contract, technical-reference output and separation from end-user manual prose. |
 | Understand persistent formats | [`docs/development/formats/README.md`](docs/development/formats/README.md) | Project, settings and user-scale file formats. |
 | Work on sequencer internals | [`docs/development/sequencer/README.md`](docs/development/sequencer/README.md) | Track models, layers and song internals. |
 | Verify behavior | [`docs/testing/README.md`](docs/testing/README.md) | Test strategy and verification procedures. |

@@ -25,6 +25,9 @@
 namespace hal {
 namespace Delay {
 
+/**
+ * @brief Emits the compile-time number of no-operation instructions used by the delay helper.
+ */
 template<uint64_t cycles>
 static void nop() {
     asm volatile ("nop");

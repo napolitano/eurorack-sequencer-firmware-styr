@@ -18,18 +18,35 @@
 
 #include <cstdint>
 
+/**
+ * @brief Provides the high resolution timer hardware/platform abstraction.
+ */
 class HighResolutionTimer {
 public:
+    /**
+     * @brief Initializes the HighResolutionTimer and its runtime resources.
+     */
     static void init();
 
+    /**
+     * @brief Returns the us.
+     *
+     * @return Us, in microseconds.
+     */
     static inline uint32_t us() {
         return _ticks;
     }
 
+    /**
+     * @brief Returns the current absolute sequencer engine tick.
+     */
     static inline void tick() {
         ++_ticks;
     }
 
 private:
-    static volatile uint32_t _ticks;
+    /**
+     * @brief Driver value representing ticks.
+     */
+    static volatile uint32_t _ticks; ///< Monotonic platform tick counter maintained by the timer interrupt.
 };

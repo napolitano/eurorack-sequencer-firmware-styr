@@ -1,0 +1,46 @@
+# Styr first-party source/API documentation.
+# Run from the repository root:
+#   doxygen docs/development/documentation/Doxyfile
+
+PROJECT_NAME           = "Styr"
+PROJECT_BRIEF          = "Sequencer firmware, bootloader, shared support and simulator API"
+OUTPUT_DIRECTORY       = build/docs/api
+
+INPUT                  = src docs/development/documentation/README.md
+FILE_PATTERNS           = *.h *.hpp *.c *.cc *.cpp *.cxx *.md
+RECURSIVE               = YES
+EXCLUDE                 = third_party \
+                          test \
+                          src/simulator/tests \
+                          src/shared/core/gfx/fonts/ati8x8.h \
+                          src/shared/core/gfx/fonts/commodore.h \
+                          src/shared/core/gfx/fonts/tiny5x5.h
+EXCLUDE_PATTERNS        = */test/* */tests/* */third_party/*
+
+EXTRACT_ALL             = NO
+EXTRACT_PRIVATE         = YES
+EXTRACT_STATIC          = YES
+HIDE_UNDOC_MEMBERS      = NO
+HIDE_UNDOC_CLASSES      = NO
+
+JAVADOC_AUTOBRIEF       = NO
+MULTILINE_CPP_IS_BRIEF  = NO
+MARKDOWN_SUPPORT        = YES
+USE_MDFILE_AS_MAINPAGE  = docs/development/documentation/README.md
+
+WARNINGS                = YES
+WARN_IF_UNDOCUMENTED    = YES
+WARN_IF_DOC_ERROR       = YES
+WARN_AS_ERROR           = FAIL_ON_WARNINGS_PRINT
+
+SOURCE_BROWSER          = YES
+REFERENCED_BY_RELATION  = YES
+REFERENCES_RELATION     = YES
+
+GENERATE_HTML           = YES
+GENERATE_LATEX          = NO
+GENERATE_XML            = YES
+XML_OUTPUT              = xml
+
+HAVE_DOT                = NO
+QUIET                   = NO

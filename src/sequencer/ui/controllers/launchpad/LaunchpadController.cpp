@@ -75,7 +75,7 @@ static const LayerMapItem noteSequenceLayerMap[] = {
     [int(NoteSequence::Layer::Condition)]                   =  { 0, 4 },
 };
 
-static constexpr int noteSequenceLayerMapSize = sizeof(noteSequenceLayerMap) / sizeof(noteSequenceLayerMap[0]);
+static constexpr int noteSequenceLayerMapSize = sizeof(noteSequenceLayerMap) / sizeof(noteSequenceLayerMap[0]); ///< Number of Launchpad mappings for Note-sequence layers. ///< Number of Launchpad mappings for Note-sequence layers.
 
 static const LayerMapItem curveSequenceLayerMap[] = {
     [int(CurveSequence::Layer::Shape)]                      =  { 0, 0 },
@@ -87,7 +87,7 @@ static const LayerMapItem curveSequenceLayerMap[] = {
     [int(CurveSequence::Layer::GateProbability)]            =  { 1, 3 },
 };
 
-static constexpr int curveSequenceLayerMapSize = sizeof(curveSequenceLayerMap) / sizeof(curveSequenceLayerMap[0]);
+static constexpr int curveSequenceLayerMapSize = sizeof(curveSequenceLayerMap) / sizeof(curveSequenceLayerMap[0]); ///< Number of Launchpad mappings for Curve-sequence layers. ///< Number of Launchpad mappings for Curve-sequence layers.
 
 struct RangeMap {
     int16_t min[2];
@@ -100,7 +100,7 @@ struct RangeMap {
     }
 };
 
-static const RangeMap curveMinMaxRangeMap = { { 0, 0 }, { 255, 7 } };
+static const RangeMap curveMinMaxRangeMap = { { 0, 0 }, { 255, 7 } }; ///< Maps the 8-bit Curve min/max value domain onto the eight Launchpad rows. ///< Maps the 8-bit Curve min/max value domain onto the eight Launchpad rows.
 
 static const RangeMap *curveSequenceLayerRangeMap[] = {
     [int(CurveSequence::Layer::Shape)]                      = nullptr,

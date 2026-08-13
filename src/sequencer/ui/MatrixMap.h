@@ -30,38 +30,101 @@ namespace MatrixMap {
     //     0 | S-8 | S-9 | S10 | S11 | S12 | S13 | S14 | S15 |
     //        -----------------------------------------------
 
+    /**
+     * @brief Maps a sequencer step index to its physical matrix index.
+     *
+     * @param[in] step Edit step size or zero-based sequence step as defined by the operation.
+     *
+     * @return Computed result in the domain described by this function.
+     */
     static constexpr int fromStep(int step) {
         return step < 8 ? (8 + step) : (step - 8);
     }
 
+    /**
+     * @brief Reports whether a physical matrix index belongs to the step-key region.
+     *
+     * @param[in] index Zero-based table/matrix index addressed by the operation.
+     *
+     * @return `true` when the documented condition is satisfied; otherwise `false`.
+     */
     static constexpr bool isStep(int index) {
         return index >= fromStep(8) && index <= fromStep(7);
     }
 
+    /**
+     * @brief Maps a physical matrix index back to its sequencer step index.
+     *
+     * @param[in] index Zero-based table/matrix index addressed by the operation.
+     *
+     * @return Computed result in the domain described by this function.
+     */
     static constexpr int toStep(int index) {
         return index >= fromStep(0) ? (index - fromStep(0)) : (index - fromStep(8) + 8);
     }
 
+    /**
+     * @brief Maps a sequencer track index to its physical matrix index.
+     *
+     * @param[in] track Zero-based sequencer track index.
+     *
+     * @return Computed result in the domain described by this function.
+     */
     static constexpr int fromTrack(int track) {
         return 16 + track;
     }
 
+    /**
+     * @brief Reports whether a physical matrix index belongs to the track-key region.
+     *
+     * @param[in] index Zero-based table/matrix index addressed by the operation.
+     *
+     * @return `true` when the documented condition is satisfied; otherwise `false`.
+     */
     static constexpr bool isTrack(int index) {
         return index >= fromTrack(0) && index <= fromTrack(7);
     }
 
+    /**
+     * @brief Maps a physical matrix index back to its sequencer track index.
+     *
+     * @param[in] index Zero-based table/matrix index addressed by the operation.
+     *
+     * @return Computed result in the domain described by this function.
+     */
     static constexpr int toTrack(int index) {
         return index - fromTrack(0);
     }
 
+    /**
+     * @brief Maps a function-key index to its physical matrix index.
+     *
+     * @param[in] function Zero-based hardware function-key index.
+     *
+     * @return Computed result in the domain described by this function.
+     */
     static constexpr int fromFunction(int function) {
         return 32 + function;
     }
 
+    /**
+     * @brief Reports whether a physical matrix index belongs to the function-key region.
+     *
+     * @param[in] index Zero-based table/matrix index addressed by the operation.
+     *
+     * @return `true` when the documented condition is satisfied; otherwise `false`.
+     */
     static constexpr int isFunction(int index) {
         return index >= fromFunction(0) && index <= fromFunction(4);
     }
 
+    /**
+     * @brief Maps a physical matrix index back to its function-key index.
+     *
+     * @param[in] index Zero-based table/matrix index addressed by the operation.
+     *
+     * @return Computed result in the domain described by this function.
+     */
     static constexpr int toFunction(int index) {
         return index - fromFunction(0);
     }

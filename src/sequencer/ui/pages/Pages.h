@@ -55,48 +55,57 @@
 #include "AsteroidsPage.h"
 #endif
 
+/**
+ * @brief Owns the concrete UI page instances used by the sequencer page manager.
+ */
 struct Pages {
-    TopPage top;
+    TopPage top; ///< Page instance for the top screen.
     // main pages
-    ProjectPage project;
-    LayoutPage layout;
-    TrackPage track;
-    NoteSequencePage noteSequence;
-    CurveSequencePage curveSequence;
-    NoteSequenceEditPage noteSequenceEdit;
-    CurveSequenceEditPage curveSequenceEdit;
-    PatternPage pattern;
-    PerformerPage performer;
-    SongPage song;
-    RoutingPage routing;
-    MidiOutputPage midiOutput;
-    UserScalePage userScale;
-    OverviewPage overview;
-    SystemPage system;
+    ProjectPage project; ///< Active project model used by this component.
+    LayoutPage layout; ///< Page instance for the layout screen.
+    TrackPage track; ///< Persistent track model operated on by this component.
+    NoteSequencePage noteSequence; ///< Page instance for the note sequence screen.
+    CurveSequencePage curveSequence; ///< Page instance for the curve sequence screen.
+    NoteSequenceEditPage noteSequenceEdit; ///< Page instance for the note sequence edit screen.
+    CurveSequenceEditPage curveSequenceEdit; ///< Page instance for the curve sequence edit screen.
+    PatternPage pattern; ///< Page instance for the pattern screen.
+    PerformerPage performer; ///< Page instance for the performer screen.
+    SongPage song; ///< Page instance for the song screen.
+    RoutingPage routing; ///< Page instance for the routing screen.
+    MidiOutputPage midiOutput; ///< Page instance for the midi output screen.
+    UserScalePage userScale; ///< Page instance for the user scale screen.
+    OverviewPage overview; ///< Page instance for the overview screen.
+    SystemPage system; ///< Page instance for the system screen.
     // modal pages
-    TempoPage tempo;
-    ClockSetupPage clockSetup;
-    MonitorPage monitor;
-    FileSelectPage fileSelect;
-    ContextMenuPage contextMenu;
-    QuickEditPage quickEdit;
+    TempoPage tempo; ///< Page instance for the tempo screen.
+    ClockSetupPage clockSetup; ///< Page instance for the clock setup screen.
+    MonitorPage monitor; ///< Page instance for the monitor screen.
+    FileSelectPage fileSelect; ///< Page instance for the file select screen.
+    ContextMenuPage contextMenu; ///< Page instance for the context menu screen.
+    QuickEditPage quickEdit; ///< Page instance for the quick edit screen.
     // generator pages
-    GeneratorPage generator;
-    GeneratorSelectPage generatorSelect;
+    GeneratorPage generator; ///< Page instance for the generator screen.
+    GeneratorSelectPage generatorSelect; ///< Page instance for the generator select screen.
     // helper pages
-    TextInputPage textInput;
-    ConfirmationPage confirmation;
-    BusyPage busy;
+    TextInputPage textInput; ///< Page instance for the text input screen.
+    ConfirmationPage confirmation; ///< Page instance for the confirmation screen.
+    BusyPage busy; ///< Page instance for the busy screen.
     // misc
-    StartupPage startup;
-	LfoPage lfo;
+    StartupPage startup; ///< Page instance for the startup screen.
+	LfoPage lfo; ///< Page instance for the lfo screen.
 #ifdef CONFIG_ENABLE_INTRO
-    IntroPage intro;
+    IntroPage intro; ///< Page instance for the intro screen.
 #endif
 #ifdef CONFIG_ENABLE_ASTEROIDS
-    AsteroidsPage asteroids;
+    AsteroidsPage asteroids; ///< Page instance for the asteroids screen.
 #endif
 
+    /**
+     * @brief Constructs a Pages instance.
+     *
+     * @param[in] manager Manager used by the operation.
+     * @param[in] context Context used by the operation.
+     */
     Pages(PageManager &manager, PageContext &context) :
         top(manager, context),
         // main pages
@@ -128,6 +137,12 @@ struct Pages {
         // helper pages
         textInput(manager, context),
         confirmation(manager, context),
+        /**
+         * @brief Executes busy.
+         *
+         * @note Includes an unnamed `manager` input parameter as declared by the inherited/interface signature.
+         * @note Includes an unnamed `context` input parameter as declared by the inherited/interface signature.
+         */
         busy(manager, context),
         // misc
         startup(manager, context),

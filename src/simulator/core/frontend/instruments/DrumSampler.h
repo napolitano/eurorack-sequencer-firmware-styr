@@ -21,19 +21,47 @@
 
 namespace sim {
 
+/**
+ * @brief Provides drum sampler behavior for the desktop simulator.
+ */
 class DrumSampler : public Instrument {
 public:
+    /**
+     * @brief Constructs a DrumSampler instance.
+     *
+     * @param[in] audio Audio source/buffer processed by the operation.
+     * @param[in] filename File name/path used for the operation.
+     */
     DrumSampler(Audio &audio, const std::string &filename);
 
+    /**
+     * @brief Sets the gate.
+     *
+     * @param[in] gate `true` to enable/set gate; `false` to disable/clear it.
+     */
     virtual void setGate(bool gate) override;
+    /**
+     * @brief Sets the cv.
+     *
+     * @param[in] cv Control-voltage value in the engine/model voltage domain.
+     */
     virtual void setCv(float cv) override;
 
 private:
+    /**
+     * @brief Triggers the instrument/event.
+     */
     void trigger();
 
-    Audio &_audio;
-    Sample _sample;
-    bool _gate = false;
+    /**
+     * @brief Reference to audio owned by another component.
+     */
+    Audio &_audio; ///< Reference to audio owned by another component.
+    Sample _sample; ///< Selected sample that determines how `DrumSampler` interprets or renders its data.
+    /**
+     * @brief Whether gate is true in the current state.
+     */
+    bool _gate = false; ///< True when the generated/current step requests an active gate.
 };
 
 } // namespace sim

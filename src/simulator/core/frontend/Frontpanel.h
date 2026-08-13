@@ -40,38 +40,47 @@ static int windowWidth = std::ceil(width * scale);
 static int windowHeight = std::ceil(height * scale);
 static int controlHeight = 109;
 
+/**
+ * @brief Enumerates the supported widget values.
+ */
 enum class Widget {
-    Jack,
-    Led,
-    CButton,
-    RButton,
-    Encoder,
-    Lcd,
+    Jack, ///< Selects the jack widget.
+    Led, ///< Selects the led widget.
+    CButton, ///< Selects the c button widget.
+    RButton, ///< Selects the r button widget.
+    Encoder, ///< Selects the encoder widget.
+    Lcd, ///< Selects the lcd widget.
 };
 
+/**
+ * @brief Enumerates the supported signal values.
+ */
 enum class Signal {
-    Encoder,
-    MidiInput,
-    MidiOutput,
-    DigitalInput,
-    DigitalOutput,
-    CvInput,
-    GateOutput,
-    CvOutput,
-    Button,
-    Led,
-    Lcd,
+    Encoder, ///< Selects the encoder signal.
+    MidiInput, ///< Selects the midi input signal.
+    MidiOutput, ///< Selects the midi output signal.
+    DigitalInput, ///< Selects the digital input signal.
+    DigitalOutput, ///< Selects the digital output signal.
+    CvInput, ///< Selects the cv input signal.
+    GateOutput, ///< Selects the gate output signal.
+    CvOutput, ///< Selects the cv output signal.
+    Button, ///< Selects the button signal.
+    Led, ///< Selects the led signal.
+    Lcd, ///< Selects the lcd signal.
 };
 
+/**
+ * @brief Provides info behavior for the desktop simulator.
+ */
 struct Info {
-    Widget widget;
-    Signal signal;
-    int index;
+    Widget widget; ///< Widget state owned by this component.
+    Signal signal; ///< Signal state owned by this component.
+    int index; ///< Zero-based index; a negative/sentinel value represents no selection where applicable.
 
-    double x;
-    double y;
-    double w;
-    double h;
+    double x; ///< Simulator value representing x.
+    double y; ///< Simulator value representing y.
+    double w; ///< Simulator value representing w.
+    double h; ///< Simulator value representing h.
 };
 
 #define INFO(_kind_, _signal_, _index_, _x_, _y_, _w_, _h_) \

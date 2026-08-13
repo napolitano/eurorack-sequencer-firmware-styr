@@ -29,10 +29,14 @@
 
 namespace asteroids {
 
+/// @brief Mathematical pi used by Asteroids geometry.
 static const float Pi = 3.1415926536f;
+/// @brief Two-pi angular period used by Asteroids geometry.
 static const float TwoPi = 2.f * Pi;
 
+/// @brief Asteroids playfield width, in display pixels.
 static const int ScreenWidth = 256;
+/// @brief Asteroids playfield height, in display pixels.
 static const int ScreenHeight = 64;
 
 static Vec2 directionFromAngle(float angle) {

@@ -18,9 +18,19 @@
 
 #include <cstdlib>
 
+/**
+ * @brief Provides bounded string-copy and formatting helpers used by the firmware.
+ */
 class StringUtils {
 public:
 
+    /**
+     * @brief Copies the supplied value/data into the destination.
+     *
+     * @param[in] dst Destination object/buffer/value.
+     * @param[in] src Source object/buffer/value.
+     * @param[in] len Number of valid bytes, characters, or elements.
+     */
     static void copy(char *dst, const char *src, size_t len) {
         if (len == 0) {
             return;

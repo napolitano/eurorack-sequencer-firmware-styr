@@ -20,19 +20,40 @@
 
 #include <cstdint>
 
+/**
+ * @brief Applies a temporary directional tempo offset with a smoothly varying strength.
+ */
 class NudgeTempo {
 public:
+    /**
+     * @brief Constructs a NudgeTempo instance.
+     */
     NudgeTempo() {
     }
 
+    /**
+     * @brief Sets the direction.
+     *
+     * @param[in] direction Direction used for traversal, rotation or sequence advancement.
+     */
     void setDirection(int direction) {
         _direction = direction;
     }
 
+    /**
+     * @brief Returns the strength.
+     *
+     * @return Current signed tempo-nudge strength.
+     */
     float strength() const {
         return _strength;
     }
 
+    /**
+     * @brief Updates the NudgeTempo for the current service cycle.
+     *
+     * @param[in] dt Elapsed time in seconds since the previous update.
+     */
     void update(float dt) {
         if (_direction == 0) {
             _strength = 0.f;
@@ -42,6 +63,12 @@ public:
     }
 
 private:
-    int8_t _direction = 0;
-    float _strength = 0.f;
+    /**
+     * @brief Runtime value representing direction.
+     */
+    int8_t _direction = 0; ///< Direction selector or signed direction stored by this state.
+    /**
+     * @brief Runtime value representing strength.
+     */
+    float _strength = 0.f; ///< Current normalized tempo-nudge strength applied in the selected direction.
 };

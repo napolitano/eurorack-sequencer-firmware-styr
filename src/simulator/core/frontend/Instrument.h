@@ -20,13 +20,29 @@
 
 namespace sim {
 
+/**
+ * @brief Provides instrument behavior for the desktop simulator.
+ */
 class Instrument {
 public:
     typedef std::shared_ptr<Instrument> Ptr;
 
+    /**
+     * @brief Destroys the Instrument instance.
+     */
     virtual ~Instrument() {}
 
+    /**
+     * @brief Sets the gate.
+     *
+     * @param[in] gate `true` to enable/set gate; `false` to disable/clear it.
+     */
     virtual void setGate(bool gate) = 0;
+    /**
+     * @brief Sets the cv.
+     *
+     * @param[in] cv Control-voltage value in the engine/model voltage domain.
+     */
     virtual void setCv(float cv) = 0;
 };
 

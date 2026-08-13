@@ -22,22 +22,52 @@
 
 #include <array>
 
+/**
+ * @brief Samples and converts calibrated CV input channels for the sequencer engine.
+ */
 class CvInput {
 public:
-    static constexpr int Channels = CONFIG_CV_INPUT_CHANNELS;
+    /**
+     * @brief Channels constant used by this component.
+     */
+    static constexpr int Channels = CONFIG_CV_INPUT_CHANNELS; ///< Number of sequencer CV input channels.
 
+    /**
+     * @brief Constructs a CvInput instance.
+     *
+     * @param[in] adc ADC driver used to sample control-voltage inputs.
+     */
     CvInput(Adc &adc);
 
+    /**
+     * @brief Initializes the CvInput and its runtime resources.
+     */
     void init();
 
+    /**
+     * @brief Updates the CvInput for the current service cycle.
+     */
     void update();
 
+    /**
+     * @brief Returns channel.
+     *
+     * @param[in] index Zero-based channel index.
+     *
+     * @return MIDI channel in the standard 0..15 internal representation.
+     */
     float channel(int index) const {
         return _channels[index];
     }
 
 private:
-    Adc &_adc;
+    /**
+     * @brief Reference to adc owned by another component.
+     */
+    Adc &_adc; ///< Reference to adc owned by another component.
 
-    std::array<float, Channels> _channels;
+    /**
+     * @brief Fixed-capacity storage for channels.
+     */
+    std::array<float, Channels> _channels; ///< Most recent converted input voltage for each CV channel.
 };

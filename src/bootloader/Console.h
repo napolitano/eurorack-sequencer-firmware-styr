@@ -18,16 +18,46 @@
 
 #include <cstdlib>
 
+/**
+ * @brief Provides formatted diagnostic output for the bootloader.
+ */
 class Console {
 public:
+    /**
+     * @brief Initializes the Console and its runtime resources.
+     */
     static void init();
+    /**
+     * @brief Releases runtime resources owned by the Console.
+     */
     static void deinit();
 
+    /**
+     * @brief Writes the supplied value/data to the destination.
+     *
+     * @param[in] c Character, color, or scalar value as defined by the called interface.
+     */
     static void write(char c);
+    /**
+     * @brief Writes the supplied value/data to the destination.
+     *
+     * @param[in] s String/scalar operand supplied by the caller.
+     */
     static void write(const char *s);
+    /**
+     * @brief Writes the supplied value/data to the destination.
+     *
+     * @param[in] s String/scalar operand supplied by the caller.
+     * @param[in] length Number of bytes or elements covered by the operation.
+     */
     static void write(const char *s, size_t length);
 
 private:
+    /**
+     * @brief Sends the supplied data through this transport/interface.
+     *
+     * @param[in] c Character, color, or scalar value as defined by the called interface.
+     */
     static void send(char c);
 };
 

@@ -58,6 +58,7 @@ static const usbh_low_level_driver_t * const lld_drivers[] = {
 	nullptr
 };
 
+/// @brief Temporary USB-host write buffer capacity, in bytes.
 static constexpr size_t WriteBufferSize = 64;
 static uint8_t writeBuffer[2][WriteBufferSize];
 static size_t writeBufferSize;

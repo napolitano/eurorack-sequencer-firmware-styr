@@ -18,8 +18,17 @@
 
 #include <libopencm3/cm3/cortex.h>
 
+/**
+ * @brief Temporarily masks interrupts for a scoped bootloader critical section.
+ */
 class InterruptLock {
 public:
+    /**
+     * @brief Constructs a InterruptLock instance.
+     */
     InterruptLock() { cm_disable_interrupts(); }
+    /**
+     * @brief Destroys the InterruptLock instance.
+     */
     ~InterruptLock() { cm_enable_interrupts(); }
 };

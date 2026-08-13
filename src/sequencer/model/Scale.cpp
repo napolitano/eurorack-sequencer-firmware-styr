@@ -83,8 +83,8 @@ static const Scale *scales[] = {
     &voltageScale
 };
 
-static const int BuiltinCount = sizeof(scales) / sizeof(Scale *);
-static const int UserCount = UserScale::userScales.size();
+static const int BuiltinCount = sizeof(scales) / sizeof(Scale *); ///< Number of built-in scale definitions preceding user scales in the registry. ///< Number of built-in scale definitions preceding user scales in the registry.
+static const int UserCount = UserScale::userScales.size(); ///< Number of user-scale slots appended to the built-in scale registry. ///< Number of user-scale slots appended to the built-in scale registry.
 
 int Scale::Count = BuiltinCount + UserCount;
 

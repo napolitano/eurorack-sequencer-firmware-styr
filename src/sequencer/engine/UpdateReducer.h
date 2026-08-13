@@ -20,9 +20,20 @@
 
 #include <cstdint>
 
+/**
+ * @brief Limits expensive updates to a configured cadence while preserving elapsed time.
+ */
 template<uint32_t Interval>
+/**
+ * @brief Coalesces frequent update requests so work executes no more often than the configured interval.
+ */
 class UpdateReducer {
 public:
+    /**
+     * @brief Updates the UpdateReducer for the current service cycle.
+     *
+     * @return `true` if update; otherwise `false`.
+     */
     bool update() {
         uint32_t currentTick = os::ticks();
         if (currentTick >= _lastUpdate + Interval) {
@@ -33,5 +44,8 @@ public:
     }
 
 private:
-    uint32_t _lastUpdate = 0;
+    /**
+     * @brief Most recently observed update.
+     */
+    uint32_t _lastUpdate = 0; ///< System tick of the most recent accepted update, used to enforce the reduction interval.
 };

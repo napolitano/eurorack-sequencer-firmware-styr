@@ -60,7 +60,9 @@ void PerformerPage::draw(Canvas &canvas) {
     WindowPainter::drawHeader(canvas, _model, _engine, TXT_MODE_PERFORMANCE);
     WindowPainter::drawFooter(canvas, functionNames, pageKeyState());
 
+    /// @brief Normal performer-cell border inset, in pixels.
     constexpr int Border = 4;
+    /// @brief Performer-cell border inset used to mark a requested/pending state, in pixels.
     constexpr int BorderRequested = 6;
 
     bool hasRequested = false;

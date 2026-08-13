@@ -21,15 +21,36 @@
 #include <functional>
 #include <memory>
 
+/**
+ * @brief Provides the dio hardware/platform abstraction.
+ */
 class Dio : private sim::TargetInputHandler {
 public:
+    /**
+     * @brief Provides the input hardware/platform abstraction.
+     */
     struct Input {
         typedef std::function<void(bool)> Handler;
 
+        /**
+         * @brief Returns the current digital input level.
+         *
+         * @return `true` when the digital input is logically active; otherwise `false`.
+         */
         bool get() const { return _value; }
+        /**
+         * @brief Sets the handler.
+         *
+         * @param[in] handler Callback invoked when the associated event occurs.
+         */
         void setHandler(Handler handler) { _handler = handler; }
 
     private:
+        /**
+         * @brief Stores the supplied value.
+         *
+         * @param[in] value Replacement value to store or apply.
+         */
         void set(bool value) {
             if (_handler && value != _value) {
                 _handler(value);
@@ -37,13 +58,21 @@ public:
             _value = value;
         }
 
-        bool _value = false;
-        Handler _handler;
+        bool _value = false; ///< Whether value is true in the current state.
+        Handler _handler; ///< Callback invoked when this digital signal changes.
 
         friend class Dio;
     };
 
+    /**
+     * @brief Provides the output hardware/platform abstraction.
+     */
     struct Output {
+        /**
+         * @brief Stores the supplied value.
+         *
+         * @param[in] value Replacement value to store or apply.
+         */
         void set(bool value) {
             if (_handler) {
                 _handler(value);
@@ -53,13 +82,21 @@ public:
     private:
         typedef std::function<void(bool)> Handler;
 
+        /**
+         * @brief Sets the handler.
+         *
+         * @param[in] handler Callback invoked when the associated event occurs.
+         */
         void setHandler(Handler handler) { _handler = handler; }
 
-        Handler _handler;
+        Handler _handler; ///< Callback invoked when this digital signal changes.
 
         friend class Dio;
     };
 
+    /**
+     * @brief Constructs a Dio instance.
+     */
     Dio() :
         _simulator(sim::Simulator::instance())
     {
@@ -74,19 +111,31 @@ public:
         });
     }
 
+    /**
+     * @brief Destroys the Dio instance.
+     */
     ~Dio() {
         _simulator.unregisterTargetInputObserver(this);
     }
 
+    /**
+     * @brief Initializes the Dio and its runtime resources.
+     */
     void init() {}
 
-    Input clockInput;
-    Input resetInput;
+    Input clockInput; ///< Digital I/O endpoint for the clock input signal.
+    Input resetInput; ///< Digital I/O endpoint for the reset input signal.
 
-    Output clockOutput;
-    Output resetOutput;
+    Output clockOutput; ///< Digital I/O endpoint for the clock output signal.
+    Output resetOutput; ///< Digital I/O endpoint for the reset output signal.
 
 private:
+    /**
+     * @brief Writes digital input.
+     *
+     * @param[in] pin Pin used by the operation.
+     * @param[in] value Replacement value to store or apply.
+     */
     void writeDigitalInput(int pin, bool value) override {
         switch (pin) {
         case 0: clockInput.set(value); break;
@@ -94,5 +143,5 @@ private:
         }
     }
 
-    sim::Simulator &_simulator;
+    sim::Simulator &_simulator; ///< Reference to simulator owned by another component.
 };

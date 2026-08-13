@@ -19,17 +19,33 @@
 #include "core/utils/MovingAverage.h"
 #include "drivers/HighResolutionTimer.h"
 
+/**
+ * @brief Estimates tempo from consecutive user taps while rejecting large discontinuities between tap intervals.
+ */
 class TapTempo {
 public:
+    /**
+     * @brief Constructs a TapTempo instance.
+     */
     TapTempo() {
         reset();
     }
 
+    /**
+     * @brief Resets the TapTempo to its initial runtime state.
+     */
     void reset() {
         _lastTime = 0;
         _lastInterval = 0;
     }
 
+    /**
+     * @brief Returns tap.
+     *
+     * @param[in] bpm Tempo in beats per minute.
+     *
+     * @return Tempo derived from the accumulated tap intervals, in beats per minute.
+     */
     float tap(float bpm) {
         uint32_t currentTime = HighResolutionTimer::us();
         uint32_t interval = currentTime - _lastTime;
@@ -50,7 +66,13 @@ public:
     }
 
 private:
-    uint32_t _lastTime;
-    uint32_t _lastInterval;
-    MovingAverage<uint32_t, 8> _intervalAverage;
+    /**
+     * @brief Most recently observed time.
+     */
+    uint32_t _lastTime; ///< Microsecond timestamp of the previous tap; zero marks the initial/no-tap state.
+    /**
+     * @brief Most recently observed interval.
+     */
+    uint32_t _lastInterval; ///< Interval between the two most recent taps, in microseconds.
+    MovingAverage<uint32_t, 8> _intervalAverage; ///< Eight-sample moving average of accepted tap intervals, in microseconds.
 };

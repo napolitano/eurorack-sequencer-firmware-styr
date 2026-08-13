@@ -18,9 +18,22 @@
 
 #include <cstdint>
 
+/**
+ * @brief Filters a sampled boolean signal and exposes its stable debounced state.
+ */
 template<uint8_t Count>
+/**
+ * @brief Filters a boolean input until it remains stable for the configured debounce interval.
+ */
 class Debouncer {
 public:
+    /**
+     * @brief Returns debounce.
+     *
+     * @param[in] state New state or logical level to apply.
+     *
+     * @return `true` if debounce; otherwise `false`.
+     */
     bool debounce(bool state) {
         if (state != _state) {
             if (++_counter >= Count) {
@@ -35,6 +48,12 @@ public:
     }
 
 private:
-    bool _state = false;
-    uint8_t _counter = 0;
+    /**
+     * @brief Whether state is true in the current state.
+     */
+    bool _state = false; ///< Current stable logical state retained by the debouncer or digital-I/O wrapper.
+    /**
+     * @brief Runtime value representing counter.
+     */
+    uint8_t _counter = 0; ///< Counter used to accumulate consecutive samples/events for the state transition.
 };

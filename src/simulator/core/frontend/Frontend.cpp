@@ -356,8 +356,11 @@ void Frontend::setupControls() {
     const int controlContentTop = controlStripTop + 5; // 1px separator + 4px gap
     int y = controlContentTop;
 
+    /// @brief Minimum CV voltage exposed by the simulator controls, in volts.
     constexpr float kCvMinVoltage = -5.f;
+    /// @brief Maximum CV voltage exposed by the simulator controls, in volts.
     constexpr float kCvMaxVoltage = 5.f;
+    /// @brief Fine CV adjustment increment, in volts.
     constexpr float kCvFineStepVoltage = 0.01f; // 1/100 V
     const Color separatorColor(0.2f, 0.2f, 0.2f, 1.f);
     const float separatorY = float(y + 6);
@@ -441,6 +444,7 @@ void Frontend::setupControls() {
         _clockSource.reset(new ClockSource(_simulator, [this] () {
              // issue a rising edge immediately and schedule a delayed falling edge
              _simulator.writeDigitalInput(0, true);
+             /// @brief Simulated digital-input pulse width chosen for reliable edge detection, in milliseconds.
              constexpr double kPulseWidthMs = 2.0; // 2 ms pulse width for reliable detection
              if (0 >= 0 && 0 < int(_digitalInputPendingFalseAt.size())) {
                  _digitalInputPendingFalseAt[0] = ticks() + kPulseWidthMs;
@@ -678,7 +682,7 @@ void Frontend::writeDigitalInput(int pin, bool value) {
     // For very short pulses (clock) keep the jack visually high for a short
     // frontend-only duration so the user can see the pulse. Do not change the
     // actual simulator timing or target input semantics.
-    constexpr double kDisplayHoldMs = 30.0; // milliseconds
+    constexpr double kDisplayHoldMs = 30.0; ///< Host-side highlight duration for transient digital-input activity, in milliseconds.
 
     if (pin == 0) {
         if (value) {

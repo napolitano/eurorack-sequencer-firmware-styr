@@ -22,33 +22,64 @@
 
 #include "model/CurveSequence.h"
 
+/**
+ * @brief Provides list data and editing behavior for curve sequence.
+ */
 class CurveSequenceListModel : public RoutableListModel {
 public:
+    /**
+     * @brief Enumerates the supported item values.
+     */
     enum Item {
-        FirstStep,
-        LastStep,
-        RunMode,
-        Divisor,
-        ResetMeasure,
-        Range,
-        Last
+        FirstStep, ///< Selects the first step item.
+        LastStep, ///< Selects the last step item.
+        RunMode, ///< Selects the run mode item.
+        Divisor, ///< Selects the divisor item.
+        ResetMeasure, ///< Selects the reset measure item.
+        Range, ///< Selects the range item.
+        Last ///< Sentinel marking the end of the valid enumeration range.
     };
 
+    /**
+     * @brief Constructs a CurveSequenceListModel instance.
+     */
     CurveSequenceListModel()
     {}
 
+    /**
+     * @brief Sets the sequence.
+     *
+     * @param[in] sequence Sequence to inspect or modify.
+     */
     void setSequence(CurveSequence *sequence) {
         _sequence = sequence;
     }
 
+    /**
+     * @brief Returns the rows.
+     *
+     * @return Number of rows represented by this object.
+     */
     virtual int rows() const override {
         return _sequence ? Last : 0;
     }
 
+    /**
+     * @brief Returns the columns.
+     *
+     * @return Number of columns represented by this object.
+     */
     virtual int columns() const override {
         return 2;
     }
 
+    /**
+     * @brief Returns the cell at the requested row and column.
+     *
+     * @param[in] row Zero-based row index.
+     * @param[in] column Zero-based column index.
+     * @param[out] str String builder that receives the formatted representation.
+     */
     virtual void cell(int row, int column, StringBuilder &str) const override {
         if (column == 0) {
             formatName(Item(row), str);
@@ -57,26 +88,61 @@ public:
         }
     }
 
+    /**
+     * @brief Applies a UI edit delta to the currently addressed value.
+     *
+     * @param[in] row Zero-based row index.
+     * @param[in] column Zero-based column index.
+     * @param[in] value Value to apply, store, compare, or encode as defined by the operation.
+     * @param[in] shift UI modifier or coarse-adjustment value supplied by the caller.
+     */
     virtual void edit(int row, int column, int value, bool shift) override {
         if (column == 1) {
             editValue(Item(row), value, shift);
         }
     }
 
+    /**
+     * @brief Returns indexed count.
+     *
+     * @param[in] row Zero-based row index.
+     *
+     * @return Number of indexed entries.
+     */
     virtual int indexedCount(int row) const override {
         return indexedCountValue(Item(row));
     }
 
+    /**
+     * @brief Returns indexed.
+     *
+     * @param[in] row Zero-based row index.
+     *
+     * @return Indexed state/value.
+     */
     virtual int indexed(int row) const override {
         return indexedValue(Item(row));
     }
 
+    /**
+     * @brief Sets the indexed.
+     *
+     * @param[in] row Zero-based row index.
+     * @param[in] index Zero-based indexed index.
+     */
     virtual void setIndexed(int row, int index) override {
         if (index >= 0 && index < indexedCount(row)) {
             setIndexedValue(Item(row), index);
         }
     }
 
+    /**
+     * @brief Returns routing target.
+     *
+     * @param[in] row Zero-based row index.
+     *
+     * @return Resolved routing target identifier.
+     */
     virtual Routing::Target routingTarget(int row) const override {
         switch (Item(row)) {
         case Divisor:
@@ -93,6 +159,13 @@ public:
     }
 
 private:
+    /**
+     * @brief Returns the display name for item.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     *
+     * @return Pointer to the item name; `nullptr` when no value is available.
+     */
     static const char *itemName(Item item) {
         switch (item) {
         case FirstStep:         return TXT_LIST_LABEL_FIRST_STEP;
@@ -106,10 +179,22 @@ private:
         return nullptr;
     }
 
+    /**
+     * @brief Formats the name for display.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[out] str String builder that receives the formatted representation.
+     */
     void formatName(Item item, StringBuilder &str) const {
         str(itemName(item));
     }
 
+    /**
+     * @brief Formats the value for display.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[out] str String builder that receives the formatted representation.
+     */
     void formatValue(Item item, StringBuilder &str) const {
         switch (item) {
         case FirstStep:
@@ -135,6 +220,13 @@ private:
         }
     }
 
+    /**
+     * @brief Adjusts the value from a UI edit delta.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[in] value Value to apply, store, compare, or encode as defined by the operation.
+     * @param[in] shift UI modifier or coarse-adjustment value supplied by the caller.
+     */
     void editValue(Item item, int value, bool shift) {
         switch (item) {
         case FirstStep:
@@ -160,6 +252,13 @@ private:
         }
     }
 
+    /**
+     * @brief Returns indexed count value.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     *
+     * @return Result of indexedCountValue().
+     */
     int indexedCountValue(Item item) const {
         switch (item) {
         case FirstStep:
@@ -178,6 +277,13 @@ private:
         return -1;
     }
 
+    /**
+     * @brief Returns indexed value.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     *
+     * @return Result of indexedValue().
+     */
     int indexedValue(Item item) const {
         switch (item) {
         case FirstStep:
@@ -198,6 +304,12 @@ private:
         return -1;
     }
 
+    /**
+     * @brief Sets the indexed value.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[in] index Zero-based indexed index.
+     */
     void setIndexedValue(Item item, int index) {
         switch (item) {
         case FirstStep:
@@ -217,5 +329,8 @@ private:
         }
     }
 
-    CurveSequence *_sequence = nullptr;
+    /**
+     * @brief Currently active sequence.
+     */
+    CurveSequence *_sequence = nullptr; ///< Currently active sequence.
 };

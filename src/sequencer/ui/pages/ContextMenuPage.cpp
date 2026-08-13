@@ -20,8 +20,10 @@
 namespace {
     // TODO: This page currently renders only five slots and maps them to F-keys directly.
     // If hardware key count or menu size changes, update rendering and key mapping together.
-    constexpr int kMenuSlotCount = 5;
+    constexpr int kMenuSlotCount = 5; ///< Number of menu rows visible in the context-menu viewport. ///< Number of menu rows visible in the context-menu viewport.
+    /// @brief Height of one context-menu selection bar, in pixels.
     constexpr int kBarHeight = 12;
+    /// @brief Vertical offset from a menu bar to its text baseline, in pixels.
     constexpr int kTextBaselineOffset = 4;
 }
 

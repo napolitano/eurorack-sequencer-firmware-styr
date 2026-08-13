@@ -22,30 +22,75 @@
 
 namespace sim {
 
+/**
+ * @brief Represents the rotary component and its associated state.
+ */
 class Rotary : public Widget {
 public:
     typedef std::shared_ptr<Rotary> Ptr;
 
+    /**
+     * @brief Constructs a Rotary instance.
+     *
+     * @param[in] pos Pos supplied to the operation.
+     * @param[in] size Number of bytes or elements covered by the operation.
+     */
     Rotary(const Vector2f &pos, const Vector2f &size) :
+        /**
+         * @brief Returns the widget.
+         */
         Widget(pos, size)
     {}
 
+    /**
+     * @brief Returns the value.
+     *
+     * @return The value value.
+     */
     float value() const { return _value; }
+    /**
+     * @brief Sets the value.
+     *
+     * @param[in] value Value to apply.
+     */
     void setValue(float value) { _value = std::max(0.f, std::min(1.f, value)); }
 
+    /**
+     * @brief Returns the pressed.
+     *
+     * @return `true` when pressed; otherwise `false`.
+     */
     bool pressed() const { return _pressed; }
 
+    /**
+     * @brief Sets the button callback.
+     *
+     * @param[in] callback Callback supplied to the operation.
+     */
     void setButtonCallback(std::function<void(bool)> callback) {
         _buttonCallback = callback;
     }
 
+    /**
+     * @brief Sets the value callback.
+     *
+     * @param[in] callback Callback supplied to the operation.
+     */
     void setValueCallback(std::function<void(float)> callback) {
         _valueCallback = callback;
     }
 
+    /**
+     * @brief Updates the Rotary for the current service cycle.
+     */
     virtual void update() override {
     }
 
+    /**
+     * @brief Performs the render operation for this Rotary.
+     *
+     * @param[in] renderer Renderer supplied to the operation.
+     */
     virtual void render(Renderer &renderer) override {
         renderer.setColor(Color(_hovered ? 0.75f : 0.5f, 1.f));
 
@@ -64,6 +109,11 @@ public:
         renderer.drawLine(center, pointOnCircle(-PI * 0.75f + _value * TWO_PI * 0.75f));
     }
 
+    /**
+     * @brief Performs the on mouse move operation for this Rotary.
+     *
+     * @param[in] e E supplied to the operation.
+     */
     virtual void onMouseMove(MouseMoveEvent &e) override {
         _hovered = isInside(e.pos());
         if (_pressed) {
@@ -83,6 +133,11 @@ public:
         }
     }
 
+    /**
+     * @brief Performs the on mouse down operation for this Rotary.
+     *
+     * @param[in] e E supplied to the operation.
+     */
     virtual void onMouseDown(MouseButtonEvent &e) override {
         if (!_pressed && e.button() == MouseButtonEvent::Left && isInside(e.pos())) {
             if (e.clicks() >= 2) {
@@ -98,6 +153,11 @@ public:
         }
     }
 
+    /**
+     * @brief Performs the on mouse up operation for this Rotary.
+     *
+     * @param[in] e E supplied to the operation.
+     */
     virtual void onMouseUp(MouseButtonEvent &e) override {
         if (_pressed && e.button() == MouseButtonEvent::Left) {
             SDL_CaptureMouse(SDL_FALSE);
@@ -107,6 +167,11 @@ public:
     }
 
 private:
+    /**
+     * @brief Sets the pressed.
+     *
+     * @param[in] pressed Whether pressed is enabled for this operation.
+     */
     void setPressed(bool pressed) {
         if (pressed != _pressed) {
             _pressed = pressed;
@@ -116,6 +181,11 @@ private:
         }
     }
 
+    /**
+     * @brief Updates the value.
+     *
+     * @param[in] value Value to apply.
+     */
     void updateValue(float value) {
         value = std::max(0.f, std::min(1.f, value));
         if (value != _value) {
@@ -126,13 +196,39 @@ private:
         }
     }
 
-    bool _pressed = false;
-    bool _hovered = false;
-    float _value = 0.5f;
-    Vector2i _lastPos;
+    /**
+     * @brief Whether pressed is true in the current state.
+     */
+    bool _pressed = false; ///< Whether pressed is active or enabled.
+    /**
+     * @brief Whether hovered is true in the current state.
+     */
+    bool _hovered = false; ///< Whether hovered is active or enabled.
+    /**
+     * @brief Simulator value representing value.
+     */
+    float _value = 0.5f; ///< Value maintained by this component.
+    /**
+     * @brief Most recently observed pos.
+     */
+    Vector2i _lastPos; ///< Last pos maintained by this component.
 
-    std::function<void(bool)> _buttonCallback;
-    std::function<void(float)> _valueCallback;
+    /**
+     * @brief Computes the void result.
+     *
+     * @note Includes an unnamed `bool` input parameter as declared by the inherited/interface signature.
+     *
+     * @return Current void.
+     */
+    std::function<void(bool)> _buttonCallback; ///< Callback invoked when the rotary push button changes state.
+    /**
+     * @brief Computes the void result.
+     *
+     * @note Includes an unnamed `float` input parameter as declared by the inherited/interface signature.
+     *
+     * @return Current void.
+     */
+    std::function<void(float)> _valueCallback; ///< Callback invoked with the rotary control's normalized value.
 };
 
 } // namespace sim

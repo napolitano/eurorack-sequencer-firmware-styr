@@ -20,28 +20,77 @@
 
 #include <functional>
 
+/**
+ * @brief Implements the confirmation page user-interface page.
+ */
 class ConfirmationPage : public BasePage {
 public:
+    /**
+     * @brief Constructs a ConfirmationPage instance.
+     *
+     * @param[in] manager Manager coordinating the associated UI or resource lifecycle.
+     * @param[in] context Context object containing state required by the operation.
+     */
     ConfirmationPage(PageManager &manager, PageContext &context);
 
     typedef std::function<void(bool)> ResultCallback;
 
     using BasePage::show;
+    /**
+     * @brief Makes the page, dialog, or message visible.
+     *
+     * @param[in] text Null-terminated text string consumed or displayed by the operation.
+     * @param[in] callback Callback invoked by the operation.
+     */
     void show(const char *text, ResultCallback callback);
 
+    /**
+     * @brief Activates the page/controller and initializes transient UI state.
+     */
     virtual void enter() override;
+    /**
+     * @brief Deactivates the page/controller and releases transient UI state.
+     */
     virtual void exit() override;
 
+    /**
+     * @brief Draws this component into the supplied canvas or rendering target.
+     *
+     * @param[in,out] canvas Canvas that receives drawing operations.
+     */
     virtual void draw(Canvas &canvas) override;
+    /**
+     * @brief Refreshes LED state from the current model and UI state.
+     *
+     * @param[in] leds LED-state buffer or mask updated by the operation.
+     */
     virtual void updateLeds(Leds &leds) override;
 
+    /**
+     * @brief Reports whether modal.
+     *
+     * @return `true` if modal; otherwise `false`.
+     */
     virtual bool isModal() const override { return true; }
 
+    /**
+     * @brief Handles a key-press event.
+     *
+     * @param[in] event Event to process.
+     */
     virtual void keyPress(KeyPressEvent &event) override;
 
 private:
+    /**
+     * @brief Closes the active page/dialog and commits its result.
+     *
+     * @param[in] result Whether result is enabled for this operation.
+     */
     void closeWithResult(bool result);
 
-    const char *_text;
-    ResultCallback _callback;
+    /**
+     * @brief Pointer to text; `nullptr` denotes that no object/resource is assigned.
+     */
+    const char *_text; ///< Pointer to text; `nullptr` denotes that no object/resource is assigned.
+    ResultCallback _callback; ///< Callback that receives the operation result.
 };

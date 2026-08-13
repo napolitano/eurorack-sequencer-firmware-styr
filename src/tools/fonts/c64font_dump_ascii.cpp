@@ -23,9 +23,12 @@
 namespace {
 
 // Default dimensions for backward compatibility with existing 8x8 binary files.
-constexpr int kDefaultWidth = 8;
+constexpr int kDefaultWidth = 8; ///< Default C64 glyph width in pixels used by the ASCII dump utility. ///< Default C64 glyph width in pixels used by the ASCII dump utility.
+/// @brief Default glyph height, in pixels.
 constexpr int kDefaultHeight = 8;
+/// @brief Minimum accepted glyph width or height, in pixels.
 constexpr int kMinGlyphDimension = 1;
+/// @brief Maximum accepted glyph width or height, in pixels.
 constexpr int kMaxGlyphDimension = 128;
 
 struct CliOptions {

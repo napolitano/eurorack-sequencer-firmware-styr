@@ -65,6 +65,8 @@ jobs:
         run: python toolchain/check_test_ownership.py
       - name: Validate repository source cleanliness
         run: python toolchain/check_repository_cleanliness.py
+      - name: Validate first-party source documentation
+        run: python toolchain/check_source_documentation.py
       - name: Run complete native product tests with PlatformIO
         run: pio test -e test_product_native
       - name: Build embedded targets

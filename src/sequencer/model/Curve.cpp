@@ -20,7 +20,9 @@
 
 #include <cmath>
 
+/// @brief Mathematical pi used by curve evaluation.
 static const float Pi = 3.1415926536f;
+/// @brief Two-pi angular period used by periodic curve evaluation.
 static const float TwoPi = 2.f * Pi;
 
 static float low(float x) {

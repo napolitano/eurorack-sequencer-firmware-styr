@@ -18,12 +18,33 @@
 
 #include "os/os.h"
 
+/**
+ * @brief Provides interrupt-protected access to a scalar value.
+ */
 template<typename T>
+/**
+ * @brief Provides interrupt-safe access to a small value shared across execution contexts.
+ */
 class Atomic {
 public:
+    /**
+     * @brief Constructs a Atomic instance.
+     */
     Atomic() = default;
+    /**
+     * @brief Constructs a Atomic instance.
+     *
+     * @param[in] value Value to apply, store, compare, or encode as defined by the operation.
+     */
     Atomic(const T &value) : _value(value) {}
 
+    /**
+     * @brief Stores the supplied value.
+     *
+     * @param[in] value Replacement value to store atomically.
+     *
+     * @return Value that was stored before the replacement.
+     */
     inline T set(const T &value) {
         os::InterruptLock lock;
         T old = _value;
@@ -31,5 +52,10 @@ public:
         return old;
     }
 private:
-    T _value = T(0);
+    /**
+     * @brief Returns the t.
+     *
+     * @return The t value.
+     */
+    T _value = T(0); ///< Value protected by the interrupt lock during atomic replacement. ///< Value protected by the interrupt lock during atomic replacement.
 };

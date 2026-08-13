@@ -20,20 +20,38 @@
 
 #include <cstring>
 
+/**
+ * @brief Stores and manipulates flash writer model data.
+ */
 class FlashWriter {
 public:
+    /**
+     * @brief Constructs a FlashWriter instance.
+     *
+     * @param[in] address Byte address in the target flash/storage address space.
+     * @param[in] sector Flash/SD-card sector index.
+     */
     FlashWriter(uint32_t address, uint32_t sector) :
+        /**
+         * @brief Returns the address.
+         */
         _address(address)
     {
         Flash::unlock();
         Flash::eraseSector(sector);
     }
 
+    /**
+     * @brief Destroys the FlashWriter instance.
+     */
     ~FlashWriter() {
         finish();
         Flash::lock();
     }
 
+    /**
+     * @brief Finalizes the current operation and commits pending result state.
+     */
     void finish() {
         if (!_finished) {
             if (_pos > 0) {
@@ -43,6 +61,12 @@ public:
         }
     }
 
+    /**
+     * @brief Writes the supplied value/data to the destination.
+     *
+     * @param[in] data Input data to read, decode, copy, or process.
+     * @param[in] len Number of valid bytes, characters, or elements.
+     */
     void write(const void *data, size_t len) {
         const uint8_t *src = static_cast<const uint8_t *>(data);
         uint8_t *buffer = reinterpret_cast<uint8_t *>(&_buffer);
@@ -63,8 +87,17 @@ public:
     }
 
 private:
-    uint32_t _address;
-    uint32_t _buffer = 0xffffffff;
-    size_t _pos = 0;
-    bool _finished = false;
+    uint32_t _address; ///< Current byte address in the target storage/flash address space.
+    /**
+     * @brief Backing buffer used to stage data for the surrounding operation.
+     */
+    uint32_t _buffer = 0xffffffff; ///< Backing buffer used to stage data for the surrounding operation.
+    /**
+     * @brief Current read/write position within the active buffer/stream.
+     */
+    size_t _pos = 0; ///< Current read/write position within the active buffer/stream.
+    /**
+     * @brief Whether finished is true in the current state.
+     */
+    bool _finished = false; ///< True after the operation has reached its terminal state and no additional payload remains to be processed.
 };

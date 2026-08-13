@@ -23,27 +23,37 @@
 
 namespace PageKeyMap {
 
+    /**
+     * @brief Enumerates the supported page values.
+     */
     enum Page {
-        Clock           = Key::Tempo,
-        Pattern         = Key::Pattern,
-        Performer       = Key::Performer,
-        Overview        = Key::Left,
+        Clock           = Key::Tempo, ///< Selects the clock page.
+        Pattern         = Key::Pattern, ///< Selects the pattern page.
+        Performer       = Key::Performer, ///< Selects the performer page.
+        Overview        = Key::Left, ///< Selects the overview page.
 
-        Project         = Key::Track0,
-        Layout          = Key::Track1,
-        Routing         = Key::Track2,
-        MidiOutput      = Key::Track3,
-        UserScale       = Key::Track4,
+        Project         = Key::Track0, ///< Selects the project page.
+        Layout          = Key::Track1, ///< Selects the layout page.
+        Routing         = Key::Track2, ///< Selects the routing page.
+        MidiOutput      = Key::Track3, ///< Selects the midi output page.
+        UserScale       = Key::Track4, ///< Selects the user scale page.
 
-        SequenceEdit    = Key::Step0,
-        Sequence        = Key::Step1,
-        Track           = Key::Step2,
-        Song            = Key::Step3,
+        SequenceEdit    = Key::Step0, ///< Selects the sequence edit page.
+        Sequence        = Key::Step1, ///< Selects the sequence page.
+        Track           = Key::Step2, ///< Selects the track page.
+        Song            = Key::Step3, ///< Selects the song page.
 
-        System          = Key::Track7,
-        Monitor         = Key::Step7,
+        System          = Key::Track7, ///< Selects the system page.
+        Monitor         = Key::Step7, ///< Selects the monitor page.
     };
 
+    /**
+     * @brief Reports whether a key code is assigned to direct page navigation.
+     *
+     * @param[in] code Input key code to classify.
+     *
+     * @return `true` when the documented condition is satisfied; otherwise `false`.
+     */
     static bool isPageKey(int code) {
         switch (code) {
         case Clock:

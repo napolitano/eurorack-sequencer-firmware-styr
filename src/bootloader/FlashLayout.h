@@ -36,8 +36,15 @@ static const uint32_t SectorAddress[] = {
     0x080E0000, // Sector 11, 128 Kbytes
 };
 
-static const std::size_t SectorCount = sizeof(SectorAddress) / sizeof(SectorAddress[0]);
+static const std::size_t SectorCount = sizeof(SectorAddress) / sizeof(SectorAddress[0]); ///< Number of STM32 flash-sector start addresses in `SectorAddress`. ///< Number of STM32 flash-sector start addresses in `SectorAddress`.
 
+/**
+ * @brief Returns the flash-sector index containing an address.
+ *
+ * @param[in] address Absolute address in the target flash/storage address space.
+ *
+ * @return Computed result in the domain described by this function.
+ */
 inline int sectorIndex(uint32_t address) {
     for (std::size_t i = 0; i < SectorCount; ++i) {
         if (address == SectorAddress[i]) {

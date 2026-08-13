@@ -16,6 +16,7 @@
  */
 #pragma once
 
+/// @brief Defines bitwise operators for an enum class used as a flag set.
 #define ENUM_CLASS_OPERATORS(e_) \
     inline e_ operator&(e_ a, e_ b) { return static_cast<e_>(static_cast<int>(a) & static_cast<int>(b)); } \
     inline e_ operator|(e_ a, e_ b) { return static_cast<e_>(static_cast<int>(a) | static_cast<int>(b)); } \

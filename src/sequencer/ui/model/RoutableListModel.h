@@ -20,7 +20,17 @@
 
 #include "model/Routing.h"
 
+/**
+ * @brief Provides list data and editing behavior for routable.
+ */
 class RoutableListModel : public ListModel {
 public:
+    /**
+     * @brief Returns routing target.
+     *
+     * @param[in] row Zero-based row index.
+     *
+     * @return Resolved routing target identifier.
+     */
     virtual Routing::Target routingTarget(int row) const = 0;
 };

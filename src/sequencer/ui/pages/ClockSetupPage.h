@@ -20,12 +20,26 @@
 
 #include "ui/model/ClockSetupListModel.h"
 
+/**
+ * @brief Implements the clock setup page user-interface page.
+ */
 class ClockSetupPage : public ListPage {
 public:
+    /**
+     * @brief Constructs a ClockSetupPage instance.
+     *
+     * @param[in] manager Manager coordinating the associated UI or resource lifecycle.
+     * @param[in] context Context object containing state required by the operation.
+     */
     ClockSetupPage(PageManager &manager, PageContext &context);
 
+    /**
+     * @brief Draws this component into the supplied canvas or rendering target.
+     *
+     * @param[in,out] canvas Canvas that receives drawing operations.
+     */
     virtual void draw(Canvas &canvas) override;
 
 private:
-    ClockSetupListModel _listModel;
+    ClockSetupListModel _listModel; ///< List model backing the list model controls shown on this page.
 };

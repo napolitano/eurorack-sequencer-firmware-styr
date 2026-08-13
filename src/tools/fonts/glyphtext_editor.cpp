@@ -32,12 +32,15 @@ namespace {
 namespace fs = std::filesystem;
 
 // Default/fallback document size when no glyph data exists yet.
-constexpr int kDefaultWidth = 8;
+constexpr int kDefaultWidth = 8; ///< Default glyph width in pixels when no explicit width is supplied. ///< Default glyph width in pixels when no explicit width is supplied.
+/// @brief Default glyph height, in pixels.
 constexpr int kDefaultHeight = 8;
 // Hard bounds prevent accidental oversized allocations in terminal workflows.
-constexpr int kMinGlyphDimension = 1;
+constexpr int kMinGlyphDimension = 1; ///< Smallest accepted glyph width or height in pixels. ///< Smallest accepted glyph width or height in pixels.
+/// @brief Maximum accepted glyph width or height, in pixels.
 constexpr int kMaxGlyphDimension = 128;
 
+/// @brief Number of glyph cells displayed per editor list row.
 constexpr int kGlyphListColumns = 10;
 
 enum ColorPairId {

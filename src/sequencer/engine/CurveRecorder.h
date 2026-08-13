@@ -22,13 +22,28 @@
 
 #include <cstdint>
 
+/**
+ * @brief Associates sampled CV values with Curve steps during realtime recording.
+ */
 class CurveRecorder {
 public:
+    /**
+     * @brief Resets the CurveRecorder to its initial runtime state.
+     */
     void reset() {
         _writeIndex = 0;
         _writeCount = 0;
     }
 
+    /**
+     * @brief Writes data to the underlying destination.
+     *
+     * @param[in] relativeTick Tick offset relative to the current sequence or step origin.
+     * @param[in] divisor Clock or sequence divisor in the sequencer engine tick domain.
+     * @param[in] value Value to write.
+     *
+     * @return `true` if write; otherwise `false`.
+     */
     bool write(uint32_t relativeTick, uint32_t divisor, float value) {
         bool result = false;
 
@@ -60,12 +75,26 @@ public:
         return result;
     }
 
+    /**
+     * @brief Stores the result of matching a recorded sample/event to sequence timing.
+     */
     struct Match {
-        float min;
-        float max;
-        Curve::Type type;
+        /**
+         * @brief Runtime value representing min.
+         */
+        float min; ///< Minimum value accepted by the object.
+        /**
+         * @brief Runtime value representing max.
+         */
+        float max; ///< Maximum value accepted by the object.
+        Curve::Type type; ///< Selected type that determines how `CurveRecorder` interprets or renders its data.
     };
 
+    /**
+     * @brief Returns the match curve.
+     *
+     * @return Curve-shape identifier matched by the recorder.
+     */
     Match matchCurve() const {
         // determine range
         float curveMin = 1.f;
@@ -103,9 +132,21 @@ public:
     }
 
 private:
-    static constexpr uint32_t RecordBufferLength = 16;
+    /**
+     * @brief Record buffer length constant used by this component.
+     */
+    static constexpr uint32_t RecordBufferLength = 16; ///< Number of recent CV samples retained by the curve recorder.
 
-    std::array<float, RecordBufferLength + 1> _buffer;
-    uint32_t _writeIndex;
-    uint32_t _writeCount;
+    /**
+     * @brief Backing buffer used to stage data for the surrounding operation.
+     */
+    std::array<float, RecordBufferLength + 1> _buffer; ///< Backing buffer used to stage data for the surrounding operation.
+    /**
+     * @brief Zero-based write index; a negative/sentinel value represents no selection where applicable.
+     */
+    uint32_t _writeIndex; ///< Zero-based write index; a negative/sentinel value represents no selection where applicable.
+    /**
+     * @brief Number of write items currently tracked or supported.
+     */
+    uint32_t _writeCount; ///< Number of write items currently tracked or supported.
 };

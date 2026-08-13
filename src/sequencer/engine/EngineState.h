@@ -16,17 +16,46 @@
  */
 #pragma once
 
+/**
+ * @brief Stores engine state used while the component is running.
+ */
 class EngineState {
 public:
+    /**
+     * @brief Returns the running.
+     *
+     * @return `true` if running; otherwise `false`.
+     */
     bool running() const { return _running; }
+    /**
+     * @brief Returns the recording.
+     *
+     * @return `true` if recording; otherwise `false`.
+     */
     bool recording() const { return _recording; }
 
 private:
+    /**
+     * @brief Sets the running.
+     *
+     * @param[in] running `true` to enable/set running; `false` to disable/clear it.
+     */
     void setRunning(bool running) { _running = running; }
+    /**
+     * @brief Sets the recording.
+     *
+     * @param[in] recording `true` to enable/set recording; `false` to disable/clear it.
+     */
     void setRecording(bool recording) { _recording = recording; }
 
-    bool _running = false;
-    bool _recording = false;
+    /**
+     * @brief Whether running is true in the current state.
+     */
+    bool _running = false; ///< True while the engine/tool main loop is running.
+    /**
+     * @brief Whether recording is true in the current state.
+     */
+    bool _recording = false; ///< True while the sequencer engine is recording incoming performance data.
 
     friend class Engine;
 };

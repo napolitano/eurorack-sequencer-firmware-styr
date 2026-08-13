@@ -22,20 +22,48 @@
 
 #include "model/Project.h"
 
+/**
+ * @brief Provides list data and editing behavior for project.
+ */
 class ProjectListModel : public RoutableListModel {
 public:
+    /**
+     * @brief Constructs a ProjectListModel instance.
+     *
+     * @param[in] project Project model read or modified by the operation.
+     */
     ProjectListModel(Project &project) :
+        /**
+         * @brief Returns the project.
+         */
         _project(project)
     {}
 
+    /**
+     * @brief Returns the rows.
+     *
+     * @return Number of rows represented by this object.
+     */
     virtual int rows() const override {
         return Last;
     }
 
+    /**
+     * @brief Returns the columns.
+     *
+     * @return Number of columns represented by this object.
+     */
     virtual int columns() const override {
         return 2;
     }
 
+    /**
+     * @brief Returns the cell at the requested row and column.
+     *
+     * @param[in] row Zero-based row index.
+     * @param[in] column Zero-based column index.
+     * @param[out] str String builder that receives the formatted representation.
+     */
     virtual void cell(int row, int column, StringBuilder &str) const override {
         if (column == 0) {
             formatName(Item(row), str);
@@ -44,12 +72,27 @@ public:
         }
     }
 
+    /**
+     * @brief Applies a UI edit delta to the currently addressed value.
+     *
+     * @param[in] row Zero-based row index.
+     * @param[in] column Zero-based column index.
+     * @param[in] value Value to apply, store, compare, or encode as defined by the operation.
+     * @param[in] shift UI modifier or coarse-adjustment value supplied by the caller.
+     */
     virtual void edit(int row, int column, int value, bool shift) override {
         if (column == 1) {
             editValue(Item(row), value, shift);
         }
     }
 
+    /**
+     * @brief Returns routing target.
+     *
+     * @param[in] row Zero-based row index.
+     *
+     * @return Resolved routing target identifier.
+     */
     virtual Routing::Target routingTarget(int row) const override {
         switch (Item(row)) {
         case Tempo:
@@ -62,22 +105,32 @@ public:
     }
 
 private:
+    /**
+     * @brief Enumerates the supported item values.
+     */
     enum Item {
-        Name,
-        Tempo,
-        Swing,
-        TimeSignature,
-        SyncMeasure,
-        Scale,
-        RootNote,
-        MonitorMode,
-        RecordMode,
-        MidiInput,
-        CvGateInput,
-        CurveCvInput,
-        Last
+        Name, ///< Selects the name item.
+        Tempo, ///< Selects the tempo item.
+        Swing, ///< Selects the swing item.
+        TimeSignature, ///< Selects the time signature item.
+        SyncMeasure, ///< Selects the sync measure item.
+        Scale, ///< Selects the scale item.
+        RootNote, ///< Selects the root note item.
+        MonitorMode, ///< Selects the monitor mode item.
+        RecordMode, ///< Selects the record mode item.
+        MidiInput, ///< Selects the midi input item.
+        CvGateInput, ///< Selects the cv gate input item.
+        CurveCvInput, ///< Selects the curve cv input item.
+        Last ///< Sentinel marking the end of the valid enumeration range.
     };
 
+    /**
+     * @brief Returns the display name for item.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     *
+     * @return Pointer to the item name; `nullptr` when no value is available.
+     */
     static const char *itemName(Item item) {
         switch (item) {
         case Name:              return TXT_LIST_LABEL_NAME;
@@ -97,10 +150,22 @@ private:
         return nullptr;
     }
 
+    /**
+     * @brief Formats the name for display.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[out] str String builder that receives the formatted representation.
+     */
     void formatName(Item item, StringBuilder &str) const {
         str(itemName(item));
     }
 
+    /**
+     * @brief Formats the value for display.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[out] str String builder that receives the formatted representation.
+     */
     void formatValue(Item item, StringBuilder &str) const {
         switch (item) {
         case Name:
@@ -144,6 +209,13 @@ private:
         }
     }
 
+    /**
+     * @brief Adjusts the value from a UI edit delta.
+     *
+     * @param[in] item Item or list entry addressed by the operation.
+     * @param[in] value Value to apply, store, compare, or encode as defined by the operation.
+     * @param[in] shift UI modifier or coarse-adjustment value supplied by the caller.
+     */
     void editValue(Item item, int value, bool shift) {
         switch (item) {
         case Name:
@@ -186,5 +258,8 @@ private:
         }
     }
 
-    Project &_project;
+    /**
+     * @brief Active project model used by this component.
+     */
+    Project &_project; ///< Active project model used by this component.
 };

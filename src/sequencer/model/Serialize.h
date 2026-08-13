@@ -24,6 +24,12 @@
 #include <cstdlib>
 #include <cstdint>
 
+/**
+ * @brief Serializes every element of a fixed-size array in order.
+ *
+ * @param[in] writer Versioned writer that receives serialized array elements.
+ * @param[in] array Fixed-size array to serialize or restore.
+ */
 template<typename T, size_t N>
 static void writeArray(VersionedSerializedWriter &writer, const std::array<T, N> &array) {
     for (size_t i = 0; i < array.size(); ++i) {
@@ -31,6 +37,12 @@ static void writeArray(VersionedSerializedWriter &writer, const std::array<T, N>
     }
 }
 
+/**
+ * @brief Serializes every element of a fixed-size array in order.
+ *
+ * @param[in] writer Versioned writer that receives serialized array elements.
+ * @param[in] array Fixed-size array to serialize or restore.
+ */
 template<size_t N>
 static void writeArray(VersionedSerializedWriter &writer, const std::array<uint8_t, N> &array) {
     for (size_t i = 0; i < array.size(); ++i) {
@@ -38,6 +50,13 @@ static void writeArray(VersionedSerializedWriter &writer, const std::array<uint8
     }
 }
 
+/**
+ * @brief Deserializes elements into a fixed-size array in order.
+ *
+ * @param[in] reader Versioned reader supplying serialized array elements.
+ * @param[out] array Fixed-size array to serialize or restore.
+ * @param[in] size Number of array elements to read; defaults to the full array capacity.
+ */
 template<typename T, size_t N>
 static void readArray(VersionedSerializedReader &reader, std::array<T, N> &array, size_t size = N) {
     for (size_t i = 0; i < size; ++i) {
@@ -45,6 +64,13 @@ static void readArray(VersionedSerializedReader &reader, std::array<T, N> &array
     }
 }
 
+/**
+ * @brief Deserializes elements into a fixed-size array in order.
+ *
+ * @param[in] reader Versioned reader supplying serialized array elements.
+ * @param[out] array Fixed-size array to serialize or restore.
+ * @param[in] size Number of array elements to read; defaults to the full array capacity.
+ */
 template<size_t N>
 static void readArray(VersionedSerializedReader &reader, std::array<uint8_t, N> &array, size_t size = N) {
     for (size_t i = 0; i < size; ++i) {

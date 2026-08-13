@@ -24,6 +24,15 @@
 
 namespace MidiUtils {
 
+/**
+ * @brief Reports whether a MIDI message matches a configured MIDI source.
+ *
+ * @param[in] port MIDI transport port associated with the message/source.
+ * @param[in] message MIDI message to test against the source configuration.
+ * @param[in] source Configured MIDI source containing port/channel matching rules.
+ *
+ * @return `true` when the documented condition is satisfied; otherwise `false`.
+ */
 static bool matchSource(MidiPort port, const MidiMessage &message, const MidiSourceConfig &source) {
     return port == MidiPort(source.port()) && (source.isOmni() || message.channel() == source.channel());
 }

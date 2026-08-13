@@ -18,15 +18,37 @@
 
 #include "core/gfx/Canvas.h"
 
+/**
+ * @brief Runs the startup/intro animation state machine.
+ */
 class Intro {
 public:
+    /**
+     * @brief Constructs a Intro instance.
+     */
     Intro();
 
+    /**
+     * @brief Initializes the Intro and its runtime resources.
+     */
     void init();
 
+    /**
+     * @brief Updates the Intro for the current service cycle.
+     *
+     * @param[in] dt Elapsed time in seconds since the previous update.
+     */
     void update(float dt);
+    /**
+     * @brief Draws this component into the supplied canvas or rendering target.
+     *
+     * @param[in,out] canvas Canvas that receives drawing operations.
+     */
     void draw(Canvas &canvas);
 
 private:
-    float _time;
+    /**
+     * @brief Runtime value representing time.
+     */
+    float _time; ///< Elapsed intro-animation time in seconds.
 };

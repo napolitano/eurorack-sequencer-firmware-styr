@@ -18,6 +18,57 @@ Text should be rewritten for Styr rather than copied mechanically. Feature and s
 
 The upstream behavioral baseline is the official PER|FORMER user manual: <https://westlicht.github.io/performer/manual/>. It documents firmware 0.1.40 and therefore cannot be treated as authoritative for later Styr additions; current implementation and generated UI captures are used to resolve differences.
 
+
+## Source/API documentation contract
+
+First-party C and C++ source is documented in **US English** with Doxygen-compatible comments. The source documentation is intended to remain useful both in the code review workflow and as structured input for later technical documentation.
+
+The contract is:
+
+- every first-party source file has a documented purpose and SPDX attribution;
+- classes, structs, unions, enums, and non-obvious type aliases explain their role rather than restating their identifier;
+- every method documents what it does, every named input/output parameter, and every non-`void` return value;
+- `@param[in]`, `@param[out]`, and `@param[in,out]` are used according to data flow;
+- preconditions, side effects, lifetime/ownership rules, and important postconditions are documented when they affect correct use;
+- persistent state and non-obvious runtime members explain what they represent and who owns them;
+- constants document their semantic purpose and, where applicable, units, range, sentinel meaning, timing domain, or invariant;
+- local variables are commented only when their role cannot be understood reliably from the name and immediate code context;
+- comments must add information. Restating a declaration such as “value used to represent value” is considered a documentation defect.
+
+The static documentation contract is checked with:
+
+```bash
+python3 toolchain/check_source_documentation.py
+```
+
+`third_party/`, generated bitmap payloads, and test implementation directories are intentionally outside the exhaustive API-documentation contract. Imported code remains documented by its upstream project; tests should explain behavior through descriptive suite/case names and targeted comments rather than duplicating production API reference material.
+
+## Technical documentation output
+
+`docs/development/documentation/Doxyfile` defines the planned first-party API reference. When Doxygen is available, run it from the repository root:
+
+```bash
+doxygen docs/development/documentation/Doxyfile
+```
+
+HTML is the reviewable developer reference. Doxygen XML is enabled as the stable machine-readable intermediate for future technical-document generation. A later publication pipeline should consume that XML rather than scrape free-form C++ comments or depend on a particular HTML layout.
+
+The Doxygen build itself is not currently a required local developer dependency; CI/source-quality checks validate the documentation contract independently of the renderer.
+
+## User-manual separation and future reproducible builds
+
+End-user handbook prose does **not** belong in C++ API comments. Production source should, however, remain authoritative for facts that a handbook may need: units, ranges, defaults, sentinel values, timing behavior, persistence rules, supported modes, and externally visible behavioral boundaries. Keeping those facts precise makes later validation or structured extraction possible without turning source files into a second manual.
+
+`docs/manual/` remains the source of user-facing explanations, workflows, screenshots, terminology, and examples. If machine-readable links between code facts and manual sections are introduced later, they should use a dedicated stable schema/identifier rather than ad-hoc prose tags embedded throughout the source.
+
+The intended future documentation build is deliberately staged:
+
+1. generate deterministic simulator screenshots;
+2. synthesize/validate the maintained Markdown documentation against the current source facts and screenshot inventory;
+3. render the Markdown documentation to a distributable ODT document, or PDF when ODT is not viable.
+
+That publishing pipeline is a future task and is **not implemented by the current source-documentation pass**.
+
 ## Screenshot output ownership
 
 The headless simulator writes user-manual images only to:

@@ -22,21 +22,41 @@
 
 #include <cstdint>
 
+/**
+ * @brief Provides the flash hardware/platform abstraction.
+ */
 class Flash {
 public:
+    /**
+     * @brief Re-enables normal engine updates after a lock.
+     */
     static void unlock() {
         flash_unlock();
     }
 
+    /**
+     * @brief Prevents normal engine updates during a short critical operation.
+     */
     static void lock() {
         flash_lock();
     }
 
+    /**
+     * @brief Erases sector.
+     *
+     * @param[in] sector Flash/SD-card sector index.
+     */
     static void eraseSector(uint32_t sector) {
         flash_erase_sector(sector, 2);
         flash_wait_for_last_operation();
     }
 
+    /**
+     * @brief Programs the target device or memory with the supplied data.
+     *
+     * @param[in] address Byte address in the target flash/storage address space.
+     * @param[in] data Input data to read, decode, copy, or process.
+     */
     static void program(uint32_t address, uint32_t data) {
         flash_program_word(address, data);
         flash_wait_for_last_operation();

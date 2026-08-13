@@ -277,6 +277,7 @@ public:
     }
 
 private:
+    /// @brief Base oscillator frequency used to map pitch CV to the simulator synth, in hertz.
     static constexpr float BaseFrequency = 440.f / 8.f;
 
     Oscillator _osc;

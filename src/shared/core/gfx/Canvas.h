@@ -23,99 +23,316 @@
 #include <cmath>
 #include <cstdint>
 
+/**
+ * @brief Enumerates the supported blend mode values.
+ */
 enum class BlendMode {
-    Set,
-    Add,
-    Sub,
+    Set, ///< Selects the set blend mode.
+    Add, ///< Selects the add blend mode.
+    Sub, ///< Selects the sub blend mode.
 };
 
+/**
+ * @brief Enumerates the supported font values.
+ */
 enum class Font {
-    Tiny,
-    Small,
-    Default = Tiny,
+    Tiny, ///< Selects the tiny font.
+    Small, ///< Selects the small font.
+    Default = Tiny, ///< Selects the default font.
 };
 
+/**
+ * @brief Enumerates the supported horizontal align values.
+ */
 enum class HorizontalAlign {
-    Left,
-    Right,
-    Center,
+    Left, ///< Selects the left horizontal align.
+    Right, ///< Selects the right horizontal align.
+    Center, ///< Selects the center horizontal align.
 };
 
+/**
+ * @brief Enumerates the supported vertical align values.
+ */
 enum class VerticalAlign {
-    Top,
-    Bottom,
-    Center,
+    Top, ///< Selects the top vertical align.
+    Bottom, ///< Selects the bottom vertical align.
+    Center, ///< Selects the center vertical align.
 };
 
+/**
+ * @brief Provides primitive drawing, clipping, bitmap and text rendering on a framebuffer.
+ */
 class Canvas {
 public:
+    /**
+     * @brief Constructs a Canvas instance.
+     *
+     * @param[in] frameBuffer Framebuffer that receives drawing operations.
+     */
     Canvas(FrameBuffer8bit &frameBuffer) :
+        /**
+         * @brief Returns the frame buffer.
+         */
         _frameBuffer(frameBuffer),
+        /**
+         * @brief Returns the right.
+         */
         _right(frameBuffer.width() - 1),
+        /**
+         * @brief Returns the bottom.
+         */
         _bottom(frameBuffer.height() - 1)
     {
     }
 
+    /**
+     * @brief Returns the color.
+     *
+     * @return Current drawing color.
+     */
     uint8_t color() const { return _color; }
+    /**
+     * @brief Sets the color.
+     *
+     * @param[in] color Color value/index to draw, store, or emit.
+     */
     void setColor(uint8_t color) { _color = color; }
 
+    /**
+     * @brief Returns the blend mode.
+     *
+     * @return Configured blend mode.
+     */
     BlendMode blendMode() const { return _blendMode; }
+    /**
+     * @brief Sets the blend mode.
+     *
+     * @param[in] blendMode Pixel blending mode used by drawing operations.
+     */
     void setBlendMode(BlendMode blendMode) { _blendMode = blendMode; }
 
+    /**
+     * @brief Returns the font.
+     *
+     * @return Font currently selected for text rendering.
+     */
     Font font() const { return _font; }
+    /**
+     * @brief Sets the font.
+     *
+     * @param[in] font Font selection used for text rendering.
+     */
     void setFont(Font font) { _font = font; }
 
+    /**
+     * @brief Fills the target region or buffer using the current/supplied value.
+     */
     void fill();
 
+    /**
+     * @brief Draws a single point.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     */
     void point(int x, int y);
 
+    /**
+     * @brief Draws a horizontal line.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     */
     void hline(int x, int y, int w);
+    /**
+     * @brief Draws a vertical line.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     */
     void vline(int x, int y, int h);
 
+    /**
+     * @brief Draws a line between two points.
+     *
+     * @param[in] x0 Horizontal coordinate of the first point.
+     * @param[in] y0 Vertical coordinate of the first point.
+     * @param[in] x1 Horizontal coordinate of the second point.
+     * @param[in] y1 Vertical coordinate of the second point.
+     */
     void line(float x0, float y0, float x1, float y1);
 
+    /**
+     * @brief Draws a rectangle outline.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     */
     void drawRect(int x, int y, int w, int h);
+    /**
+     * @brief Fills a rectangular region.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     */
     void fillRect(int x, int y, int w, int h);
 
+    /**
+     * @brief Draws a packed 1-bit bitmap.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     * @param[in] bitmap Pointer to packed bitmap data in the format expected by the drawing method.
+     */
     void drawBitmap1bit(int x, int y, int w, int h, const uint8_t *bitmap);
+    /**
+     * @brief Draws a packed 4-bit bitmap.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     * @param[in] bitmap Pointer to packed bitmap data in the format expected by the drawing method.
+     */
     void drawBitmap4bit(int x, int y, int w, int h, const uint8_t *bitmap);
 
+    /**
+     * @brief Draws a text string at the requested position.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] str Str consumed by `drawText()`.
+     */
     void drawText(int x, int y, const char *str);
+    /**
+     * @brief Draws text centered inside the requested rectangle.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     * @param[in] str Str consumed by `drawTextCentered()`.
+     */
     void drawTextCentered(int x, int y, int w, int h, const char *str);
+    /**
+     * @brief Draws text inside a rectangle using explicit horizontal and vertical alignment.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     * @param[in] horizontalAlign Horizontal alignment applied to the rendered text.
+     * @param[in] verticalAlign Vertical alignment applied to the rendered text.
+     * @param[in] str Str consumed by `drawTextAligned()`.
+     */
     void drawTextAligned(int x, int y, int w, int h, HorizontalAlign horizontalAlign, VerticalAlign verticalAlign, const char *str);
+    /**
+     * @brief Draws wrapped/multiline text in the requested width.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] str Str consumed by `drawTextMultiline()`.
+     */
     void drawTextMultiline(int x, int y, int w, const char *str);
 
+    /**
+     * @brief Measures the rendered width of a text string.
+     *
+     * @param[in] str Str consumed by `textWidth()`.
+     *
+     * @return Rendered text width in pixels.
+     */
     int textWidth(const char *str);
+    /**
+     * @brief Measures the rendered height of a text string.
+     *
+     * @param[in] str Str consumed by `textHeight()`.
+     *
+     * @return Rendered text height in pixels.
+     */
     int textHeight(const char *str);
 
 
 private:
+    /**
+     * @brief Clips a horizontal span to the active drawing bounds.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     */
     void hclip(int &x) {
         x = std::max(0, std::min(_right, x));
     }
 
+    /**
+     * @brief Clips a vertical span to the active drawing bounds.
+     *
+     * @param[in] y Vertical coordinate or scalar y component.
+     */
     void vclip(int &y) {
         y = std::max(0, std::min(_bottom, y));
     }
 
+    /**
+     * @brief Clips the supplied geometry to the active bounds.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     */
     void clip(int &x, int &y) {
         hclip(x);
         vclip(y);
     }
 
+    /**
+     * @brief Reports whether hinside.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     *
+     * @return `true` if hinside; otherwise `false`.
+     */
     bool hinside(int x) {
         return x >= 0 && x <= _right;
     }
 
+    /**
+     * @brief Reports whether vinside.
+     *
+     * @param[in] y Vertical coordinate or scalar y component.
+     *
+     * @return `true` if vinside; otherwise `false`.
+     */
     bool vinside(int y) {
         return y >= 0 && y <= _bottom;
     }
 
+    /**
+     * @brief Reports whether inside.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     *
+     * @return `true` if inside; otherwise `false`.
+     */
     bool inside(int x, int y) {
         return hinside(x) && vinside(y);
     }
 
     template<typename Blit>
+    /**
+     * @brief Draws a single point.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     */
     void point(int x, int y) {
         Blit blit;
         if (inside(x, y)) {
@@ -124,6 +341,13 @@ private:
     }
 
     template<typename Blit>
+    /**
+     * @brief Draws a horizontal line.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     */
     void hline(int x, int y, int w) {
         Blit blit;
         if (vinside(y)) {
@@ -137,6 +361,13 @@ private:
     }
 
     template<typename Blit>
+    /**
+     * @brief Draws a vertical line.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     */
     void vline(int x, int y, int h) {
         Blit blit;
         if (hinside(x)) {
@@ -150,6 +381,14 @@ private:
     }
 
     template<typename Blit>
+    /**
+     * @brief Draws a line between two points.
+     *
+     * @param[in] x0 Horizontal coordinate of the first point.
+     * @param[in] y0 Vertical coordinate of the first point.
+     * @param[in] x1 Horizontal coordinate of the second point.
+     * @param[in] y1 Vertical coordinate of the second point.
+     */
     void line(float x0, float y0, float x1, float y1) {
         Blit blit;
 
@@ -225,6 +464,14 @@ private:
     }
 
     template<typename Blit>
+    /**
+     * @brief Draws a rectangle outline.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     */
     void drawRect(int x, int y, int w, int h) {
         hline(x, y, w);
         hline(x, y + h - 1, w);
@@ -233,6 +480,14 @@ private:
     }
 
     template<typename Blit>
+    /**
+     * @brief Fills a rectangular region.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     */
     void fillRect(int x, int y, int w, int h) {
         Blit blit;
         int x0 = x, x1 = x + w - 1;
@@ -247,6 +502,15 @@ private:
     }
 
     template<typename Blit, size_t Bpp>
+    /**
+     * @brief Draws bitmap.
+     *
+     * @param[in] x Horizontal coordinate or scalar x component.
+     * @param[in] y Vertical coordinate or scalar y component.
+     * @param[in] w Width in pixels or the coordinate domain used by the caller.
+     * @param[in] h Height in pixels or the coordinate domain used by the caller.
+     * @param[in] bitmap Pointer to packed bitmap data in the format expected by the drawing method.
+     */
     void drawBitmap(int x, int y, int w, int h, const uint8_t *bitmap) {
         Blit blit;
         int x0 = x, x1 = x + w - 1;
@@ -273,10 +537,22 @@ private:
         }
     }
 
-    FrameBuffer8bit &_frameBuffer;
-    int _right;
-    int _bottom;
-    uint8_t _color = 0xf;
-    BlendMode _blendMode = BlendMode::Set;
-    Font _font = Font::Default;
+    /**
+     * @brief Reference to frame buffer owned by another component.
+     */
+    FrameBuffer8bit &_frameBuffer; ///< Reference to frame buffer owned by another component.
+    /**
+     * @brief Graphics value representing right.
+     */
+    int _right; ///< Inclusive/exclusive right clipping boundary in canvas coordinates.
+    /**
+     * @brief Graphics value representing bottom.
+     */
+    int _bottom; ///< Inclusive/exclusive bottom clipping boundary in canvas coordinates.
+    /**
+     * @brief Current drawing color/index.
+     */
+    uint8_t _color = 0xf; ///< Current drawing color/index.
+    BlendMode _blendMode = BlendMode::Set; ///< Active blend mode controlling the behavior of `Canvas`.
+    Font _font = Font::Default; ///< Font state used by `Canvas` to preserve its current configuration or runtime progress.
 };

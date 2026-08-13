@@ -47,7 +47,7 @@ static constexpr int kPreferredDegreeWeights[] = {
 static constexpr int kPreferredDegreeCount =
     sizeof(kPreferredDegrees) / sizeof(kPreferredDegrees[0]);
 
-static const char *kRootNames[] = TXT_NOTE_NAMES;
+static const char *kRootNames[] = TXT_NOTE_NAMES; ///< Localized chromatic note names used when displaying the generator root-note parameter. ///< Localized chromatic note names used when displaying the generator root-note parameter.
 } // namespace
 
 const AcidBasslineGenerator::TimingFeel AcidBasslineGenerator::kTightFeel = {

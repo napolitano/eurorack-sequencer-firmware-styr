@@ -18,20 +18,37 @@
 
 namespace os {
 
+/**
+ * @brief Acquires a lock on construction and releases it automatically on scope exit.
+ */
 class LockGuard {
 public:
+    /**
+     * @brief Constructs a LockGuard instance.
+     *
+     * @param[in] mutex Mutex acquired on construction and released on destruction.
+     */
     LockGuard(os::Mutex &mutex) :
+        /**
+         * @brief Returns the mutex.
+         */
         _mutex(mutex)
     {
         _mutex.take();
     }
 
+    /**
+     * @brief Destroys the LockGuard instance.
+     */
     ~LockGuard() {
         _mutex.give();
     }
 
 private:
-    Mutex &_mutex;
+    /**
+     * @brief Reference to mutex owned by another component.
+     */
+    Mutex &_mutex; ///< Reference to mutex owned by another component.
 };
 
 } // namespace os
