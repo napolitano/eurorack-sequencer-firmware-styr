@@ -27,6 +27,8 @@
 
 #include "model/Scale.h"
 
+#include <algorithm>
+
 static Random rng;
 
 // evaluate if step gate is active
@@ -152,6 +154,12 @@ void NoteTrackEngine::reset() {
     _cvOutput = 0.f;
     _cvOutputTarget = 0.f;
     _slideActive = false;
+    _lookAheadReservation = {};
+    if (++_planningVersion == 0) {
+        _planningVersion = 1;
+    }
+    _gateGenerationCounter = 0;
+    _activeGateGeneration = 0;
     _gateQueue.clear();
     _cvQueue.clear();
     _recordHistory.clear();
@@ -163,6 +171,10 @@ void NoteTrackEngine::restart() {
     _freeRelativeTick = 0;
     _sequenceState.reset();
     _currentStep = -1;
+    _lookAheadReservation = {};
+    if (++_planningVersion == 0) {
+        _planningVersion = 1;
+    }
 }
 
 TrackEngine::TickResult NoteTrackEngine::tick(uint32_t tick) {
@@ -222,27 +234,52 @@ TrackEngine::TickResult NoteTrackEngine::tick(uint32_t tick) {
     TickResult result = TickResult::NoUpdate;
 
     while (!_gateQueue.empty() && tick >= _gateQueue.front().tick) {
+        const Gate event = _gateQueue.front();
+        _gateQueue.pop();
+
+        // A future step is only speculative until its own boundary.  If the
+        // sequencing context changed (pattern/reset/link) or a pattern request
+        // is pending, do not emit a prediction that is no longer trustworthy.
+        if (event.speculative &&
+            (event.planningVersion != _planningVersion || _linkedTrackEngine || _trackState.hasPatternRequest())) {
+            continue;
+        }
+
         if (!_monitorOverrideActive) {
+            if (event.gate) {
+                _activeGateGeneration = event.generation;
+            } else if (event.generation != _activeGateGeneration) {
+                // A newer gate-on has superseded this old gate-off.
+                continue;
+            } else {
+                _activeGateGeneration = 0;
+            }
+
             result |= TickResult::GateUpdate;
-            _activity = _gateQueue.front().gate;
+            _activity = event.gate;
             _gateOutput = (!mute() || fill()) && _activity;
             midiOutputEngine.sendGate(_track.trackIndex(), _gateOutput);
         }
-        _gateQueue.pop();
-
     }
 
     while (!_cvQueue.empty() && tick >= _cvQueue.front().tick) {
+        const Cv event = _cvQueue.front();
+        _cvQueue.pop();
+
+        if (event.speculative &&
+            (event.planningVersion != _planningVersion || _linkedTrackEngine || _trackState.hasPatternRequest())) {
+            continue;
+        }
+
         if (!mute() || _noteTrack.cvUpdateMode() == NoteTrack::CvUpdateMode::Always) {
             if (!_monitorOverrideActive) {
                 result |= TickResult::CvUpdate;
-                _cvOutputTarget = _cvQueue.front().cv;
-                _slideActive = _cvQueue.front().slide;
+                _cvOutputTarget = event.cv;
+                _slideActive = event.slide;
                 midiOutputEngine.sendCv(_track.trackIndex(), _cvOutputTarget);
                 midiOutputEngine.sendSlide(_track.trackIndex(), _slideActive);
             }
         }
-        _cvQueue.pop();
     }
 
     return result;
@@ -326,6 +363,10 @@ void NoteTrackEngine::update(float dt) {
 void NoteTrackEngine::changePattern() {
     _sequence = &_noteTrack.sequence(pattern());
     _fillSequence = &_noteTrack.sequence(std::min(pattern() + 1, CONFIG_PATTERN_COUNT - 1));
+    _lookAheadReservation = {};
+    if (++_planningVersion == 0) {
+        _planningVersion = 1;
+    }
 }
 
 void NoteTrackEngine::monitorMidi(uint32_t tick, const MidiMessage &message) {
@@ -369,12 +410,20 @@ void NoteTrackEngine::triggerStep(uint32_t tick, uint32_t divisor) {
         return uint32_t(std::max<int64_t>(0, eventTick));
     };
 
-    // At this point, _firstStepAfterStart determines if we clamp negative offsets for the very first scheduled step
-    // (no look-ahead for negative offsets on first run)
-    auto scheduleStep = [&] (uint32_t baseTick, const NoteSequence::Step &scheduledStep, uint32_t iteration, bool clampNegativeOffsetToBoundary) {
+    auto nextGateGeneration = [this] () {
+        if (++_gateGenerationCounter == 0) {
+            ++_gateGenerationCounter;
+        }
+        return _gateGenerationCounter;
+    };
+
+    auto scheduleStep = [&] (uint32_t baseTick,
+                             const NoteSequence::Step &scheduledStep,
+                             uint32_t iteration,
+                             bool clampNegativeOffsetToBoundary,
+                             bool speculative) {
         int32_t gateOffset = (int32_t(divisor) * scheduledStep.gateOffset()) / (NoteSequence::GateOffset::Max + 1);
-        // Clamp negative offset only on first step after play/restart
-        if ((clampNegativeOffsetToBoundary || _firstStepAfterStart) && gateOffset < 0) {
+        if (clampNegativeOffsetToBoundary && gateOffset < 0) {
             gateOffset = 0;
         }
 
@@ -384,38 +433,79 @@ void NoteTrackEngine::triggerStep(uint32_t tick, uint32_t divisor) {
         }
 
         if (stepGate) {
-            uint32_t stepLength = (divisor * evalStepLength(scheduledStep, _noteTrack.lengthBias())) / NoteSequence::Length::Range;
+            const int evaluatedLength = evalStepLength(scheduledStep, _noteTrack.lengthBias());
+            uint32_t stepLength = evaluatedLength > 0
+                ? std::max<uint32_t>(1, (divisor * uint32_t(evaluatedLength)) / NoteSequence::Length::Range)
+                : 0;
             int stepRetrigger = evalStepRetrigger(scheduledStep, _noteTrack.retriggerProbabilityBias());
+
             if (stepRetrigger > 1) {
-                uint32_t retriggerLength = divisor / stepRetrigger;
+                // A retrigger pulse needs at least one engine tick high and one
+                // tick low.  At very small routed divisors, reduce only the
+                // realized retrigger density instead of quantizing pulses to
+                // zero width.
+                const int maxResolvableRetriggers = std::max<int>(1, int(divisor / 2));
+                stepRetrigger = std::min(stepRetrigger, maxResolvableRetriggers);
+                const uint32_t retriggerLength = std::max<uint32_t>(1, divisor / uint32_t(stepRetrigger));
+                const uint32_t pulseLength = std::max<uint32_t>(1, retriggerLength / 2);
                 uint32_t retriggerOffset = 0;
                 while (stepRetrigger-- > 0 && retriggerOffset <= stepLength) {
-                    _gateQueue.pushReplace({ Groove::applySwing(scheduleTick(baseTick, gateOffset + int32_t(retriggerOffset)), swing()), true });
-                    _gateQueue.pushReplace({ Groove::applySwing(scheduleTick(baseTick, gateOffset + int32_t(retriggerOffset + retriggerLength / 2)), swing()), false });
+                    const uint32_t generation = nextGateGeneration();
+                    const uint32_t onTick = Groove::applySwing(scheduleTick(baseTick, gateOffset + int32_t(retriggerOffset)), swing());
+                    const uint32_t offTick = Groove::applySwing(scheduleTick(baseTick, gateOffset + int32_t(retriggerOffset + pulseLength)), swing());
+                    _gateQueue.push({ onTick, true, generation, _planningVersion, speculative });
+                    _gateQueue.push({ offTick, false, generation, _planningVersion, speculative });
                     retriggerOffset += retriggerLength;
                 }
             } else {
-                _gateQueue.pushReplace({ Groove::applySwing(scheduleTick(baseTick, gateOffset), swing()), true });
-                _gateQueue.pushReplace({ Groove::applySwing(scheduleTick(baseTick, gateOffset + int32_t(stepLength)), swing()), false });
+                const uint32_t generation = nextGateGeneration();
+                const uint32_t onTick = Groove::applySwing(scheduleTick(baseTick, gateOffset), swing());
+                const uint32_t offTick = Groove::applySwing(scheduleTick(baseTick, gateOffset + int32_t(stepLength)), swing());
+                _gateQueue.push({ onTick, true, generation, _planningVersion, speculative });
+                _gateQueue.push({ offTick, false, generation, _planningVersion, speculative });
             }
         }
 
         if (stepGate || _noteTrack.cvUpdateMode() == NoteTrack::CvUpdateMode::Always) {
             const auto &scale = evalSequence.selectedScale(_model.project().scale());
             int rootNote = evalSequence.selectedRootNote(_model.project().rootNote());
-            _cvQueue.push({ Groove::applySwing(scheduleTick(baseTick, gateOffset), swing()), evalStepNote(scheduledStep, _noteTrack.noteProbabilityBias(), scale, rootNote, octave, transpose), scheduledStep.slide() });
+            _cvQueue.push({
+                Groove::applySwing(scheduleTick(baseTick, gateOffset), swing()),
+                evalStepNote(scheduledStep, _noteTrack.noteProbabilityBias(), scale, rootNote, octave, transpose),
+                scheduledStep.slide(),
+                _planningVersion,
+                speculative
+            });
         }
     };
 
-    const bool currentStepHasNegativeOffset = step.gateOffset() < 0;
-    const bool firstScheduledStep = _sequenceState.prevStep() < 0;
-    const bool allowLookAhead = lookAheadSupported(sequence.runMode()) && !useFillGates && !useFillSequence && !useFillCondition;
-    const bool scheduleCurrentStep = !currentStepHasNegativeOffset || firstScheduledStep || !allowLookAhead;
+    // A negative event is considered already materialized only when the exact
+    // step/iteration predicted at the previous boundary was reserved.  If no
+    // such reservation exists, causality wins and the event is emitted on its
+    // nominal boundary instead of being silently dropped or scheduled in the past.
+    const bool currentWasReserved =
+        _lookAheadReservation.valid &&
+        _lookAheadReservation.planningVersion == _planningVersion &&
+        _lookAheadReservation.step == _sequenceState.step() &&
+        _lookAheadReservation.iteration == _sequenceState.iteration();
 
-    if (scheduleCurrentStep) {
-        // On the very first scheduled step there is no previous boundary to pre-trigger from.
-        scheduleStep(tick, step, _sequenceState.iteration(), firstScheduledStep);
+    if (currentWasReserved) {
+        _lookAheadReservation = {};
+    } else {
+        scheduleStep(tick, step, _sequenceState.iteration(), step.gateOffset() < 0, false);
     }
+
+    const bool dynamicFillDecision =
+        fill() && fillAmount() > 0 && _noteTrack.fillMode() != NoteTrack::FillMode::None;
+    const uint32_t resetDivisor = sequence.resetMeasure() * _engine.measureDivisor();
+    const bool crossesResetBoundary = resetDivisor != 0 && ((tick + divisor) % resetDivisor == 0);
+
+    const bool allowLookAhead =
+        !_linkedTrackEngine &&
+        lookAheadSupported(sequence.runMode()) &&
+        !dynamicFillDecision &&
+        !_trackState.hasPatternRequest() &&
+        !crossesResetBoundary;
 
     if (allowLookAhead) {
         LookAheadInfo next = predictNextStep(_sequenceState, sequence.runMode(), sequence.firstStep(), sequence.lastStep());
@@ -423,13 +513,14 @@ void NoteTrackEngine::triggerStep(uint32_t tick, uint32_t divisor) {
             int nextStep = SequenceUtils::rotateStep(next.step, sequence.firstStep(), sequence.lastStep(), rotate);
             const auto &nextEvalStep = evalSequence.step(nextStep);
             if (nextEvalStep.gateOffset() < 0) {
-                scheduleStep(tick + divisor, nextEvalStep, next.iteration, false);
+                scheduleStep(tick + divisor, nextEvalStep, next.iteration, false, true);
+                _lookAheadReservation.step = next.step;
+                _lookAheadReservation.iteration = next.iteration;
+                _lookAheadReservation.planningVersion = _planningVersion;
+                _lookAheadReservation.valid = true;
             }
         }
     }
-
-    // After first triggerStep call, clear the flag
-    if (_firstStepAfterStart) _firstStepAfterStart = false;
 }
 
 void NoteTrackEngine::recordStep(uint32_t tick, uint32_t divisor) {
@@ -477,7 +568,8 @@ void NoteTrackEngine::recordStep(uint32_t tick, uint32_t divisor) {
         uint32_t noteStart = _recordHistory[i].tick;
         uint32_t noteEnd = i + 1 < _recordHistory.size() ? _recordHistory[i + 1].tick : tick;
 
-        if (noteStart >= stepStart - margin && noteStart < stepStart + margin) {
+        const int64_t noteStartDelta = int64_t(noteStart) - int64_t(stepStart);
+        if (noteStartDelta >= -int64_t(margin) && noteStartDelta < int64_t(margin)) {
             // note on during step start phase
             if (noteEnd >= stepEnd) {
                 // note hold during step

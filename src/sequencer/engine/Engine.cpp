@@ -79,7 +79,6 @@ void Engine::init() {
     updateTrackSetups();
     reset();
 
-    resetAllFirstStepAfterStart();
 
     _lastSystemTicks = os::ticks();
 }
@@ -186,11 +185,7 @@ void Engine::update() {
         // tick track engines
         for (size_t trackIndex = 0; trackIndex < CONFIG_TRACK_COUNT; ++trackIndex) {
             auto &trackEngine = _trackEngines[trackIndex];
-            // Pass firstStepAfterStart flag to trackEngine
-            trackEngine->setFirstStepAfterStart(firstStepAfterStart(trackIndex));
             uint32_t result = trackEngine->tick(tick);
-            // After first tick, clear flag
-            if (firstStepAfterStart(trackIndex)) setFirstStepAfterStart(trackIndex, false);
             // update track outputs and routings if tick results in updating the track's CV output
             if (result &= TrackEngine::TickResult::CvUpdate && _trackUpdateReducers[trackIndex].update()) {
                 trackEngine->update(0.f);
@@ -287,7 +282,6 @@ void Engine::togglePlay(bool shift) {
 
 void Engine::clockStart() {
     _clock.masterStart();
-    resetAllFirstStepAfterStart();
 }
 
 void Engine::clockStop() {
@@ -300,7 +294,6 @@ void Engine::clockContinue() {
 
 void Engine::clockReset() {
     _clock.masterReset();
-    resetAllFirstStepAfterStart();
 }
 
 bool Engine::clockRunning() const {

@@ -69,8 +69,6 @@ public:
 
     void setMonitorStep(int index);
 
-    // For look-ahead: set per-track first-step-after-start
-    void setFirstStepAfterStart(bool value) override { _firstStepAfterStart = value; }
 
 private:
     void triggerStep(uint32_t tick, uint32_t divisor);
@@ -105,25 +103,46 @@ private:
     float _cvOutputTarget;
     bool _slideActive;
 
-    bool _firstStepAfterStart = true;
+    struct LookAheadReservation {
+        int step = -1;
+        uint32_t iteration = 0;
+        uint32_t planningVersion = 0;
+        bool valid = false;
+    };
+
+    LookAheadReservation _lookAheadReservation;
+    uint32_t _planningVersion = 1;
+    uint32_t _gateGenerationCounter = 0;
+    uint32_t _activeGateGeneration = 0;
 
     struct Gate {
         uint32_t tick;
         bool gate;
+        uint32_t generation;
+        uint32_t planningVersion;
+        bool speculative;
     };
 
     struct GateCompare {
         bool operator()(const Gate &a, const Gate &b) {
-            return a.tick < b.tick;
+            if (a.tick != b.tick) {
+                return a.tick < b.tick;
+            }
+            // At an identical engine tick, establish the new gate generation
+            // before considering an older gate-off.  The generation check then
+            // suppresses stale offs without creating a false low pulse.
+            return a.gate && !b.gate;
         }
     };
 
-    SortedQueue<Gate, 16, GateCompare> _gateQueue;
+    SortedQueue<Gate, 32, GateCompare> _gateQueue;
 
     struct Cv {
         uint32_t tick;
         float cv;
         bool slide;
+        uint32_t planningVersion;
+        bool speculative;
     };
 
     struct CvCompare {
@@ -132,5 +151,5 @@ private:
         }
     };
 
-    SortedQueue<Cv, 16, CvCompare> _cvQueue;
+    SortedQueue<Cv, 32, CvCompare> _cvQueue;
 };

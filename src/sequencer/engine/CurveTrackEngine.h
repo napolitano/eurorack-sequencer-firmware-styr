@@ -89,6 +89,7 @@ private:
 
     CurveSequence *_sequence;
     CurveSequence *_fillSequence;
+    uint32_t _freeRelativeTick = 0;
     SequenceState _sequenceState;
     int _currentStep;
     float _currentStepFraction;

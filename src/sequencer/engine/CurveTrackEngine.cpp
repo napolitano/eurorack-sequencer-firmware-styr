@@ -28,6 +28,8 @@
 #include "model/Curve.h"
 #include "model/Types.h"
 
+#include <algorithm>
+
 static Random rng;
 
 static float evalStepShape(const CurveSequence::Step &step, bool variation, bool invert, float fraction) {
@@ -52,6 +54,7 @@ static bool evalGate(const CurveSequence::Step &step, int probabilityBias) {
 }
 
 void CurveTrackEngine::reset() {
+    _freeRelativeTick = 0;
     _sequenceState.reset();
     _currentStep = -1;
     _currentStepFraction = 0.f;
@@ -67,6 +70,7 @@ void CurveTrackEngine::reset() {
 }
 
 void CurveTrackEngine::restart() {
+    _freeRelativeTick = 0;
     _sequenceState.reset();
     _currentStep = -1;
     _currentStepFraction = 0.f;
@@ -98,25 +102,39 @@ TrackEngine::TickResult CurveTrackEngine::tick(uint32_t tick) {
             reset();
         }
 
-        updateRecording(relativeTick, divisor);
-
-        if (relativeTick % divisor == 0) {
-            // advance sequence
-            switch (_curveTrack.playMode()) {
-            case Types::PlayMode::Aligned:
+        switch (_curveTrack.playMode()) {
+        case Types::PlayMode::Aligned:
+            updateRecording(relativeTick, divisor);
+            if (relativeTick % divisor == 0) {
                 _sequenceState.advanceAligned(relativeTick / divisor, sequence.runMode(), sequence.firstStep(), sequence.lastStep(), rng);
                 triggerStep(tick, divisor);
-                break;
-            case Types::PlayMode::Free:
+            }
+            updateOutput(relativeTick, divisor);
+            break;
+        case Types::PlayMode::Free:
+            // Free mode owns its phase.  Do not derive it from the absolute
+            // transport tick: changing the divisor while running must affect
+            // the next local cycle, not snap the track back to the master grid.
+            // If routing shortens the divisor below the already elapsed local
+            // phase, finish the current cycle on the next tick rather than
+            // feeding an out-of-range phase into curve evaluation.
+            if (_freeRelativeTick >= divisor) {
+                _freeRelativeTick = divisor - 1;
+            }
+            relativeTick = _freeRelativeTick;
+            updateRecording(relativeTick, divisor);
+            if (relativeTick == 0) {
                 _sequenceState.advanceFree(sequence.runMode(), sequence.firstStep(), sequence.lastStep(), rng);
                 triggerStep(tick, divisor);
-                break;
-            case Types::PlayMode::Last:
-                break;
             }
+            updateOutput(relativeTick, divisor);
+            if (++_freeRelativeTick >= divisor) {
+                _freeRelativeTick = 0;
+            }
+            break;
+        case Types::PlayMode::Last:
+            break;
         }
-
-        updateOutput(relativeTick, divisor);
 
         _linkData.divisor = divisor;
         _linkData.relativeTick = relativeTick;
@@ -180,19 +198,27 @@ void CurveTrackEngine::triggerStep(uint32_t tick, uint32_t divisor) {
 
     const auto &sequence = *_sequence;
     _currentStep = SequenceUtils::rotateStep(_sequenceState.step(), sequence.firstStep(), sequence.lastStep(), rotate);
-    const auto &step = sequence.step(_currentStep);
-
-    _shapeVariation = evalShapeVariation(step, shapeProbabilityBias);
 
     bool fillStep = fill() && (rng.nextRange(100) < uint32_t(fillAmount()));
     _fillMode = fillStep ? _curveTrack.fillMode() : CurveTrack::FillMode::None;
+
+    // Next Pattern is a complete step substitution.  Shape variation, gate
+    // pattern and gate probability must come from the same sequence as the
+    // curve output, otherwise one logical step is assembled from two patterns.
+    const bool fillNextPattern = _fillMode == CurveTrack::FillMode::NextPattern;
+    const auto &evalSequence = fillNextPattern ? *_fillSequence : *_sequence;
+    const auto &step = evalSequence.step(_currentStep);
+
+    _shapeVariation = evalShapeVariation(step, shapeProbabilityBias);
 
     // Trigger gate pattern
     int gate = step.gate();
     for (int i = 0; i < 4; ++i) {
         if (gate & (1 << i) && evalGate(step, gateProbabilityBias)) {
             uint32_t gateStart = (divisor * i) / 4;
-            uint32_t gateLength = divisor / 8;
+            // A logically present gate must survive integer quantization at
+            // the fastest routed divisor.
+            uint32_t gateLength = std::max<uint32_t>(1, divisor / 8);
             _gateQueue.pushReplace({ Groove::applySwing(tick + gateStart, swing()), true });
             _gateQueue.pushReplace({ Groove::applySwing(tick + gateStart + gateLength, swing()), false });
         }

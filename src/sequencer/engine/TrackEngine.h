@@ -104,8 +104,6 @@ public:
 
     virtual float sequenceProgress() const { return -1.f; }
 
-    // For look-ahead: set per-track first-step-after-start
-    virtual void setFirstStepAfterStart(bool value) {}
 
     // helpers
 

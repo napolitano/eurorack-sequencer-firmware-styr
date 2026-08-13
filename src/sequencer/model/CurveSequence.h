@@ -155,7 +155,7 @@ public:
         void read(VersionedSerializedReader &reader);
 
         bool operator==(const Step &other) const {
-            return _data0.raw == other._data0.raw;
+            return _data0.raw == other._data0.raw && _data1.raw == other._data1.raw;
         }
 
         bool operator!=(const Step &other) const {

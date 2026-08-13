@@ -269,11 +269,4 @@ private:
 
     MessageHandler _messageHandler;
 
-    // Track first-step-after-start for look-ahead scheduling
-    std::array<bool, CONFIG_TRACK_COUNT> _firstStepAfterStart = {};
-
-    // Helpers for managing first-step-after-start
-    bool firstStepAfterStart(int trackIndex) const { return _firstStepAfterStart[trackIndex]; }
-    void setFirstStepAfterStart(int trackIndex, bool value) { _firstStepAfterStart[trackIndex] = value; }
-    void resetAllFirstStepAfterStart() { _firstStepAfterStart.fill(true); }
 };
