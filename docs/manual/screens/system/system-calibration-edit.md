@@ -15,7 +15,7 @@ On the Calibration page, select a calibration point and press the encoder.
 
 ## Operation
 
-Rotate the encoder to correct the value against the measured physical voltage; leave edit mode before moving on.
+Rotate the encoder to correct the value against the measured output voltage, then press the encoder again to leave edit mode. Use **Auto** to return the selected point to its automatic value.
 
 
 From Munich with <img src="../../assets/blue-heart.svg" alt="blue heart" width="14">

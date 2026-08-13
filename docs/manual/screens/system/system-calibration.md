@@ -15,7 +15,11 @@ Open System and select Calibration.
 
 ## Operation
 
-Select the channel and calibration point, then compare the physical output against an accurate voltmeter before editing the calibration value.
+Track buttons select output channels 1-8. Styr drives the calibration voltage to the outputs so you can compare the selected point against an accurate voltmeter.
+
+Press the encoder to edit the selected calibration point, turn to correct it, and press again to leave edit mode. While editing, **Auto** returns the selected point to its automatic value.
+
+On this page, `SHIFT` + `PAGE` opens settings actions for **Init**, **Save**, **Backup**, and **Restore**.
 
 
 From Munich with <img src="../../assets/blue-heart.svg" alt="blue heart" width="14">

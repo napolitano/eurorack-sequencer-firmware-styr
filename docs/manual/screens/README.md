@@ -7,6 +7,12 @@ This section is the maintained screen-by-screen reference for the Styr user manu
 
 The individual pages are intentionally concise: they explain what the screen represents, how to reach it, and how to operate the control shown. Broader concepts and multi-screen workflows belong in the category or feature guides.
 
+## Navigation conventions
+
+- `PAGE` plus a labeled global, track, or step key opens the corresponding page.
+- Some pages also support temporary access: `TEMP` opens Tempo, `TEMP` plus left/right shows Tempo Nudge, and `PATT` or `PERF` can be held for quick access.
+- `SHIFT` + `PAGE` opens a context menu where the current page exposes one.
+
 - [Display Layout](interface/README.md)
 - [Global and Project](global/README.md)
 - [Layout](layout/README.md)

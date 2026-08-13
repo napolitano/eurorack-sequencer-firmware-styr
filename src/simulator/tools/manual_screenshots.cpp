@@ -740,6 +740,7 @@ int main(int argc, char **argv) {
             c.selectPage(Key::Track7).screenshot("system-confirm");
             c.press(Key::F4).screenshot("system-calibration");
             c.pressEncoder().screenshot("system-calibration-edit").pressEncoder();
+            c.press(Key::F2).screenshot("system-advanced");
             c.press(Key::F3).screenshot("system-utilities");
             c.press(Key::F4).screenshot("system-update");
         }

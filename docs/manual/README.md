@@ -3,7 +3,7 @@
 
 # Styr User Manual
 
-The maintained end-user documentation for Styr lives here. Markdown is hand-maintained source material; the screenshot pipeline regenerates PNG files only and never rewrites these documents. Initial descriptions are based on the original PER|FORMER user documentation where behaviour is inherited and are checked against the current Styr implementation.
+The maintained end-user manual for Styr lives here. These Markdown files are hand-maintained source; the screenshot pipeline regenerates PNG files only and never rewrites the documents. Where Styr inherits behavior from PER|FORMER, the original user documentation is a starting reference, but every maintained page is checked against the current Styr implementation.
 
 LCD images are stored only in [`assets/`](assets/). Every captured UI state has a dedicated, hand-maintained Markdown reference page below [`screens/`](screens/README.md); related states are grouped by functional area so the manual remains navigable as coverage grows. Screenshot regeneration updates PNG files only after a complete successful capture run.
 
@@ -15,6 +15,10 @@ For inherited behavior, the first reference is Simon Kallweit's official [PER|FO
 
 - [LFO Track](features/lfo/README.md)
 - [Acid Bassline Generator](features/acid-bassline/README.md)
+
+## Release history
+
+- [Version history](releases/README.md)
 
 ## Display anatomy
 
@@ -38,7 +42,7 @@ For inherited behavior, the first reference is Simon Kallweit's official [PER|FO
 
 ## Screenshot convention
 
-The native LCD framebuffer is 256×64 pixels. Manual captures default to **3×**, producing 768×192 pixel PNG files. Scaling is always an integer multiple and uses direct nearest-neighbour pixel replication; screenshots must never be resampled with anti-aliasing. See [`README_SCREENSHOTS.md`](../../README_SCREENSHOTS.md) for generation, validation and review workflow.
+The native LCD framebuffer is 256×64 pixels. Manual captures default to **3×**, producing 768×192 pixel PNG files. Scaling is always an integer multiple and uses direct nearest-neighbor pixel replication; screenshots must never be resampled with anti-aliasing. See [`README_SCREENSHOTS.md`](../../README_SCREENSHOTS.md) for the generation, validation, and review workflow.
 
 From Munich with <img src="assets/blue-heart.svg" alt="blue heart" width="14">
 
