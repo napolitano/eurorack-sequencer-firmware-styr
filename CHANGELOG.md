@@ -29,6 +29,7 @@
 - CI actions and developer workflows were modernized while preserving the established STM32 flash layout, ST-Link path and SD-card update format.
 
 #### Development
+- Added manually invoked GitHub Copilot agents for bundled Styr user-manual authoring, factual technical review and final US-English editing, backed by a shared repository-specific manual skill and documentation-sync issue template.
 - Completed a US-English structured Doxygen documentation pass across first-party source APIs, state, constants and enumerations; added a source-documentation quality gate and HTML/XML Doxygen configuration for future technical documentation.
 - Removed the experimental Algorithmic Track and retained project serialization version 32 with LFO persistence.
 - Added Windows UCRT64 CMake presets, VSCodium convenience tasks and pinned historical simulator dependency resolution.

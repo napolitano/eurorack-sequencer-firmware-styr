@@ -1,0 +1,54 @@
+name: Documentation sync
+description: Manually trigger a bundled Styr user-manual synchronization for a development milestone or release candidate.
+title: "Documentation sync: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this issue as the explicit trigger for a bundled user-manual update. Assign the issue to the **Styr Manual SME** custom agent after the target and baseline are known. The agent must produce one coherent documentation change set; it must not merge directly into the base branch.
+
+  - type: input
+    id: target
+    attributes:
+      label: Target release or milestone
+      description: The release candidate, planned tag, or development milestone this documentation should describe.
+      placeholder: "v0.2.0 or Unreleased RC"
+    validations:
+      required: true
+
+  - type: input
+    id: baseline
+    attributes:
+      label: Comparison baseline
+      description: Previous release/tag from which user-visible changes must be audited.
+      placeholder: "v0.1.47"
+    validations:
+      required: true
+
+  - type: input
+    id: branch
+    attributes:
+      label: Base branch
+      description: Branch whose complete current state must be documented.
+      placeholder: "main"
+    validations:
+      required: true
+
+  - type: textarea
+    id: emphasis
+    attributes:
+      label: Known documentation focus
+      description: Optional areas that deserve special attention. This does not limit the agent's responsibility to inspect the complete user-visible diff.
+      placeholder: "Clock/external sync, Note microtiming, Curve Track changes..."
+
+  - type: checkboxes
+    id: contract
+    attributes:
+      label: Documentation contract
+      options:
+        - label: Treat this as one bundled documentation update, not isolated per-commit edits.
+          required: true
+        - label: Do not change product behavior or merge directly into the base branch.
+          required: true
+        - label: Run the manual screenshot mapping validation before review.
+          required: true

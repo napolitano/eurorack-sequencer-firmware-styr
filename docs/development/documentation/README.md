@@ -69,6 +69,22 @@ The intended future documentation build is deliberately staged:
 
 That publishing pipeline is a future task and is **not implemented by the current source-documentation pass**.
 
+## User-manual agents
+
+Repository-scoped GitHub Copilot custom agents live under `.github/agents/`. They are deliberately manual-only (`disable-model-invocation: true`) and do not run on pushes or pull requests. The shared Styr manual subject-matter and writing contract lives in `.github/skills/styr-user-manual/SKILL.md`.
+
+The intended bundled workflow is:
+
+1. create a `Documentation sync` issue from `.github/ISSUE_TEMPLATE/documentation_sync.yml` and record the target state, comparison baseline and base branch;
+2. assign/select **Styr Manual SME** to produce one coherent manual update on its task branch/PR;
+3. run **Styr Manual Technical Reviewer** against the same documentation change set to verify product facts, values, timing, UI behavior and screenshot consistency;
+4. run **Styr Manual US English Editor** last to normalize readability and language without changing established technical meaning;
+5. merge only after the deterministic documentation checks pass and a human has reviewed the bundled result.
+
+The agents must not merge their own changes or write directly to the protected/base branch. The author may update `docs/manual/**` and, when required for documentation coverage, deterministic capture states in `src/simulator/tools/manual_screenshots.cpp`. The reviewers are more restricted: technical review corrects documentation facts, while the final editorial pass edits only user-facing prose under `docs/manual/**`.
+
+This agent workflow maintains documentation sources; it is not the publication pipeline. Release artifacts must still be produced deterministically from the merged release commit.
+
 ## Screenshot output ownership
 
 The headless simulator writes user-manual images only to:
