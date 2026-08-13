@@ -3,6 +3,8 @@
 ## Unreleased
 
 #### Fixes
+- Fixed the native Windows runtime post-link hook to use SCons' canonical `(target, source, env)` action signature, preventing `test_product_native` builds from failing before execution.
+- Restored per-suite native link isolation inside `test_product_native`: bootloader suites link bootloader support, while core/sequencer suites retain the normal product support graph.
 - Reworked external clock acquisition, BPM estimation, swing handling, loss-of-clock timeout and phase tracking; inherited PER|FORMER clock defects are now covered by focused regression tests.
 - Fixed Note/Curve edge cases including single-step PingPong, first-step live-record quantization, zero-width gates/retriggers at very fast divisors, Curve Free divisor changes, Next Pattern consistency and Curve gate edit detection.
 - Reworked negative Note Gate Offset scheduling so deterministic Forward/Backward look-ahead survives loop wraps without stale Gate-Off events cutting newer pre-triggered gates; uncertain future state falls back safely to the boundary.

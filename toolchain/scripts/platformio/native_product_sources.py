@@ -281,7 +281,7 @@ def configure_native_toolchain() -> None:
 
     print("Styr native runtime: local UCRT64 toolchain DLL probe PASS")
 
-    def stage_native_runtime(source, target, action_env):
+    def stage_native_runtime(target, source, env):
         program = Path(target[0].get_abspath())
         staged = stage_toolchain_runtime(program)
         if not staged:
@@ -397,7 +397,29 @@ components = {
     if item.strip()
 }
 
-if "bootloader" in components:
-    build_bootloader_support()
-if "product" in components:
-    build_product_support()
+# PlatformIO builds every test_* directory as an independent executable and
+# exposes the selected suite through PIOTEST_RUNNING_NAME.  A complete product
+# test environment therefore does not mean that every individual executable
+# should link every product partition.  Keep the link graph suite-local:
+# bootloader suites get bootloader support, while core/sequencer suites get the
+# normal product support.  This preserves the isolation that focused native
+# tests had before bootloader suites were added to test_product_native.
+running_suite = str(env.get("PIOTEST_RUNNING_NAME", "")).replace("\\", "/")
+pio_env = str(env.get("PIOENV", ""))
+
+if pio_env == "test_product_native" and running_suite:
+    if running_suite.startswith("bootloader/"):
+        print(f"Styr native suite link graph: {running_suite} -> bootloader")
+        if "bootloader" in components:
+            build_bootloader_support()
+    else:
+        print(f"Styr native suite link graph: {running_suite} -> product")
+        if "product" in components:
+            build_product_support()
+else:
+    # Dedicated environments (and non-test metadata/configuration passes where
+    # no suite name exists yet) keep their declared component behavior.
+    if "bootloader" in components:
+        build_bootloader_support()
+    if "product" in components:
+        build_product_support()

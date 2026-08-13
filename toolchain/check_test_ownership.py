@@ -93,6 +93,8 @@ require("imported_dlls" in NATIVE_ADAPTER and "OBJDUMP" in NATIVE_ADAPTER,
         "Windows native runtime staging must derive imports from the linked PE binaries")
 require("shutil.copy2" in NATIVE_ADAPTER,
         "Windows native runtime staging must copy matching toolchain DLLs beside program.exe")
+require(re.search(r"def\s+stage_native_runtime\(\s*target\s*,\s*source\s*,\s*env\s*\)\s*:", NATIVE_ADAPTER) is not None,
+        "SCons post actions must use the canonical (target, source, env) callback signature")
 require('env.Append(LINKFLAGS=["-static"])' not in NATIVE_ADAPTER,
         "native tests must not force a fully static Windows runtime link")
 bootloader_support = re.search(
@@ -127,6 +129,10 @@ if product_support is not None:
             "native simulator support must link the stb_image_write implementation required by Simulator.cpp")
 require("pio test -e test_bootloader_native" in CI,
         "CI must run bootloader tests through PlatformIO")
+require("PIOTEST_RUNNING_NAME" in NATIVE_ADAPTER,
+        "complete product tests must isolate bootloader versus core/sequencer support per PlatformIO suite")
+require('running_suite.startswith("bootloader/")' in NATIVE_ADAPTER,
+        "test_product_native must select bootloader support only for bootloader suites")
 require("pio test -e test_product_native" in CI,
         "CI must run the complete native product suite through PlatformIO")
 
