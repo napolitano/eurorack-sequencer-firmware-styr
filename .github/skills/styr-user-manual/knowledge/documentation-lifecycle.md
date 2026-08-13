@@ -10,7 +10,7 @@ active-locales: [en-US]
 
 The Styr manual is a versioned product artifact, not disposable generated prose. Agent-assisted authoring therefore has two explicit modes with different stability rules.
 
-Both modes use the branch-only multi-agent handoff defined in [`orchestration.md`](orchestration.md). The documentation-sync issue is a control/status record and must not be assigned to Copilot; intermediate agent stages intentionally run without a pull request.
+Both modes use the single-issue Orchestrator pipeline defined in [`orchestration.md`](orchestration.md). The maintainer assigns the authorized documentation-sync issue once to **Styr Documentation Orchestrator**; the Orchestrator delegates all specialist stages programmatically inside the same task and Draft PR.
 
 ## Mode 1: Full regeneration
 

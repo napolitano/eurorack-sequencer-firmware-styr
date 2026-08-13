@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Purpose: Enforces the maintainer-only control surface and branch-only orchestration contract for user-documentation agents.
+# Purpose: Enforces the maintainer-only control surface and single-issue documentation-agent orchestration contract.
 # Author: Axel Napolitano — Styr documentation tooling
 # Copyright: 2026 Axel Napolitano
 # License: MIT; see LICENSES/MIT.txt.
@@ -36,20 +36,20 @@ else:
         "issues: write",
         "internal:documentation-sync",
         "gh issue create",
-        "Do not assign this issue to Copilot",
-        "Agents",
+        "Assign this issue **once**",
+        "Styr Documentation Orchestrator",
         "Styr Release Documentation Analyst",
         "Styr Manual SME",
         "Styr Manual Technical Reviewer",
         "Styr Manual US English Editor",
-        ".github/documentation-sync/work/issue-",
-        "Do not open a pull request",
+        "single bundled documentation PR",
+        "Deterministic CI and human review",
     )
     for token in required:
         if token not in text:
             errors.append(f"documentation-sync workflow missing required contract token: {token}")
 
-    # The control surface must remain manual-only. Reject common automatic
+    # The control surface is maintainer-triggered only. Reject common automatic
     # triggers even if someone later adds them beside workflow_dispatch.
     on_block_match = re.search(
         r"(?ms)^on:\s*\n(?P<body>.*?)(?=^[A-Za-z_][A-Za-z0-9_-]*:\s*$)", text
@@ -62,55 +62,91 @@ else:
     else:
         errors.append("unable to inspect documentation-sync workflow trigger block")
 
-    # The workflow may create the control issue, but it must never assign it
-    # to Copilot. Issue assignment always creates a PR and breaks the
-    # branch-only multi-agent chain.
+    # The workflow creates an authorized issue but must not choose an assignee.
+    # Selecting the repository custom Orchestrator is an explicit maintainer action.
     if re.search(r"(?m)^\s*gh\s+issue\s+create\b[^\n]*--assignee\b", text):
-        errors.append("documentation-sync workflow must not assign the control issue to Copilot or any agent")
+        errors.append("documentation-sync workflow must not auto-assign Copilot or an agent")
     if re.search(r"(?m)^\s*gh\s+issue\s+edit\b[^\n]*--add-assignee\b", text):
         errors.append("documentation-sync workflow must not add an issue assignee")
 
-agent_contracts = {
+orchestrator = ROOT / ".github" / "agents" / "styr-documentation-orchestrator.agent.md"
+if not orchestrator.is_file():
+    errors.append("Styr Documentation Orchestrator agent is missing")
+else:
+    text = orchestrator.read_text(encoding="utf-8")
+    required = (
+        "name: Styr Documentation Orchestrator",
+        "disable-model-invocation: true",
+        "user-invocable: true",
+        "agent",
+        '"github/*"',
+        "internal:documentation-sync",
+        "Styr Release Documentation Analyst",
+        "Styr Manual SME",
+        "Styr Manual Technical Reviewer",
+        "Styr Manual US English Editor",
+        "STYR_DOCUMENTATION_IMPACT_SET",
+        "STYR_MANUAL_AUTHORING_REPORT",
+        "STYR_MANUAL_TECHNICAL_REVIEW",
+        "STYR_MANUAL_EDITORIAL_REPORT",
+        "technical-review-blocked",
+        "check_manual_screenshots.py",
+        "check_documentation_agent_control.py",
+        "check_repository_cleanliness.py",
+        "single bundled documentation PR",
+    )
+    for token in required:
+        if token not in text:
+            errors.append(f"documentation Orchestrator missing required contract token: {token}")
+
+specialist_contracts = {
     ".github/agents/styr-release-documentation-analyst.agent.md": (
         "disable-model-invocation: true",
-        "Agents",
-        "Do not open a pull request",
-        "impact-set.md",
-        "tools: [read, search, edit, execute]",
+        "user-invocable: false",
+        "Styr Documentation Orchestrator",
+        "custom-agent `agent` tool",
+        "STYR_DOCUMENTATION_IMPACT_SET",
+        "status: analyst-complete",
+        "tools: [read, search, execute]",
+        "Do not edit repository files",
     ),
     ".github/agents/styr-manual-sme.agent.md": (
         "disable-model-invocation: true",
-        "Agents",
-        "Do not open a pull request",
-        "impact-set.md",
-        "authoring-report.md",
+        "user-invocable: false",
+        "Styr Documentation Orchestrator",
+        "STYR_DOCUMENTATION_IMPACT_SET",
+        "STYR_MANUAL_AUTHORING_REPORT",
+        "status: manual-sme-complete",
     ),
     ".github/agents/styr-manual-technical-reviewer.agent.md": (
         "disable-model-invocation: true",
-        "Agents",
-        "Do not open a pull request",
-        "authoring-report.md",
-        "technical-review.md",
+        "user-invocable: false",
+        "Styr Documentation Orchestrator",
+        "STYR_MANUAL_AUTHORING_REPORT",
+        "STYR_MANUAL_TECHNICAL_REVIEW",
+        "status: technical-review-complete",
+        "technical-review-blocked",
     ),
     ".github/agents/styr-manual-editor.agent.md": (
         "disable-model-invocation: true",
-        "Agents",
-        "Do not open a pull request",
-        "technical-review-complete",
+        "user-invocable: false",
+        "Styr Documentation Orchestrator",
+        "STYR_MANUAL_TECHNICAL_REVIEW",
+        "STYR_MANUAL_EDITORIAL_REPORT",
+        "status: editorial-complete",
         "check_repository_cleanliness.py",
-        "tools: [read, search, edit, execute]",
     ),
 }
 
-for relative, required_tokens in agent_contracts.items():
+for relative, required_tokens in specialist_contracts.items():
     path = ROOT / relative
     if not path.is_file():
-        errors.append(f"documentation agent missing: {relative}")
+        errors.append(f"documentation specialist agent missing: {relative}")
         continue
     text = path.read_text(encoding="utf-8")
     for token in required_tokens:
         if token not in text:
-            errors.append(f"documentation agent contract missing {token!r}: {relative}")
+            errors.append(f"documentation specialist contract missing {token!r}: {relative}")
 
 skill = ROOT / ".github" / "skills" / "styr-user-manual" / "SKILL.md"
 orchestration = ROOT / ".github" / "skills" / "styr-user-manual" / "knowledge" / "orchestration.md"
@@ -119,7 +155,14 @@ if not skill.is_file():
     errors.append("shared manual skill is missing")
 else:
     skill_text = skill.read_text(encoding="utf-8")
-    for token in ("internal:documentation-sync", "do not assign", "orchestration.md"):
+    for token in (
+        "internal:documentation-sync",
+        "Styr Documentation Orchestrator",
+        "custom-agent `agent` tool",
+        "STYR_DOCUMENTATION_IMPACT_SET",
+        "user-invocable: false",
+        "orchestration.md",
+    ):
         if token.lower() not in skill_text.lower():
             errors.append(f"shared manual skill missing orchestration/authorization contract token: {token}")
 
@@ -128,15 +171,39 @@ if not orchestration.is_file():
 else:
     orchestration_text = orchestration.read_text(encoding="utf-8")
     for token in (
-        "branch-only",
-        "issue-<N>",
-        "impact-set.md",
-        "authoring-report.md",
-        "technical-review.md",
-        "single bundled documentation PR",
+        "one authorized issue assignment",
+        "Styr Documentation Orchestrator",
+        "agent` tool",
+        "STYR_DOCUMENTATION_IMPACT_SET",
+        "STYR_MANUAL_AUTHORING_REPORT",
+        "STYR_MANUAL_TECHNICAL_REVIEW",
+        "STYR_MANUAL_EDITORIAL_REPORT",
+        "not committed as repository files",
+        "same Draft PR",
+        "user-invocable: false",
     ):
         if token.lower() not in orchestration_text.lower():
             errors.append(f"orchestration knowledge missing required token: {token}")
+
+# The obsolete manual-branch-chain architecture must not creep back into the
+# maintainer workflow. Specialist documents may discuss branches generically,
+# but these exact operational instructions are retired.
+retired_phrases = (
+    "Do not assign this issue to Copilot or to a custom agent",
+    "every stage after the Analyst must use the previous stage's branch",
+    "Start each stage from the GitHub **Agents** panel",
+)
+for relative in (
+    ".github/workflows/create-documentation-sync.yml",
+    "docs/development/documentation/AGENT_WORKFLOW.md",
+    ".github/skills/styr-user-manual/knowledge/orchestration.md",
+):
+    path = ROOT / relative
+    if path.is_file():
+        text = path.read_text(encoding="utf-8")
+        for phrase in retired_phrases:
+            if phrase in text:
+                errors.append(f"retired manual branch-chain instruction remains in {relative}: {phrase}")
 
 if errors:
     print("Documentation agent control validation FAILED:")
@@ -145,10 +212,12 @@ if errors:
     sys.exit(1)
 
 print("Documentation agent control validation OK:")
-print(" - documentation sync control issue creation is workflow_dispatch-only")
+print(" - documentation sync issue creation is workflow_dispatch-only")
 print(" - public documentation-sync issue form is absent")
 print(" - workflow token permissions are limited to contents:read and issues:write")
-print(" - control issues are not assigned to Copilot/agents")
-print(" - all documentation stages are explicit branch-only custom-agent sessions")
-print(" - Analyst -> SME -> Technical Reviewer -> US-English Editor handoffs are contracted")
-print(" - only the human maintainer opens the final bundled documentation PR")
+print(" - workflow does not auto-assign an agent")
+print(" - Styr Documentation Orchestrator is the single maintainer-facing agent")
+print(" - Orchestrator can invoke specialist custom agents with the agent tool")
+print(" - specialist agents are programmatic-only (user-invocable:false)")
+print(" - Analyst -> SME -> Technical Reviewer -> US-English Editor handoffs stay in agent context")
+print(" - the initial issue assignment produces the single bundled Draft PR")

@@ -92,7 +92,7 @@ jobs:
           baseline = os.environ.get("BASELINE", "").strip() or "(not supplied)"
           emphasis = os.environ.get("EMPHASIS", "").strip() or "(none specified)"
           body = dedent(f"""\
-          ## Authorized documentation sync control issue
+          ## Authorized documentation sync
 
           This issue was created by the maintainer-only **Create documentation sync control issue** workflow and is authorized for the Styr documentation-agent process.
 
@@ -107,51 +107,35 @@ jobs:
 
           {emphasis}
 
-          > [!IMPORTANT]
-          > **Do not assign this issue to Copilot or to a custom agent.** GitHub issue assignment always creates a pull request. This workflow deliberately uses branch-only prompt sessions from the **Agents** panel so analysis, authoring, technical review, and editing can be chained before one final PR is opened.
+          ## Start the documentation pipeline
 
-          ## Required orchestration
+          Assign this issue **once** to the custom agent **Styr Documentation Orchestrator**.
 
-          Start each stage from the GitHub **Agents** panel/tab with a prompt. Select the named custom agent explicitly. Do **not** ask any intermediate stage to open a pull request.
+          That is the only maintainer handoff required. GitHub will create one Draft PR for the assigned task. The Orchestrator will then invoke the internal specialist agents in order using the custom-agent `agent` tool:
 
           1. **Styr Release Documentation Analyst**
-             - Base branch: `{os.environ['TARGET']}` when it is a branch; otherwise use the branch containing the requested target state.
-             - Prompt: `Run authorized Styr documentation sync issue #{issue} in {os.environ['MODE']} mode. Work branch-only. Do not open a pull request. Produce the required transient impact handoff.`
           2. **Styr Manual SME**
-             - Base branch: the completed Analyst branch.
-             - Prompt: `Continue authorized Styr documentation sync issue #{issue} from this branch. Require the Analyst handoff. Work branch-only and do not open a pull request.`
           3. **Styr Manual Technical Reviewer**
-             - Base branch: the completed Manual SME branch.
-             - Prompt: `Technically review authorized Styr documentation sync issue #{issue} from this branch. Require the SME handoff. Correct documentation facts only. Work branch-only and do not open a pull request.`
           4. **Styr Manual US English Editor**
-             - Base branch: the completed Technical Reviewer branch.
-             - Prompt: `Perform the final en-US editorial pass for authorized Styr documentation sync issue #{issue}. Require the completed technical-review handoff, finalize and remove the transient sync workspace, run the required documentation checks, and leave the branch ready for human PR creation. Do not open a pull request.`
-          5. **Human finalization**
-             - Open exactly one Draft PR from the completed Editor branch to `{os.environ['BASE_BRANCH']}`.
-             - Review the complete bundle and require deterministic CI before merge.
 
-          The branch chain is part of the contract: every stage after the Analyst must use the previous stage's branch as its base. Starting a later agent again from `{os.environ['BASE_BRANCH']}` discards the preceding agent's work.
+          The specialist agents are programmatic-only and must not be started manually. They work in the same task/worktree and return structured handoffs to the Orchestrator; internal analysis handoffs are not committed as repository files.
 
-          ## Stage tracking
+          ## Expected result
 
-          - [ ] Analyst complete
-          - [ ] Manual SME complete
-          - [ ] Technical review complete
-          - [ ] US-English editorial pass complete
-          - [ ] Transient documentation-sync workspace removed
-          - [ ] Final Draft PR opened by maintainer
-          - [ ] Deterministic checks passed
-          - [ ] Human review complete
+          The existing Draft PR created by this issue assignment becomes the single bundled documentation PR. The Orchestrator leaves it ready for deterministic CI and human review after all specialist stages succeed.
+
+          If a factual technical review is blocked, the pipeline stops for human intervention rather than letting editorial work hide the problem.
 
           ## Contract
 
           - US English (`en-US`) is the current canonical and only active source locale.
           - Treat the result as one bundled documentation update, not isolated per-commit edits.
-          - In incremental mode, preserve unaffected structure, stable IDs/paths, and unaffected prose.
-          - In full-regeneration mode, treat the regenerated result as review material rather than an automatic replacement of the maintained manual.
-          - Intermediate agents use the transient `.github/documentation-sync/work/issue-{issue}/` handoff workspace. It must be absent from the final PR diff.
-          - Do not change product behavior or merge directly into the final PR base branch.
-          - Public issues, comments, copied issue bodies, or issue assignments without this authorized control flow are not supported agent triggers.
+          - In `incremental-release-sync`, preserve unaffected structure, stable IDs/paths, and unaffected prose. `What's New` covers only `{baseline}` to `{os.environ['TARGET']}`.
+          - In `full-regeneration`, reconstruct complete current en-US user documentation from verified repository evidence; the result remains review material until human approval.
+          - Do not change product behavior merely to make documentation agree with it.
+          - Do not commit internal handoff artifacts under `.github/documentation-sync/work/`, `docs/analysis/`, or root `PROVENANCE.md`.
+          - Public issues, comments, or copied versions of this body without the `internal:documentation-sync` label are not authorized agent triggers.
+          - Agents do not merge. Deterministic CI and human review are required before merge.
           """)
           Path("documentation-sync-body.md").write_text(body, encoding="utf-8")
           PY

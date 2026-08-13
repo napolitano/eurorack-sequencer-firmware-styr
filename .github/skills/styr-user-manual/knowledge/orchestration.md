@@ -8,9 +8,9 @@ active-locales: [en-US]
 
 # Documentation-agent orchestration
 
-Styr documentation synchronization is a **prompt-driven, branch-only agent chain**. The maintainer-only control issue records authorization and parameters; it is not assigned to Copilot.
+Styr documentation synchronization uses **one authorized issue assignment, one maintainer-facing Orchestrator, internal specialist sub-agents, and one Draft PR**.
 
-GitHub issue assignment is intentionally not used for this process because assigning an issue to Copilot always creates a pull request. Styr needs several specialist stages to operate on one linear branch history before a single bundled documentation PR exists.
+The maintainer does not manually chain branches or specialist sessions. GitHub issue assignment is used intentionally for the first and only visible agent: assigning the authorized issue to **Styr Documentation Orchestrator** creates the single Draft PR that carries the complete documentation bundle.
 
 ## Official entry point
 
@@ -23,123 +23,142 @@ Run `.github/workflows/create-documentation-sync.yml` manually with `workflow_di
 - final PR base branch;
 - optional documentation emphasis.
 
-Do **not** assign that issue to Copilot or a custom agent.
+The workflow itself does not assign an agent. The maintainer opens the generated issue and assigns it **once** to **Styr Documentation Orchestrator**.
 
-## Branch-only stage chain
+Do not assign the issue directly to a specialist agent. The specialist profiles are programmatic-only (`user-invocable: false`).
 
-Start every agent from the GitHub Agents panel/tab using a prompt and explicitly select the required custom agent.
+## Single-task specialist chain
+
+The Orchestrator uses the custom-agent `agent` tool to delegate stages in this exact order inside the current Copilot task/worktree:
 
 ```text
-requested target/base state
+authorized documentation-sync issue
         |
+        | maintainer assigns once
+        v
+Styr Documentation Orchestrator
+        |
+        | agent tool
         v
 Styr Release Documentation Analyst
         |
-        | analyst branch
+        | structured result
         v
 Styr Manual SME
         |
-        | author branch
+        | structured result
         v
 Styr Manual Technical Reviewer
         |
-        | technically reviewed branch
+        | structured result
         v
 Styr Manual US English Editor
         |
-        | clean final documentation branch
         v
-maintainer opens one Draft PR to the requested final base branch
+same Draft PR -> deterministic CI -> human review
 ```
 
-Each stage after the Analyst **must use the immediately preceding agent branch as its base branch**. This linear ancestry is how the complete bundle and its agent commit history are preserved. Starting a later stage from the original base branch discards earlier work.
+There are no manual branch handoffs between specialists and no specialist-created pull requests. The Draft PR created by the initial issue assignment is the only PR for the documentation sync.
 
-Intermediate stages must not request or open a pull request. The maintainer opens exactly one final Draft PR after the editorial stage has completed and removed the transient handoff workspace.
+## Handoff model
 
-## Transient handoff workspace
+Specialist-to-specialist state is passed through structured sub-agent results in the Orchestrator context. Internal analysis handoffs are **not committed as repository files**.
 
-Agent-to-agent state is committed temporarily under:
+### Analyst result
+
+The Analyst returns a Markdown block headed:
 
 ```text
-.github/documentation-sync/work/issue-<N>/
+STYR_DOCUMENTATION_IMPACT_SET
 ```
 
-This workspace exists only on the chained agent branches. It must be absent from the final PR diff and must never be merged into the maintained branch.
+It must include:
 
-### Analyst handoff
+- `status: analyst-complete` or `analyst-incomplete`;
+- sync issue number;
+- mode;
+- target;
+- baseline when applicable;
+- final PR base branch;
+- complete user-visible coverage/impact inventory;
+- affected existing documentation IDs/paths;
+- required new documentation IDs/paths;
+- screenshot additions/changes;
+- What's New candidates when applicable;
+- release-history candidates;
+- evidence/source locations;
+- explicitly excluded internal changes;
+- unresolved evidence questions.
 
-The Analyst creates:
+The Analyst does not edit the repository.
+
+### Manual SME result
+
+The Manual SME receives the complete Analyst result, edits the manual and permitted supporting documentation sources in the shared worktree, and returns:
 
 ```text
-.github/documentation-sync/work/issue-<N>/impact-set.md
+STYR_MANUAL_AUTHORING_REPORT
 ```
 
-Required frontmatter:
+Use `status: manual-sme-complete` only when the requested authoring scope is complete enough for technical review. Use `manual-sme-incomplete` with explicit remaining scope otherwise. The Orchestrator may invoke the SME again without requiring maintainer action.
 
-```yaml
-sync_issue: <N>
-mode: full-regeneration | incremental-release-sync
-target: <ref>
-baseline: <ref-or-null>
-final_base_branch: <branch>
-stage: analyst-complete
-```
+### Technical review result
 
-Required body sections:
-
-- Coverage / user-visible impact
-- Existing documentation IDs and paths affected
-- Required new documentation IDs and paths
-- Screenshot additions or changes
-- What's New candidates when applicable
-- Version-history candidates
-- Evidence and source locations
-- Explicitly excluded internal changes
-- Unresolved evidence questions
-
-The Analyst may edit only this transient workspace. It does not author manual prose.
-
-### Manual SME handoff
-
-The Manual SME requires a valid `impact-set.md`, performs the complete authoring task, and then creates:
+The Technical Reviewer receives the Analyst context and completed authoring report, verifies/corrects the current worktree, and returns:
 
 ```text
-.github/documentation-sync/work/issue-<N>/authoring-report.md
+STYR_MANUAL_TECHNICAL_REVIEW
 ```
 
-with `stage: manual-sme-complete` and a concise record of changed manual/knowledge/screenshot sources, validation performed, and unresolved blockers. If authoring is incomplete, use `stage: manual-sme-incomplete`; the Technical Reviewer must not proceed.
+Use `status: technical-review-complete` only when no unresolved factual blocker remains. Use `technical-review-blocked` otherwise. Editorial work must not start on a blocked review.
 
-A large full regeneration may require more than one Manual SME session. Continue from the current SME branch until `manual-sme-complete` is justified.
+### Editorial result
 
-### Technical review handoff
-
-The Technical Reviewer requires `manual-sme-complete`, reviews and corrects the documentation bundle, then creates:
+The US-English Editor receives the completed technical review, performs the final language pass, and returns:
 
 ```text
-.github/documentation-sync/work/issue-<N>/technical-review.md
+STYR_MANUAL_EDITORIAL_REPORT
 ```
 
-Use `stage: technical-review-complete` only when no unresolved factual blocker remains. Otherwise use `stage: technical-review-blocked` and describe the blocker. The Editor must not proceed on a blocked review.
+Use `status: editorial-complete` only after the permitted editorial scope is complete and established technical meaning has been preserved.
 
-### Editorial completion
+## No internal handoff artifacts
 
-The US-English Editor requires `technical-review-complete`. It performs only the final language pass permitted by its agent contract. When editorial work is complete it may create a temporary `editorial-review.md` for its own final verification.
+Do not create or commit internal orchestration state such as:
 
-Before ending the session, the Editor must:
+```text
+.github/documentation-sync/work/
+docs/analysis/
+PROVENANCE.md
+```
 
-1. ensure there is no unresolved technical-review blocker;
-2. remove the complete `.github/documentation-sync/work/issue-<N>/` directory;
-3. run the required deterministic documentation/control/cleanliness checks available in the environment;
-4. leave the branch ready for the maintainer to open the single bundled Draft PR.
+The repository-cleanliness gate intentionally rejects these paths. The Orchestrator carries handoffs in task context, not in public repository history.
 
-The Editor must not open the PR itself. The human maintainer selects the final PR base branch explicitly.
+## Full regeneration versus incremental sync
+
+`full-regeneration` reconstructs the complete current en-US manual from authoritative evidence. It is appropriate for initial bootstrap, completeness testing, and deliberate audits. The result remains review material until human approval.
+
+`incremental-release-sync` is the normal release-maintenance mode once the initial manual is established. It preserves unaffected structure, stable IDs/paths, and unaffected prose while updating the complete user-visible release delta and transitive documentation impact.
+
+## Failure and resume behavior
+
+The Orchestrator advances only after the preceding specialist reports a valid completed status.
+
+- An incomplete Analyst is reinvoked to close identified coverage gaps.
+- An incomplete SME may be reinvoked on the same worktree.
+- A blocked Technical Review stops the pipeline for human intervention.
+- The Editor never resolves factual ambiguity by rewriting around it.
+
+If the Copilot task is later resumed on the same Draft PR, the Orchestrator inspects the existing documentation diff and available task context and continues conservatively from the first stage that is not demonstrably complete. If stage state is uncertain, rerun the necessary analysis/review rather than guessing.
 
 ## Final PR and release
 
-The maintainer opens one Draft PR from the completed Editor branch to the base branch recorded by the control issue. The final PR must contain the documentation/product-facing screenshot-definition changes only; transient orchestration files must not appear in its final diff.
+The initial issue assignment already created the one Draft PR. After all specialist stages complete, the Orchestrator runs the required deterministic documentation/control/cleanliness checks and leaves that Draft PR ready for human review.
 
-The agent chain does not replace CI or human review. Merge only after deterministic repository/documentation checks pass and the bundled result has been reviewed by a human.
+The Orchestrator and specialists never merge their own work. Release documentation is accepted only after deterministic CI and human approval.
 
-## Authorization boundary
+## Authorization
 
-The public issue tracker is not an agent API. The official control issue can only be created through the maintainer-only manual workflow. Direct prompt sessions from the Agents UI are valid when they explicitly reference that authorized sync issue. A copied issue body or arbitrary public issue does not grant write authority.
+The public issue tracker is not an agent-control API. The official issue is created only by the maintainer-only manual workflow and carries `internal:documentation-sync`. A copied issue body, public comment, or unlabeled issue does not authorize the Orchestrator.
+
+The Orchestrator is manually selectable (`user-invocable: true`, `disable-model-invocation: true`). Specialist agents are programmatic-only (`user-invocable: false`) and are invoked only through the Orchestrator's `agent` tool.

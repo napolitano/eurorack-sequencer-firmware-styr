@@ -29,7 +29,7 @@
 - CI actions and developer workflows were modernized while preserving the established STM32 flash layout, ST-Link path and SD-card update format.
 
 #### Development
-- Corrected documentation-agent orchestration to match GitHub's branch-first cloud-agent model: the authorized sync issue is now a control/status record only, specialist agents run as a linear Analyst -> SME -> Technical Reviewer -> US-English Editor branch chain with transient Markdown handoffs, and the maintainer opens the single final bundled PR.
+- Simplified documentation-agent orchestration to one maintainer assignment: an authorized sync issue is assigned once to a Styr Documentation Orchestrator, which delegates Analyst -> SME -> Technical Reviewer -> US-English Editor through GitHub's custom-agent `agent` tool inside the same Draft-PR task; specialist handoffs stay in agent context instead of becoming repository analysis files.
 - Added a conservative one-way repository-layout migration for retired public documentation-control artifacts; archive overlays can now be cleaned explicitly without weakening CI checks for stale tracked files.
 - Added transparent README disclosure for agent-assisted user-manual maintenance and replaced the public documentation-sync issue form with a maintainer-only manual workflow that creates explicitly authorized documentation-sync issues without auto-starting Copilot.
 - Extended the manual-agent foundation with explicit full-regeneration and incremental-release modes, an evidence-only Release Documentation Analyst, open-ended locale support with en-US as the only active source locale, and contracts for release-specific What's New plus cumulative user-facing version history.
