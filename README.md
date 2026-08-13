@@ -193,12 +193,13 @@ Host prerequisites and additional presets are documented in [`src/simulator/READ
 
 ### Tests
 
-PlatformIO is the canonical test runner for code that ships in the embedded product. Run the complete native product suite from the repository root:
+PlatformIO is the canonical test runner for code that ships in the embedded product. Run the complete native product suite — bootloader, shared core and sequencer — from the repository root:
 
 ```sh
-pio test -e test_bootloader_native
 pio test -e test_product_native
 ```
+
+The focused `test_bootloader_native` environment remains available for bootloader-only safety verification.
 
 CMake/CTest is reserved for simulator-specific behavior. After configuring and building the simulator, run its host-only regression suite with:
 

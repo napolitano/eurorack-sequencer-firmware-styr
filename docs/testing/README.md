@@ -19,11 +19,10 @@ This boundary is enforced by `toolchain/check_test_ownership.py` and by CI. Prod
 From the repository root:
 
 ```sh
-pio test -e test_bootloader_native
 pio test -e test_product_native
 ```
 
-The first command runs the five release-critical bootloader suites. The second runs shared-core and sequencer/application suites. Both use PlatformIO's native platform with Unity, so they execute quickly on the host while remaining under the same build/test orchestrator as the embedded targets. The native test environments deliberately keep PlatformIO's Library Dependency Finder enabled (`lib_ldf_mode = chain`): Unity is supplied by PlatformIO as a test-library dependency, and disabling LDF prevents `<unity.h>` from being added to the compiler include path. The embedded production environments may continue to use manual/off LDF because their dependency graph is assembled explicitly.
+`test_product_native` is the complete native product suite: bootloader, shared core and sequencer/application code. The focused `test_bootloader_native` environment remains available for bootloader-only verification and release-safety work. Both environments use PlatformIO's native platform with Unity, so they execute quickly on the host while remaining under the same build/test orchestrator as the embedded targets. The native test environments deliberately keep PlatformIO's Library Dependency Finder enabled (`lib_ldf_mode = chain`): Unity is supplied by PlatformIO as a test-library dependency, and disabling LDF prevents `<unity.h>` from being added to the compiler include path. The embedded production environments may continue to use manual/off LDF because their dependency graph is assembled explicitly.
 
 > [!NOTE]
 > Always select one of the native test environments explicitly. A bare `pio test` follows the project's default `application` environment, which is an embedded firmware build and intentionally has no Unity test framework configured.
@@ -31,7 +30,7 @@ The first command runs the five release-critical bootloader suites. The second r
 Run an individual suite by filtering its path relative to `test/`:
 
 ```sh
-pio test -e test_bootloader_native --filter "bootloader/test_format"
+pio test -e test_product_native --filter "bootloader/test_format"
 pio test -e test_product_native --filter "sequencer/test_lfo_track_engine"
 ```
 

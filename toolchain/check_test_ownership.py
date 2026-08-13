@@ -62,6 +62,16 @@ for native_env in ("env:test_bootloader_native", "env:test_product_native"):
                 f"{native_env} must keep LDF enabled so PlatformIO can resolve <unity.h>; "
                 f"got lib_ldf_mode = {ldf.group(1)}")
 
+product_env = ini_section("env:test_product_native")
+require(re.search(r"(?m)^\s*bootloader/\*\s*$", product_env) is not None,
+        "test_product_native must include bootloader/*; Product includes the bootloader")
+require(re.search(r"(?m)^\s*core/\*\s*$", product_env) is not None,
+        "test_product_native must include core/*")
+require(re.search(r"(?m)^\s*sequencer/\*\s*$", product_env) is not None,
+        "test_product_native must include sequencer/*")
+require(re.search(r"(?m)^custom_styr_test_components\s*=\s*[^\n]*\bproduct\b[^\n]*\bbootloader\b", product_env) is not None,
+        "test_product_native must build both product and bootloader support")
+
 require("test_framework = custom" not in PIO_INI,
         "custom PlatformIO test frameworks are not permitted for product tests")
 require(not (ROOT / "test" / "test_custom_runner.py").exists(),
@@ -118,7 +128,7 @@ if product_support is not None:
 require("pio test -e test_bootloader_native" in CI,
         "CI must run bootloader tests through PlatformIO")
 require("pio test -e test_product_native" in CI,
-        "CI must run shared-core/sequencer tests through PlatformIO")
+        "CI must run the complete native product suite through PlatformIO")
 
 product_tests = sorted((ROOT / "test").rglob("*.cpp"))
 bootloader_tests = sorted((ROOT / "test" / "bootloader").rglob("*.cpp"))

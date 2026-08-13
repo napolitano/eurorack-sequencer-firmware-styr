@@ -68,9 +68,10 @@ C:\msys64\ucrt64\bin\cmake.exe --build --preset windows-ucrt64-debug
 Tests for PlatformIO-built product code are executed by PlatformIO with its built-in **Unity** framework, even when they run natively on the host:
 
 ```sh
-pio test -e test_bootloader_native
 pio test -e test_product_native
 ```
+
+This environment runs the complete embedded product test set, including the bootloader. Use `test_bootloader_native` only when a focused bootloader-only run is required.
 
 The native PlatformIO test environments use normal dependency discovery (`lib_ldf_mode = chain`) so PlatformIO's built-in Unity dependency is visible as `<unity.h>`. Do not copy the embedded `lib_ldf_mode = off` setting into these test environments.
 

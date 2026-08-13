@@ -16,6 +16,7 @@
 - Fixed the LFO function-key mapping for the five-key hardware and several documentation-screenshot navigation/build regressions.
 
 #### Improvements
+- `test_product_native` now means the complete product by construction: bootloader, shared core and sequencer suites run together; `test_bootloader_native` remains a focused bootloader-only safety subset.
 - External clock tracking now separates isolated bad edges from confirmed tempo changes and keeps detected slave tempo independent from project/master tempo.
 - PlatformIO is the canonical test runner for embedded/product code; CMake/CTest is restricted to simulator-only behavior. The repository currently contains 44 PlatformIO Unity suites with 410 registered product regression cases.
 - Product tests live only under `test/`; simulator-only tests live under `src/simulator/tests/`, with CI ownership and repository-cleanliness gates preventing the two test worlds from drifting together again.

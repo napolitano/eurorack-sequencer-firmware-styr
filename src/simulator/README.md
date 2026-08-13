@@ -51,7 +51,7 @@ cd src\simulator
 C:\msys64\ucrt64\bin\ctest.exe --preset windows-ucrt64-debug
 ```
 
-Product-code unit tests are not owned by this CMake project; run them from the repository root with `pio test -e test_bootloader_native` and `pio test -e test_product_native`. The Windows preset explicitly selects UCRT64 GCC/G++, Ninja and the UCRT64 prefix so STM32CubeCLT or an unrelated `cc.exe` in the normal Windows `PATH` cannot silently become the simulator toolchain.
+Product-code unit tests are not owned by this CMake project; run the complete product suite from the repository root with `pio test -e test_product_native`. The dedicated `test_bootloader_native` environment is a focused bootloader-only subset. The Windows preset explicitly selects UCRT64 GCC/G++, Ninja and the UCRT64 prefix so STM32CubeCLT or an unrelated `cc.exe` in the normal Windows `PATH` cannot silently become the simulator toolchain.
 
 SDL2 and GLEW are resolved explicitly from `C:/msys64/ucrt64` instead of through the invoking CMake installation's helper modules. The runtime links only the SDL2 DLL import library; `SDL2main` and `-mwindows` are intentionally excluded so native test executables keep normal `main()` entry points.
 
