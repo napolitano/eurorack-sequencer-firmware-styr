@@ -73,7 +73,7 @@ That publishing pipeline is a future task and is **not implemented by the curren
 
 The documentation agents share a curated Markdown knowledge base under `.github/skills/styr-user-manual/knowledge/`. It captures the stable product model, interaction concepts, track/timing terminology, documentation map, current change-impact catalog, and localization rules. It is deliberately human-editable and versioned with the product.
 
-The knowledge base is not a generated database and is not the published manual. Current implementation/tests remain authoritative, while the knowledge files provide a compact starting context so authoring and review agents do not need to rediscover the complete product model for every documentation sync. US English is the canonical source locale; future German, French, Italian, or other localization agents must reuse the same technical knowledge rather than create independent factual forks.
+The knowledge base is not a generated database and is not the published manual. Current implementation/tests remain authoritative, while the knowledge files provide a compact starting context so authoring and review agents do not need to rediscover the complete product model for every documentation sync. US English (`en-US`) is the canonical source locale and currently the only active locale. The localization foundation is intentionally open-ended: future locales must reuse the same technical knowledge and stable IDs rather than create independent factual forks, but the project does not assume a fixed future language list.
 
 For the planned GitHub Wiki publishing model, see [`WIKI.md`](WIKI.md). The Wiki is treated as a derived publication target because GitHub stores it in a separate Git repository. Canonical content remains in the main Styr repository and can later be synchronized explicitly after review.
 
@@ -83,15 +83,29 @@ Repository-scoped GitHub Copilot custom agents live under `.github/agents/`. The
 
 The intended bundled workflow is:
 
-1. create a `Documentation sync` issue from `.github/ISSUE_TEMPLATE/documentation_sync.yml` and record the target state, comparison baseline and base branch;
-2. assign/select **Styr Manual SME** to produce one coherent manual update on its task branch/PR;
-3. run **Styr Manual Technical Reviewer** against the same documentation change set to verify product facts, values, timing, UI behavior and screenshot consistency;
-4. run **Styr Manual US English Editor** last to normalize readability and language without changing established technical meaning;
-5. merge only after the deterministic documentation checks pass and a human has reviewed the bundled result.
+1. run the maintainer-only **Create documentation sync issue** workflow (`workflow_dispatch`) from the Actions tab; explicitly select `full-regeneration` or `incremental-release-sync`, then record the target ref, baseline where required, and base branch;
+2. the workflow creates an issue carrying the `internal:documentation-sync` authorization label; do not treat an arbitrary public issue as an agent trigger;
+3. run **Styr Release Documentation Analyst** first. It produces the evidence-backed coverage/impact set and does not author manual prose;
+4. assign/select **Styr Manual SME** to produce one coherent en-US manual change set on its task branch/PR;
+5. run **Styr Manual Technical Reviewer** against the same documentation bundle to verify product facts, values, timing, UI behavior and screenshot consistency;
+6. run **Styr Manual US English Editor** last to normalize readability and language without changing established technical meaning;
+7. merge only after deterministic documentation checks pass and a human has reviewed the bundled result.
+
+`full-regeneration` reconstructs the complete current manual and is intended for initial bootstrap, completeness testing and deliberate audits. Its result is review material and must not automatically replace the maintained manual. `incremental-release-sync` is the normal release mode after bootstrap: it preserves unaffected structure, stable documentation identities and unaffected prose while applying only the user-visible release delta and its transitive effects.
+
+The incremental release flow also maintains two distinct user-facing release surfaces: `What's New` covers only the previous-release-to-target interval, while a cumulative version history receives one concise narrative entry per released version. The engineering changelog is an input to this process, not a replacement for either user-facing view.
 
 The agents must not merge their own changes or write directly to the protected/base branch. The author may update `docs/manual/**` and, when required for documentation coverage, deterministic capture states in `src/simulator/tools/manual_screenshots.cpp`. The reviewers are more restricted: technical review corrects documentation facts, while the final editorial pass edits only user-facing prose under `docs/manual/**`.
 
 This agent workflow maintains documentation sources; it is not the publication pipeline. Release artifacts must still be produced deterministically from the merged release commit.
+
+### Documentation-agent authorization
+
+The public issue tracker is **not** an agent-control API. The supported issue-driven entry point is the manually dispatched `.github/workflows/create-documentation-sync.yml` workflow. GitHub requires repository write access to manually run a `workflow_dispatch` workflow, so ordinary external users cannot create an authorized documentation-agent task through this path.
+
+The workflow creates the issue itself and applies `internal:documentation-sync`. For defense in depth, issue-driven documentation agents must refuse to make documentation changes when that label is absent. Maintainers may still start an agent directly from GitHub's agent UI, but a public issue, mention, or copied issue body never constitutes authorization by itself.
+
+The workflow grants only `contents: read` and `issues: write` to its `GITHUB_TOKEN`, does not check out or execute repository code, and does not assign Copilot automatically. Agent selection remains an explicit maintainer action.
 
 ## Screenshot output ownership
 

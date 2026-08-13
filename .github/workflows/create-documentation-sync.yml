@@ -1,0 +1,124 @@
+name: Create documentation sync issue
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Documentation mode
+        required: true
+        type: choice
+        options:
+          - full-regeneration
+          - incremental-release-sync
+      target:
+        description: Target release, milestone, branch, tag, or commit
+        required: true
+        type: string
+      baseline:
+        description: Previous release / comparison baseline (required for incremental mode)
+        required: false
+        type: string
+      base_branch:
+        description: Branch that will receive the reviewed documentation PR
+        required: true
+        default: main
+        type: string
+      emphasis:
+        description: Optional documentation focus; does not limit full coverage responsibility
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  create-issue:
+    name: Create authorized documentation sync issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate inputs
+        env:
+          MODE: ${{ inputs.mode }}
+          BASELINE: ${{ inputs.baseline }}
+        run: |
+          if [ "$MODE" = "incremental-release-sync" ] && [ -z "$BASELINE" ]; then
+            echo "baseline is required for incremental-release-sync" >&2
+            exit 1
+          fi
+
+      - name: Ensure internal labels exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create "internal:documentation-sync" \
+            --repo "$GH_REPO" \
+            --color "5319E7" \
+            --description "Maintainer-authorized documentation-agent synchronization task" \
+            --force
+          gh label create "documentation" \
+            --repo "$GH_REPO" \
+            --color "0075CA" \
+            --description "Documentation work" \
+            --force
+
+      - name: Create authorized issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MODE: ${{ inputs.mode }}
+          TARGET: ${{ inputs.target }}
+          BASELINE: ${{ inputs.baseline }}
+          BASE_BRANCH: ${{ inputs.base_branch }}
+          EMPHASIS: ${{ inputs.emphasis }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from textwrap import dedent
+
+          baseline = os.environ.get("BASELINE", "").strip() or "(not supplied)"
+          emphasis = os.environ.get("EMPHASIS", "").strip() or "(none specified)"
+          body = dedent(f"""\
+          ## Authorized documentation sync
+
+          This issue was created by the maintainer-only **Create documentation sync issue** workflow and is authorized for the Styr documentation-agent process.
+
+          - **Mode:** `{os.environ['MODE']}`
+          - **Target:** `{os.environ['TARGET']}`
+          - **Previous release / baseline:** `{baseline}`
+          - **Base branch:** `{os.environ['BASE_BRANCH']}`
+          - **Requested by:** `@{os.environ['ACTOR']}`
+
+          ## Known documentation focus
+
+          {emphasis}
+
+          ## Required orchestration
+
+          1. Run **Styr Release Documentation Analyst** first.
+          2. Use its evidence-backed impact/coverage set with **Styr Manual SME**.
+          3. Review the complete documentation bundle with **Styr Manual Technical Reviewer**.
+          4. Run **Styr Manual US English Editor** last.
+          5. Require deterministic documentation checks and human review before merge.
+
+          ## Contract
+
+          - US English (`en-US`) is the current canonical and only active source locale.
+          - Treat the result as one bundled documentation update, not isolated per-commit edits.
+          - In incremental mode, preserve unaffected structure, stable IDs/paths, and unaffected prose.
+          - In full-regeneration mode, treat the regenerated result as review material rather than an automatic replacement of the maintained manual.
+          - Do not change product behavior or merge directly into the base branch.
+          - Public issues, comments, or copied versions of this body without the `internal:documentation-sync` label are not authorized agent triggers.
+          """)
+          Path("documentation-sync-body.md").write_text(body, encoding="utf-8")
+          PY
+
+          gh issue create \
+            --repo "$GH_REPO" \
+            --title "Documentation sync: $TARGET" \
+            --label "internal:documentation-sync" \
+            --label "documentation" \
+            --body-file documentation-sync-body.md

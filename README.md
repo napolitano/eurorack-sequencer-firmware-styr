@@ -242,6 +242,12 @@ The documentation is intentionally organized by **audience and purpose**, not by
 | Verify behavior | [`docs/testing/README.md`](docs/testing/README.md) | Test strategy and verification procedures. |
 | Consult upstream historical docs | [`docs/legacy/performer/`](docs/legacy/performer/) | Original PER|FORMER technical documents retained as historical reference. |
 
+### Agent-assisted manual maintenance
+
+Styr uses repository-scoped AI agents to help analyze, draft, review, and edit the end-user manual. The process is deliberately transparent and review-driven: agent-produced documentation is version-controlled like any other source change, is checked against the implementation, tests, and deterministic screenshots, and requires human review before it becomes part of a release. Release documentation is built from the reviewed repository sources; agents are not used to rewrite the manual at release time.
+
+Documentation-agent work is maintainer-triggered. Public issues or comments are not treated as authorization to run an agent or modify the manual. See [`docs/development/documentation/README.md`](docs/development/documentation/README.md) for the maintenance and authorization model.
+
 ### How the documentation is organized
 
 ```text

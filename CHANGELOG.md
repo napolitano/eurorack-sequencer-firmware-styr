@@ -29,6 +29,8 @@
 - CI actions and developer workflows were modernized while preserving the established STM32 flash layout, ST-Link path and SD-card update format.
 
 #### Development
+- Added transparent README disclosure for agent-assisted user-manual maintenance and replaced the public documentation-sync issue form with a maintainer-only manual workflow that creates explicitly authorized documentation-sync issues without auto-starting Copilot.
+- Extended the manual-agent foundation with explicit full-regeneration and incremental-release modes, an evidence-only Release Documentation Analyst, open-ended locale support with en-US as the only active source locale, and contracts for release-specific What's New plus cumulative user-facing version history.
 - Added a shared Markdown subject-matter knowledge base for user-documentation agents, including canonical terminology, product/interaction/timing models, documentation mapping, localization rules, and a future derived GitHub Wiki publishing policy.
 - Added manually invoked GitHub Copilot agents for bundled Styr user-manual authoring, factual technical review and final US-English editing, backed by a shared repository-specific manual skill and documentation-sync issue template.
 - Completed a US-English structured Doxygen documentation pass across first-party source APIs, state, constants and enumerations; added a source-documentation quality gate and HTML/XML Doxygen configuration for future technical documentation.
