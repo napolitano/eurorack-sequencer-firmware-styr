@@ -153,6 +153,22 @@ Only directories that actually own images receive an `assets/` directory. End-us
 
 A screen document should explain what the state is, how it is reached, and what the relevant control does. It should not duplicate a complete feature guide.
 
+## Documentation-agent regeneration contract
+
+The agentic documentation modes treat screenshots as part of the documentation state, not as optional supporting files.
+
+For `full-regeneration`:
+
+1. the Orchestrator runs `python3 toolchain/regenerate_manual_screenshots.py`, which drives the canonical `manual-screenshots` target, before documentation analysis;
+2. the Analyst and Manual SME work from the freshly rendered UI states;
+3. the Manual SME or UX/IA Reviewer may improve deterministic capture definitions when a technically correct state is a poor instructional example;
+4. after authoring and UX/IA review, the Orchestrator regenerates the **complete** screenshot corpus again;
+5. `python3 toolchain/check_manual_screenshots.py --require-assets` must pass before Technical Review.
+
+For `incremental-release-sync`, affected capture definitions are updated with the documentation change and the complete corpus is regenerated once before Technical Review. This intentionally favors a coherent current screenshot set over mixing generated assets from different documentation runs.
+
+A documentation sync must not claim screenshot regeneration merely because capture mappings validate. The canonical generator must actually run successfully.
+
 ## Review discipline
 
 A changed generated PNG can mean either an intentional UI change or an unintended visual/state regression. Review screenshot diffs together with the corresponding Markdown changes.

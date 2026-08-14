@@ -28,6 +28,13 @@ A full regeneration may reorganize or rewrite content when that materially impro
 
 A regeneration result is a review artifact. It must **not** automatically overwrite or merge into the maintained manual. Compare it with the maintained manual and review meaningful differences before adoption.
 
+
+## Full-regeneration visual and quality requirements
+
+A full regeneration is also a visual regeneration. Before content analysis, regenerate the complete deterministic manual screenshot corpus from the target state. After authoring and UX/IA review, regenerate the complete corpus again so any changed capture definitions are reflected in the final bundle. The run is incomplete if screenshot generation or asset validation fails.
+
+Full regeneration must compare regenerated prose with the maintained manual as a quality regression oracle. Complete coverage does not justify replacing clearer existing prose with weaker wording. Apply `manual-quality.md` before declaring the regenerated bundle complete.
+
 ## Mode 2: Incremental release sync
 
 `incremental-release-sync` is the normal maintenance mode after the initial manual exists.
@@ -49,6 +56,8 @@ Rules:
 - editorial review defaults to changed sections plus enough neighboring context to ensure consistency.
 
 Incremental maintenance is deliberately semi-deterministic: facts, scope, IDs, screenshot identities, release interval, and validation are controlled; wording inside genuinely changed prose remains editorial.
+
+Affected screenshots must be regenerated during an incremental sync. Before Technical Review, regenerate the complete current screenshot corpus so the PR cannot contain a mixture of old and new generated UI states.
 
 ## Stable identities
 

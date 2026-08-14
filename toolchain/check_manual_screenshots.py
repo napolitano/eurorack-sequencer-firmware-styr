@@ -9,12 +9,15 @@
 """Validate the one-to-one contract between manual captures and screen docs."""
 
 from pathlib import Path
+import argparse
 import re
+import struct
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "src/simulator/tools/manual_screenshots.cpp"
 SCREENS = ROOT / "docs/manual/screens"
+ASSETS = ROOT / "docs/manual/assets"
 
 
 REQUIRED_CAPTURES = {
@@ -80,7 +83,69 @@ def screen_docs():
     return {path.stem: path for path in docs}
 
 
+
+def png_dimensions(path: Path):
+    """Return PNG width/height from IHDR without external image dependencies."""
+    with path.open("rb") as handle:
+        signature = handle.read(8)
+        if signature != b"\x89PNG\r\n\x1a\n":
+            raise ValueError("invalid PNG signature")
+        length = struct.unpack(">I", handle.read(4))[0]
+        chunk_type = handle.read(4)
+        if chunk_type != b"IHDR" or length < 8:
+            raise ValueError("missing PNG IHDR")
+        width, height = struct.unpack(">II", handle.read(8))
+    return width, height
+
+
+def validate_assets(captures, errors):
+    """Require a complete, internally consistent generated screenshot corpus."""
+    missing = []
+    scales = set()
+    for name in sorted(captures):
+        asset = ASSETS / f"{name}.png"
+        if not asset.is_file():
+            missing.append(name)
+            continue
+        try:
+            width, height = png_dimensions(asset)
+        except (OSError, ValueError, struct.error) as exc:
+            errors.append(f"invalid screenshot asset {asset.relative_to(ROOT)}: {exc}")
+            continue
+
+        base_height = 10 if name in {"header", "footer"} else 64
+        if width % 256 != 0:
+            errors.append(
+                f"screenshot {asset.relative_to(ROOT)} width {width} is not an integer scale of 256"
+            )
+            continue
+        scale = width // 256
+        if scale < 1 or scale > 8 or height != base_height * scale:
+            errors.append(
+                f"screenshot {asset.relative_to(ROOT)} has invalid dimensions {width}x{height} "
+                f"for {scale}x integer framebuffer scaling"
+            )
+            continue
+        scales.add(scale)
+
+    if missing:
+        errors.append("generated screenshot assets are missing: " + ", ".join(missing))
+    if len(scales) > 1:
+        errors.append(
+            "generated screenshot assets use inconsistent integer scales: "
+            + ", ".join(str(value) for value in sorted(scales))
+        )
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--require-assets",
+        action="store_true",
+        help="require every capture PNG to exist and use consistent integer framebuffer scaling",
+    )
+    args = parser.parse_args()
+
     errors = []
     captures, duplicates = capture_names()
     docs = screen_docs()
@@ -115,6 +180,9 @@ def main():
         if "From Munich with" not in text or "blue-heart.svg" not in text:
             errors.append(f"{docs[name].relative_to(ROOT)} is missing the manual footer")
 
+    if args.require_assets:
+        validate_assets(captures, errors)
+
     # The Step 6.2 bootstrap pages contained the same generated-image NOTE on
     # every screen. Screen Markdown is now editorial source, so that boilerplate
     # must not creep back in. Useful, screen-specific GitHub notes remain valid.
@@ -132,7 +200,8 @@ def main():
         return 1
 
 
-    print(f"Manual screenshot validation OK: {len(captures)} captures, {len(docs)} screen documents.")
+    asset_suffix = " with generated assets" if args.require_assets else ""
+    print(f"Manual screenshot validation OK: {len(captures)} captures, {len(docs)} screen documents{asset_suffix}.")
     return 0
 
 

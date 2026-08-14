@@ -23,7 +23,8 @@ Before analysis, read:
 - `.github/skills/styr-user-manual/SKILL.md`;
 - `.github/skills/styr-user-manual/knowledge/README.md`;
 - `.github/skills/styr-user-manual/knowledge/documentation-lifecycle.md`;
-- `.github/skills/styr-user-manual/knowledge/orchestration.md`.
+- `.github/skills/styr-user-manual/knowledge/orchestration.md`;
+- `.github/skills/styr-user-manual/knowledge/manual-quality.md`.
 
 Load the other knowledge modules relevant to the target state. Do not open or create a pull request.
 
@@ -38,13 +39,13 @@ Do not silently choose a mode.
 
 ### Full regeneration
 
-Analyze the complete current target state as if the end-user manual had to be reconstructed from authoritative product evidence. Existing manual text may be inspected as evidence and as a regression oracle, but it must not define behavior merely because it already exists.
+Analyze the complete current target state as if the end-user manual had to be reconstructed from authoritative product evidence. The Orchestrator must have freshly regenerated the complete manual screenshot corpus before invoking you; treat those captures as current visible-UI evidence and report a blocker if that prerequisite is not established. Existing manual text may be inspected as evidence and as a regression oracle, but it must not define behavior merely because it already exists.
 
 The analysis must identify:
 
 - complete user-facing feature and workflow coverage;
 - required manual sections and stable documentation identities;
-- required deterministic screenshot states;
+- required deterministic screenshot states, including states whose existing capture is instructionally weak even if technically valid;
 - gaps between current product behavior and existing manual coverage;
 - contradictions or unsupported claims in existing documentation;
 - content that belongs in the user manual versus developer/reference documentation.
@@ -83,7 +84,7 @@ Return a Markdown block headed `STYR_DOCUMENTATION_IMPACT_SET` containing `statu
 2. user-visible changes or complete coverage areas;
 3. affected existing documentation IDs/paths;
 4. required new documentation IDs/paths;
-5. screenshot changes/additions;
+5. screenshot changes/additions and any capture states that should be improved for instructional clarity;
 6. `What's New` candidates (incremental mode only, or regeneration with an explicit baseline);
 7. release-history candidates;
 8. evidence/source locations;

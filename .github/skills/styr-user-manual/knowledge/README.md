@@ -35,7 +35,8 @@ Evidence priority remains:
 | [`tracks.md`](tracks.md) | Canonical user-facing model for Note, Curve, LFO, and MIDI/CV tracks. |
 | [`timing-and-transport.md`](timing-and-transport.md) | Clock, transport, external synchronization, microtiming, and boundary behavior relevant to users. |
 | [`change-catalog.md`](change-catalog.md) | User-visible Styr changes that documentation agents must consider during release synchronization. |
-| [`documentation-lifecycle.md`](documentation-lifecycle.md) | Full-regeneration versus incremental-release modes, stable identities, What's New, version history, and regeneration testing. |
+| [`documentation-lifecycle.md`](documentation-lifecycle.md) | Full-regeneration versus incremental-release modes, stable identities, What's New, version history, screenshot regeneration, and regeneration testing. |
+| [`manual-quality.md`](manual-quality.md) | Mandatory editorial quality contract, preservation rules, user-facing writing principles, screenshot quality, and good/bad examples. |
 | [`orchestration.md`](orchestration.md) | Single-issue Orchestrator delegation, structured in-context handoffs, stage gates, and the single Draft-PR contract. |
 | [`documentation-map.md`](documentation-map.md) | Mapping from concepts to maintained manual sections and deterministic screenshot families. |
 | [`terminology.md`](terminology.md) | Canonical English terms and stable term IDs for authoring and future localization. |

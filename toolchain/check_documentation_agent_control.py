@@ -40,6 +40,7 @@ else:
         "Styr Documentation Orchestrator",
         "Styr Release Documentation Analyst",
         "Styr Manual SME",
+        "Styr Manual UX and Information Architecture Reviewer",
         "Styr Manual Technical Reviewer",
         "Styr Manual US English Editor",
         "single bundled documentation PR",
@@ -83,14 +84,19 @@ else:
         "internal:documentation-sync",
         "Styr Release Documentation Analyst",
         "Styr Manual SME",
+        "Styr Manual UX and Information Architecture Reviewer",
         "Styr Manual Technical Reviewer",
         "Styr Manual US English Editor",
         "STYR_DOCUMENTATION_IMPACT_SET",
         "STYR_MANUAL_AUTHORING_REPORT",
+        "STYR_MANUAL_UX_REVIEW",
         "STYR_MANUAL_TECHNICAL_REVIEW",
         "STYR_MANUAL_EDITORIAL_REPORT",
+        "ux-review-blocked",
         "technical-review-blocked",
-        "check_manual_screenshots.py",
+        "regenerate_manual_screenshots.py",
+        "check_manual_screenshots.py --require-assets",
+        "manual-quality.md",
         "check_documentation_agent_control.py",
         "check_repository_cleanliness.py",
         "single bundled documentation PR",
@@ -118,11 +124,23 @@ specialist_contracts = {
         "STYR_MANUAL_AUTHORING_REPORT",
         "status: manual-sme-complete",
     ),
+    ".github/agents/styr-manual-ux-reviewer.agent.md": (
+        "disable-model-invocation: true",
+        "user-invocable: false",
+        "Styr Documentation Orchestrator",
+        "STYR_MANUAL_AUTHORING_REPORT",
+        "STYR_MANUAL_UX_REVIEW",
+        "status: ux-review-complete",
+        "ux-review-blocked",
+        "manual-quality.md",
+        "src/simulator/tools/manual_screenshots.cpp",
+    ),
     ".github/agents/styr-manual-technical-reviewer.agent.md": (
         "disable-model-invocation: true",
         "user-invocable: false",
         "Styr Documentation Orchestrator",
         "STYR_MANUAL_AUTHORING_REPORT",
+        "STYR_MANUAL_UX_REVIEW",
         "STYR_MANUAL_TECHNICAL_REVIEW",
         "status: technical-review-complete",
         "technical-review-blocked",
@@ -160,6 +178,8 @@ else:
         "Styr Documentation Orchestrator",
         "custom-agent `agent` tool",
         "STYR_DOCUMENTATION_IMPACT_SET",
+        "Styr Manual UX and Information Architecture Reviewer",
+        "manual-quality.md",
         "user-invocable: false",
         "orchestration.md",
     ):
@@ -176,14 +196,41 @@ else:
         "agent` tool",
         "STYR_DOCUMENTATION_IMPACT_SET",
         "STYR_MANUAL_AUTHORING_REPORT",
+        "STYR_MANUAL_UX_REVIEW",
         "STYR_MANUAL_TECHNICAL_REVIEW",
         "STYR_MANUAL_EDITORIAL_REPORT",
         "not committed as repository files",
         "same Draft PR",
+        "Styr Manual UX and Information Architecture Reviewer",
+        "complete screenshot corpus",
         "user-invocable: false",
     ):
         if token.lower() not in orchestration_text.lower():
             errors.append(f"orchestration knowledge missing required token: {token}")
+
+screenshot_regenerator = ROOT / "toolchain" / "regenerate_manual_screenshots.py"
+if not screenshot_regenerator.is_file():
+    errors.append("canonical manual screenshot regeneration helper is missing")
+else:
+    regenerator_text = screenshot_regenerator.read_text(encoding="utf-8")
+    for token in ("manual-screenshots", "--require-assets", "windows-ucrt64-debug", "release"):
+        if token not in regenerator_text:
+            errors.append(f"manual screenshot regeneration helper missing required token: {token}")
+
+quality = ROOT / ".github" / "skills" / "styr-user-manual" / "knowledge" / "manual-quality.md"
+if not quality.is_file():
+    errors.append("shared manual quality contract is missing")
+else:
+    quality_text = quality.read_text(encoding="utf-8")
+    for token in (
+        "Existing prose is an asset",
+        "Regeneration is not permission",
+        "Do not turn the manual into a UI inventory",
+        "Screenshot quality",
+        "Good and bad transformations",
+    ):
+        if token.lower() not in quality_text.lower():
+            errors.append(f"manual quality contract missing required token: {token}")
 
 # The obsolete manual-branch-chain architecture must not creep back into the
 # maintainer workflow. Specialist documents may discuss branches generically,
@@ -219,5 +266,7 @@ print(" - workflow does not auto-assign an agent")
 print(" - Styr Documentation Orchestrator is the single maintainer-facing agent")
 print(" - Orchestrator can invoke specialist custom agents with the agent tool")
 print(" - specialist agents are programmatic-only (user-invocable:false)")
-print(" - Analyst -> SME -> Technical Reviewer -> US-English Editor handoffs stay in agent context")
+print(" - Analyst -> SME -> UX/IA Reviewer -> Technical Reviewer -> US-English Editor handoffs stay in agent context")
+print(" - full-regeneration requires complete screenshot regeneration and strict asset validation")
+print(" - the manual quality contract is present and enforced by agent profiles")
 print(" - the initial issue assignment produces the single bundled Draft PR")

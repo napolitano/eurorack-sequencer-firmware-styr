@@ -48,6 +48,13 @@ Styr Manual SME
         |
         | structured result
         v
+Styr Manual UX and Information Architecture Reviewer
+        |
+        | structured result
+        v
+complete screenshot regeneration + asset validation
+        |
+        v
 Styr Manual Technical Reviewer
         |
         | structured result
@@ -59,6 +66,8 @@ same Draft PR -> deterministic CI -> human review
 ```
 
 There are no manual branch handoffs between specialists and no specialist-created pull requests. The Draft PR created by the initial issue assignment is the only PR for the documentation sync.
+
+For `full-regeneration`, the Orchestrator must regenerate the complete screenshot corpus **before invoking the Analyst** so visible UI evidence comes from the selected target state. It must regenerate the complete corpus again after the UX/IA stage and before Technical Review. For incremental mode, the final pre-Technical-Review regeneration is mandatory as well. Screenshot generation is atomic: a failed generation must not be treated as partial success. The canonical orchestration command is `python3 toolchain/regenerate_manual_screenshots.py`.
 
 ## Handoff model
 
@@ -102,9 +111,21 @@ STYR_MANUAL_AUTHORING_REPORT
 
 Use `status: manual-sme-complete` only when the requested authoring scope is complete enough for technical review. Use `manual-sme-incomplete` with explicit remaining scope otherwise. The Orchestrator may invoke the SME again without requiring maintainer action.
 
+### Manual UX/IA review result
+
+The Manual UX and Information Architecture Reviewer receives the Analyst context and completed authoring report, reviews/edits the shared worktree for user usefulness and coherent structure, and returns:
+
+```text
+STYR_MANUAL_UX_REVIEW
+```
+
+Use `status: ux-review-complete` only when the bundle is coherent enough for factual Technical Review. Use `ux-review-blocked` when authoring is too incomplete or a factual ambiguity prevents safe restructuring. The reviewer may improve deterministic capture definitions for documentation value but must not change product behavior.
+
+After this stage, the Orchestrator regenerates and validates the complete screenshot corpus before invoking Technical Review.
+
 ### Technical review result
 
-The Technical Reviewer receives the Analyst context and completed authoring report, verifies/corrects the current worktree, and returns:
+The Technical Reviewer receives the Analyst context, completed authoring report, and completed `STYR_MANUAL_UX_REVIEW`, verifies/corrects the current worktree, and returns:
 
 ```text
 STYR_MANUAL_TECHNICAL_REVIEW
@@ -146,6 +167,7 @@ The Orchestrator advances only after the preceding specialist reports a valid co
 
 - An incomplete Analyst is reinvoked to close identified coverage gaps.
 - An incomplete SME may be reinvoked on the same worktree.
+- A blocked UX/IA review stops the pipeline until the documentation-quality problem is resolved.
 - A blocked Technical Review stops the pipeline for human intervention.
 - The Editor never resolves factual ambiguity by rewriting around it.
 

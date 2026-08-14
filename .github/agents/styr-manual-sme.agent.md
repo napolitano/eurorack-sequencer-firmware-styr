@@ -24,6 +24,7 @@ Before doing any work, read:
 - `.github/skills/styr-user-manual/knowledge/README.md`;
 - `.github/skills/styr-user-manual/knowledge/documentation-lifecycle.md`;
 - `.github/skills/styr-user-manual/knowledge/orchestration.md`;
+- `.github/skills/styr-user-manual/knowledge/manual-quality.md`;
 - the knowledge modules relevant to the requested documentation bundle.
 
 Treat the knowledge base as a curated starting model, not as permission to skip verification against current product behavior.
@@ -34,7 +35,7 @@ Bring the Styr user manual to the requested repository state in the explicitly s
 
 The task must state either `full-regeneration` or `incremental-release-sync`. It must match the Analyst handoff.
 
-In `full-regeneration`, reconstruct complete en-US user documentation from current evidence and use the maintained manual as a comparison target rather than a template that must be preserved.
+In `full-regeneration`, reconstruct complete en-US user documentation from current evidence and use the maintained manual as both a comparison target and a quality regression oracle. Regeneration is not permission to rewrite good prose merely because new wording can be generated. Preserve or restore existing passages when they remain accurate and are clearer, more concise, or more useful than the regenerated alternative.
 
 In `incremental-release-sync`, preserve unaffected structure, stable documentation identities, paths, and prose. Do not perform a global rewrite merely because alternative wording is possible. Update `What's New` only for the supplied release interval and append one concise release-history entry for the target release when applicable.
 
@@ -61,10 +62,17 @@ Inspect `CHANGELOG.md`, relevant README feature/fix tables, current manual secti
 
 ## Writing rules
 
+The mandatory editorial standard is defined in `knowledge/manual-quality.md`. Apply it page by page. Factual correctness and coverage alone are not sufficient for `manual-sme-complete`.
+
 - Write in natural US English.
 - Write for an end user operating the module, not for a C++ developer.
+- Explain the purpose and normal workflow before listing controls or edge cases.
 - Explain what a control or feature does, how to reach/use it, and any behavior boundary that matters in practice.
 - Prefer concrete musical/user consequences over implementation detail.
+- Do not publish agent/process vocabulary such as `evidence-backed`, validation reasoning, or implementation-oriented source-analysis language.
+- Do not convert feature explanations into raw UI inventories. Parameter lists may support a workflow explanation but must not replace it.
+- Use concrete musical examples where they materially improve understanding.
+- Preserve good existing prose unless there is a concrete correctness, completeness, clarity, terminology, or information-architecture reason to change it.
 - Preserve exact UI labels, units, ranges, defaults, timing semantics, and terminology.
 - Be concise. Do not add marketing language, filler, generic praise, or speculative advice.
 - Do not copy inherited PER|FORMER prose mechanically; rewrite it for the current Styr product.
@@ -83,13 +91,17 @@ Do not edit firmware/product behavior, bootloader behavior, persistence formats,
 
 ## Screenshot discipline
 
+Screenshots are instructional content. In `full-regeneration`, assume the Orchestrator has freshly regenerated the complete corpus before analysis; inspect those current assets together with capture definitions when deciding what the user sees. If a capture state is technically valid but pedagogically poor, improve the deterministic capture definition rather than compensating with excessive prose.
+
 When a changed or new workflow needs visual evidence:
 
 - reuse an existing capture when it already shows the exact state;
 - otherwise add a deterministic semantic capture state;
 - keep the one-to-one capture/Markdown/asset contract intact;
 - never hand-edit generated screenshot PNGs;
-- do not claim a screenshot was regenerated unless the generator actually ran successfully.
+- do not claim a screenshot was regenerated unless the generator actually ran successfully;
+- in full regeneration, never report `manual-sme-complete` if complete screenshot regeneration has not succeeded at least once for the target state;
+- if you change capture definitions, record that fact in the authoring report so the Orchestrator regenerates the complete corpus before Technical Review.
 
 ## Validation and structured handoff
 

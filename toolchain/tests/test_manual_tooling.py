@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import struct
 import tempfile
 import unittest
 from zipfile import ZipFile
@@ -23,6 +24,8 @@ def load_module(name: str, path: Path):
 build = load_module("styr_manual_build", ROOT / "toolchain" / "manual" / "build_manual.py")
 artifact = load_module("styr_manual_artifact", ROOT / "toolchain" / "manual" / "check_manual_artifact.py")
 fonts = load_module("styr_manual_fonts", ROOT / "toolchain" / "manual" / "fetch_ubuntu_fonts.py")
+screenshots = load_module("styr_manual_screenshots_check", ROOT / "toolchain" / "check_manual_screenshots.py")
+regenerator = load_module("styr_manual_screenshot_regenerator", ROOT / "toolchain" / "regenerate_manual_screenshots.py")
 
 
 class ManualToolingTests(unittest.TestCase):
@@ -61,6 +64,43 @@ class ManualToolingTests(unittest.TestCase):
             build.ensure_outside_repo(ROOT / "dist" / "manual")
         with tempfile.TemporaryDirectory() as raw:
             build.ensure_outside_repo(Path(raw))
+
+    def test_screenshot_asset_validation_accepts_consistent_integer_scaling(self):
+        with tempfile.TemporaryDirectory() as raw:
+            assets = Path(raw)
+            old_assets = screenshots.ASSETS
+            screenshots.ASSETS = assets
+            try:
+                for name, height in (("alpha", 192), ("header", 30)):
+                    payload = (
+                        b"\x89PNG\r\n\x1a\n"
+                        + struct.pack(">I", 13)
+                        + b"IHDR"
+                        + struct.pack(">II", 768, height)
+                        + b"\x08\x00\x00\x00\x00"
+                    )
+                    (assets / f"{name}.png").write_bytes(payload)
+                errors = []
+                screenshots.validate_assets({"alpha", "header"}, errors)
+                self.assertEqual(errors, [])
+            finally:
+                screenshots.ASSETS = old_assets
+
+    def test_screenshot_asset_validation_rejects_missing_asset(self):
+        with tempfile.TemporaryDirectory() as raw:
+            old_assets = screenshots.ASSETS
+            screenshots.ASSETS = Path(raw)
+            try:
+                errors = []
+                screenshots.validate_assets({"missing"}, errors)
+                self.assertTrue(any("generated screenshot assets are missing" in error for error in errors))
+            finally:
+                screenshots.ASSETS = old_assets
+
+    def test_screenshot_regenerator_selects_repository_platform_presets(self):
+        self.assertEqual(regenerator.default_preset("Linux"), "release")
+        self.assertEqual(regenerator.default_preset("Darwin"), "release")
+        self.assertEqual(regenerator.default_preset("Windows"), "windows-ucrt64-debug")
 
 
 if __name__ == "__main__":
