@@ -3,7 +3,7 @@
 
 # What’s New
 
-This run does not include a baseline release interval, so this page is intentionally left as a structure placeholder.
+No release interval is defined for this manual rebuild, so this chapter does not list version-to-version changes.
 
 For cumulative release notes, see [Release History](releases/README.md).
 

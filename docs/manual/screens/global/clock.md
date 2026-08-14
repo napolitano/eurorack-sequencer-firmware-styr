@@ -15,12 +15,12 @@ Press `PAGE` + `TEMP`/Clock to open the Clock page.
 
 ## Operation
 
-Use the encoder to edit the clock list:
+Set up clocking in this order:
 
-- **Mode** sets Auto/Master/Slave operation.
-- **Input Divisor** and **Input Mode** define how external clock and run/reset/start-stop signals are interpreted.
-- **Output Divisor**, **Output Swing**, **Output Pulse**, and **Output Mode** define outgoing clock behavior.
-- **MIDI RX/TX** and **USB RX/TX** enable or disable MIDI clock receive/transmit paths.
+1. Choose **Mode** (`Auto`, `Master`, or `Slave`).
+2. If you use external clock, set **Input Divisor** and **Input Mode** for incoming clock plus run/reset/start-stop signals.
+3. Set **Output Divisor**, **Output Swing**, **Output Pulse**, and **Output Mode** for outgoing clock.
+4. Enable or disable MIDI clock paths with **Midi RX/TX** and **USB RX/TX**.
 
 The active source state is reflected in the header while running.
 

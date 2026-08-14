@@ -3,7 +3,7 @@
 
 # Styr Feature Guides
 
-Styr-specific additions receive a dedicated feature directory and `README.md`. Feature guides explain the complete workflow and reuse the canonical generated LCD screenshots from `docs/manual/assets/`; individual UI states remain documented separately in the screen reference.
+Feature guides explain complete workflows that span multiple screens. Use them when you want to understand how a feature behaves in practice, then use the screen reference for page-by-page control details.
 
 - [LFO Track](lfo/README.md)
 - [Acid Bassline Generator](acid-bassline/README.md)

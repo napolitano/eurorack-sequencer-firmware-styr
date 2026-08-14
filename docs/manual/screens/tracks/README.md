@@ -1,9 +1,9 @@
 <!-- SPDX-FileCopyrightText: 2026 Axel Napolitano -->
 <!-- SPDX-License-Identifier: CC-BY-NC-4.0 -->
 
-# Other Track Modes
+# MIDI/CV Track
 
-Track-mode pages not covered by the dedicated Note, Curve and LFO sections.
+Reference pages for the MIDI/CV Track.
 
 - [MIDI/CV Track](midi-cv-track.md)
 

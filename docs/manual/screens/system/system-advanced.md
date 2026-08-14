@@ -15,6 +15,6 @@ Open System and select Advanced Settings.
 
 ## Operation
 
-The current page shows **Enhanced UI** and **Language** rows as placeholders. In the current firmware state, these rows are visible but not editable from this page.
+The page shows **Enhanced UI** and **Language** rows as placeholders. These rows are visible, but you cannot edit them on this page.
 
 From Munich with <img src="../../assets/blue-heart.svg" alt="blue heart" width="14">
