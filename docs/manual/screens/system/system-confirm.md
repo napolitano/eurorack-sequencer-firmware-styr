@@ -15,7 +15,7 @@ Press `PAGE` + `T8` (`SYSTEM`).
 
 ## Operation
 
-Use the function keys to switch between available system tabs. Potentially destructive actions require deliberate confirmation.
+Use the function keys to switch between Calibration, Advanced Settings, Utilities, and Update. Potentially destructive actions require deliberate confirmation.
 
 
 From Munich with <img src="../../assets/blue-heart.svg" alt="blue heart" width="14">

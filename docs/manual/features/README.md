@@ -7,5 +7,6 @@ Styr-specific additions receive a dedicated feature directory and `README.md`. F
 
 - [LFO Track](lfo/README.md)
 - [Acid Bassline Generator](acid-bassline/README.md)
+- [Advanced Settings](advanced-settings/README.md)
 
 From Munich with <img src="../assets/blue-heart.svg" alt="blue heart" width="14">

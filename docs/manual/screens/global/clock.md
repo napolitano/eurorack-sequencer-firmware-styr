@@ -7,7 +7,7 @@
 
 ## Function
 
-Configures clock source and timing behaviour for the sequencer.
+Configures clock source, transport behavior, and MIDI/USB clock I/O.
 
 ## Access
 
@@ -15,7 +15,14 @@ Press `PAGE` + `TEMP`/Clock to open the Clock page.
 
 ## Operation
 
-Use the encoder to select and edit clock parameters. The active clock mode is also reflected in the display header.
+Use the encoder to edit the clock list:
+
+- **Mode** sets Auto/Master/Slave operation.
+- **Input Divisor** and **Input Mode** define how external clock and run/reset/start-stop signals are interpreted.
+- **Output Divisor**, **Output Swing**, **Output Pulse**, and **Output Mode** define outgoing clock behavior.
+- **MIDI RX/TX** and **USB RX/TX** enable or disable MIDI clock receive/transmit paths.
+
+The active source state is reflected in the header while running.
 
 
 From Munich with <img src="../../assets/blue-heart.svg" alt="blue heart" width="14">

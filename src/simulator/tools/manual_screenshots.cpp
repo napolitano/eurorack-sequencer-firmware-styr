@@ -640,6 +640,19 @@ int main(int argc, char **argv) {
             // Global and project pages.
             c.down(Key::Tempo).wait(100).screenshot("tempo").up(Key::Tempo).wait(100);
             c.down(Key::Tempo).wait(100).down(Key::Right).wait(800).screenshot("tempo-nudge").up(Key::Right).up(Key::Tempo).wait(100);
+            auto &clockSetup = project->clockSetup();
+            clockSetup.setMode(ClockSetup::Mode::Slave);
+            clockSetup.setShiftMode(ClockSetup::ShiftMode::Pause);
+            clockSetup.setClockInputDivisor(12);
+            clockSetup.setClockInputMode(ClockSetup::ClockInputMode::StartStop);
+            clockSetup.setClockOutputDivisor(24);
+            clockSetup.setClockOutputSwing(true);
+            clockSetup.setClockOutputPulse(3);
+            clockSetup.setClockOutputMode(ClockSetup::ClockOutputMode::Run);
+            clockSetup.setMidiRx(true);
+            clockSetup.setMidiTx(true);
+            clockSetup.setUsbRx(false);
+            clockSetup.setUsbTx(false);
             c.selectPage(Key::Tempo).screenshot("clock");
             c.selectPage(Key::Left).screenshot("overview");
             c.screenshotRegion("header", 0, 0, CONFIG_LCD_WIDTH, 10);
@@ -710,6 +723,23 @@ int main(int argc, char **argv) {
         if (wantsSection("midi-cv")) {
             beginIsolatedSection("midi-cv");
             project->setTrackMode(0, Track::TrackMode::MidiCv);
+            auto &midiCvTrack = project->track(0).midiCvTrack();
+            midiCvTrack.setVoices(4);
+            midiCvTrack.setVoiceConfig(MidiCvTrack::VoiceConfig::PitchVelocityPressure);
+            midiCvTrack.setNotePriority(MidiCvTrack::NotePriority::LowestNote);
+            midiCvTrack.setLowNote(36);
+            midiCvTrack.setHighNote(84);
+            midiCvTrack.setPitchBendRange(12);
+            midiCvTrack.setRetrigger(true);
+            midiCvTrack.setSlideTime(35);
+            midiCvTrack.setTranspose(-5);
+            auto &arpeggiator = midiCvTrack.arpeggiator();
+            arpeggiator.setEnabled(true);
+            arpeggiator.setHold(true);
+            arpeggiator.setMode(Arpeggiator::Mode::UpDown);
+            arpeggiator.setDivisor(12);
+            arpeggiator.setGateLength(50);
+            arpeggiator.setOctaves(2);
             c.wait(30).selectPage(Key::Step2).screenshot("midi-cv-track");
         }
 
@@ -740,6 +770,7 @@ int main(int argc, char **argv) {
             c.selectPage(Key::Track7).screenshot("system-confirm");
             c.press(Key::F4).screenshot("system-calibration");
             c.pressEncoder().screenshot("system-calibration-edit").pressEncoder();
+            c.press(Key::F2).screenshot("system-advanced");
             c.press(Key::F3).screenshot("system-utilities");
             c.press(Key::F4).screenshot("system-update");
         }
