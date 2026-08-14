@@ -97,6 +97,10 @@ else:
         "regenerate_manual_screenshots.py",
         "check_manual_screenshots.py --require-assets",
         "manual-quality.md",
+        "full-product-discovery.md",
+        "manual-information-architecture.md",
+        "product-surface map",
+        "user-workflow map",
         "check_documentation_agent_control.py",
         "check_repository_cleanliness.py",
         "single bundled documentation PR",
@@ -115,6 +119,12 @@ specialist_contracts = {
         "status: analyst-complete",
         "tools: [read, search, execute]",
         "Do not edit repository files",
+        "full-product-discovery.md",
+        "manual-information-architecture.md",
+        "recording-workflows.md",
+        "song-and-performance.md",
+        "product-surface map",
+        "coverage-audit",
     ),
     ".github/agents/styr-manual-sme.agent.md": (
         "disable-model-invocation: true",
@@ -123,6 +133,10 @@ specialist_contracts = {
         "STYR_DOCUMENTATION_IMPACT_SET",
         "STYR_MANUAL_AUTHORING_REPORT",
         "status: manual-sme-complete",
+        "manual-information-architecture.md",
+        "recording-workflows.md",
+        "song-and-performance.md",
+        "docs/manual/manual.toml",
     ),
     ".github/agents/styr-manual-ux-reviewer.agent.md": (
         "disable-model-invocation: true",
@@ -133,6 +147,9 @@ specialist_contracts = {
         "status: ux-review-complete",
         "ux-review-blocked",
         "manual-quality.md",
+        "manual-information-architecture.md",
+        "recording-workflows.md",
+        "song-and-performance.md",
         "src/simulator/tools/manual_screenshots.cpp",
     ),
     ".github/agents/styr-manual-technical-reviewer.agent.md": (
@@ -180,6 +197,10 @@ else:
         "STYR_DOCUMENTATION_IMPACT_SET",
         "Styr Manual UX and Information Architecture Reviewer",
         "manual-quality.md",
+        "full-product-discovery.md",
+        "manual-information-architecture.md",
+        "recording-workflows.md",
+        "song-and-performance.md",
         "user-invocable: false",
         "orchestration.md",
     ):
@@ -232,6 +253,58 @@ else:
         if token.lower() not in quality_text.lower():
             errors.append(f"manual quality contract missing required token: {token}")
 
+required_knowledge_modules = {
+    ".github/skills/styr-user-manual/knowledge/full-product-discovery.md": (
+        "Full product discovery contract",
+        "Mandatory discovery passes",
+        "Product surface inventory",
+        "Workflow discovery",
+        "Feature interaction discovery",
+        "Screenshot/state coverage",
+        "Manual architecture plan",
+        "Changelog relationship",
+        "Existing manual relationship",
+    ),
+    ".github/skills/styr-user-manual/knowledge/manual-information-architecture.md": (
+        "Manual information architecture",
+        "Part I — Meet Styr",
+        "Part II — How Styr thinks",
+        "Part III — Basic use",
+        "Part IV — Creating and recording material",
+        "Part V — Patterns and arrangement",
+        "Part VI — Performance Mode",
+        "Part VII — Advanced sequencing and modulation",
+        "Part IX — Reference",
+        "docs/manual/manual.toml",
+    ),
+    ".github/skills/styr-user-manual/knowledge/recording-workflows.md": (
+        "Recording workflows",
+        "Step Record",
+        "Overdub",
+        "Overwrite",
+        "Curve recording",
+        "Recommended Note-recording learning workflow",
+        "PAGE` + `PLAY",
+    ),
+    ".github/skills/styr-user-manual/knowledge/song-and-performance.md": (
+        "Song Mode and Performance Mode",
+        "Recommended Song workflow",
+        "Immediate, Latch, and Sync mental model",
+        "Recommended live workflow",
+        "Song slot",
+        "Fill Amount",
+    ),
+}
+for relative, tokens in required_knowledge_modules.items():
+    path = ROOT / relative
+    if not path.is_file():
+        errors.append(f"required manual knowledge module is missing: {relative}")
+        continue
+    text = path.read_text(encoding="utf-8")
+    for token in tokens:
+        if token.lower() not in text.lower():
+            errors.append(f"manual knowledge module missing required token {token!r}: {relative}")
+
 # The obsolete manual-branch-chain architecture must not creep back into the
 # maintainer workflow. Specialist documents may discuss branches generically,
 # but these exact operational instructions are retired.
@@ -269,4 +342,6 @@ print(" - specialist agents are programmatic-only (user-invocable:false)")
 print(" - Analyst -> SME -> UX/IA Reviewer -> Technical Reviewer -> US-English Editor handoffs stay in agent context")
 print(" - full-regeneration requires complete screenshot regeneration and strict asset validation")
 print(" - the manual quality contract is present and enforced by agent profiles")
+print(" - full regeneration is governed by ground-up product discovery and a stable reader journey")
+print(" - recording, Song Mode, and Performance Mode workflow knowledge is present")
 print(" - the initial issue assignment produces the single bundled Draft PR")

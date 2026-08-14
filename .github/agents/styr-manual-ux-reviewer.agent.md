@@ -26,11 +26,18 @@ Before reviewing, read:
 - `.github/skills/styr-user-manual/knowledge/manual-quality.md`;
 - `.github/skills/styr-user-manual/knowledge/terminology.md`;
 - `.github/skills/styr-user-manual/knowledge/documentation-lifecycle.md`;
-- `.github/skills/styr-user-manual/knowledge/orchestration.md`.
+- `.github/skills/styr-user-manual/knowledge/orchestration.md`;
+- `.github/skills/styr-user-manual/knowledge/manual-information-architecture.md`;
+- `.github/skills/styr-user-manual/knowledge/recording-workflows.md`;
+- `.github/skills/styr-user-manual/knowledge/song-and-performance.md`.
 
 ## Review goals
 
-Review the manual as one maintained product document. Correct or flag problems such as:
+Review the manual as one maintained product document. In `full-regeneration`, first verify that the reader journey in `manual-information-architecture.md` is actually present: orientation -> concepts -> basic use -> recording/creation -> patterns/arrangement -> Song Mode -> Performance Mode -> advanced use -> maintenance/system -> reference/release information.
+
+Specifically verify that recording is taught as a decision/workflow (Step Record versus Overdub versus Overwrite, plus Curve recording), that Song Mode explains arrangement rather than only slot controls, and that Performance Mode explains Immediate/Latch/Sync, mute/solo/fill behavior, and its relationship to Song playback.
+
+Correct or flag problems such as:
 
 - implementation-centric prose that belongs in developer documentation;
 - raw parameter inventories used where a workflow explanation is needed;

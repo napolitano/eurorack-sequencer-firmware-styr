@@ -26,6 +26,13 @@ Before analysis, read:
 - `.github/skills/styr-user-manual/knowledge/orchestration.md`;
 - `.github/skills/styr-user-manual/knowledge/manual-quality.md`.
 
+For `full-regeneration`, you must also read:
+
+- `.github/skills/styr-user-manual/knowledge/full-product-discovery.md`;
+- `.github/skills/styr-user-manual/knowledge/manual-information-architecture.md`;
+- `.github/skills/styr-user-manual/knowledge/recording-workflows.md`;
+- `.github/skills/styr-user-manual/knowledge/song-and-performance.md`.
+
 Load the other knowledge modules relevant to the target state. Do not open or create a pull request.
 
 ## Required mode
@@ -39,16 +46,25 @@ Do not silently choose a mode.
 
 ### Full regeneration
 
-Analyze the complete current target state as if the end-user manual had to be reconstructed from authoritative product evidence. The Orchestrator must have freshly regenerated the complete manual screenshot corpus before invoking you; treat those captures as current visible-UI evidence and report a blocker if that prerequisite is not established. Existing manual text may be inspected as evidence and as a regression oracle, but it must not define behavior merely because it already exists.
+Analyze the complete current target state **from first principles** as if no reliable end-user manual existed. The Orchestrator must have freshly regenerated the complete manual screenshot corpus before invoking you; treat those captures as current visible-UI evidence and report a blocker if that prerequisite is not established.
+
+Execute every mandatory discovery pass in `full-product-discovery.md`: product surface, interaction surface, product/data mental model, workflows, feature interactions, user-relevant boundaries, screenshot/state coverage, user mental model, manual architecture plan, and final coverage audit.
+
+Do not treat `CHANGELOG.md`, README change tables, the current `docs/manual/` tree, or the existing screenshot count as the product inventory. They are secondary evidence and regression aids after independent current-product discovery.
 
 The analysis must identify:
 
-- complete user-facing feature and workflow coverage;
-- required manual sections and stable documentation identities;
-- required deterministic screenshot states, including states whose existing capture is instructionally weak even if technically valid;
+- the complete current user-facing product-surface map;
+- complete user workflows, including basic sequencing, Note/Curve recording, pattern use, Song Mode, Performance Mode, persistence/system tasks, and all other workflows current evidence establishes;
+- feature interactions that require explanation across multiple screens/components;
+- the user mental model needed before advanced topics;
+- a narrative manual architecture following `manual-information-architecture.md`;
+- required stable documentation identities and paths;
+- required deterministic screenshot states, including missing/weak states even when all currently declared captures generate successfully;
 - gaps between current product behavior and existing manual coverage;
+- useful existing prose/structure worth preserving during the later quality comparison;
 - contradictions or unsupported claims in existing documentation;
-- content that belongs in the user manual versus developer/reference documentation.
+- content that belongs in the narrative manual versus feature guides, screen reference, or developer documentation.
 
 This mode is intended for bootstrap, audit, and regeneration testing. It does not imply that a regenerated manual should automatically replace the maintained manual.
 
@@ -81,15 +97,19 @@ Do not edit repository files. The Analyst is evidence-only. Return the analysis 
 Return a Markdown block headed `STYR_DOCUMENTATION_IMPACT_SET` containing `status: analyst-complete` only when the scope is complete enough for authoring. Include:
 
 1. mode, target ref, baseline when applicable, and final PR base branch;
-2. user-visible changes or complete coverage areas;
-3. affected existing documentation IDs/paths;
-4. required new documentation IDs/paths;
-5. screenshot changes/additions and any capture states that should be improved for instructional clarity;
-6. `What's New` candidates (incremental mode only, or regeneration with an explicit baseline);
-7. release-history candidates;
-8. evidence/source locations;
-9. unresolved evidence questions;
-10. explicit non-user-facing changes that should be excluded.
+2. user-visible changes (incremental) or the complete discovered product-surface map (full regeneration);
+3. discovered user workflows and feature-interaction map for full regeneration;
+4. proposed reader mental model and manual architecture plan for full regeneration;
+5. affected existing documentation IDs/paths;
+6. required new documentation IDs/paths;
+7. screenshot changes/additions and any missing or instructionally weak capture states;
+8. `What's New` candidates (incremental mode only, or regeneration with an explicit baseline);
+9. release-history candidates;
+10. useful existing material that later stages should preserve/compare;
+11. evidence/source locations;
+12. unresolved evidence questions;
+13. explicit non-user-facing changes that should be excluded;
+14. a coverage-audit summary showing that scope was checked against the discovered current product rather than only against existing documentation.
 
 If evidence is insufficient for a required area, record the unresolved question rather than inventing an answer. Use `status: analyst-incomplete` when the scope itself is not yet adequate.
 

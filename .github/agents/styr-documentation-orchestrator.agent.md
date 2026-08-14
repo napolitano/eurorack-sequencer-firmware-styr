@@ -31,6 +31,11 @@ Before delegating, read:
 - `.github/skills/styr-user-manual/knowledge/orchestration.md`;
 - `.github/skills/styr-user-manual/knowledge/manual-quality.md`.
 
+For `full-regeneration`, also read:
+
+- `.github/skills/styr-user-manual/knowledge/full-product-discovery.md`;
+- `.github/skills/styr-user-manual/knowledge/manual-information-architecture.md`.
+
 ## Required specialist pipeline
 
 Use the `agent` tool to invoke the repository custom agents below in this exact order inside the current task and working tree:
@@ -64,6 +69,8 @@ The canonical target stages all captures first and publishes only after all capt
 ## Stage 1: analysis
 
 Invoke **Styr Release Documentation Analyst** first. Require a structured response headed `STYR_DOCUMENTATION_IMPACT_SET` with `status: analyst-complete`.
+
+For `full-regeneration`, the Analyst result must demonstrate ground-up product discovery rather than release-delta expansion. Require a product-surface map, user-workflow map, feature-interaction map, user mental model, manual-architecture plan, screenshot/state gap analysis, and coverage audit against the current product. A changelog-derived or existing-manual-derived inventory is incomplete.
 
 If the response is incomplete, ask the Analyst once more to close clearly identified coverage gaps. Do not advance until the impact set is complete enough to bound authoring. Never invent missing product facts yourself.
 

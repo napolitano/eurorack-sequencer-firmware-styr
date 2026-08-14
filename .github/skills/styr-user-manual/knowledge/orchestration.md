@@ -90,9 +90,10 @@ It must include:
 - baseline when applicable;
 - final PR base branch;
 - complete user-visible coverage/impact inventory;
+- in full regeneration: product-surface map, user-workflow map, feature-interaction map, user mental model, manual-architecture plan, and product-based coverage audit;
 - affected existing documentation IDs/paths;
 - required new documentation IDs/paths;
-- screenshot additions/changes;
+- screenshot additions/changes, including missing instructional states discovered beyond the existing capture list;
 - What's New candidates when applicable;
 - release-history candidates;
 - evidence/source locations;
@@ -157,7 +158,7 @@ The repository-cleanliness gate intentionally rejects these paths. The Orchestra
 
 ## Full regeneration versus incremental sync
 
-`full-regeneration` reconstructs the complete current en-US manual from authoritative evidence. It is appropriate for initial bootstrap, completeness testing, and deliberate audits. The result remains review material until human approval.
+`full-regeneration` reconstructs the complete current en-US manual from authoritative evidence after mandatory ground-up discovery. It is not a large release-delta pass: the current product surface, workflows, interactions, and UI states define scope; the changelog and existing manual are secondary history/comparison sources. Authoring then follows the reader journey in `manual-information-architecture.md`. It is appropriate for initial bootstrap, completeness testing, and deliberate audits. The result remains review material until human approval.
 
 `incremental-release-sync` is the normal release-maintenance mode once the initial manual is established. It preserves unaffected structure, stable IDs/paths, and unaffected prose while updating the complete user-visible release delta and transitive documentation impact.
 

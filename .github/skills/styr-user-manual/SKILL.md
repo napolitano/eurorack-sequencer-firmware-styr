@@ -47,9 +47,13 @@ User-facing manual sources:
 ```text
 docs/manual/
 ├── README.md
+├── manual.toml      locale and deterministic publication order
+├── guide/           narrative reader journey; created/maintained by full regeneration
+├── features/        focused feature-level guides
+├── screens/         concise screen/state reference pages
+├── releases/        cumulative user-facing version history
 ├── assets/          generated screenshot PNGs plus manual-owned assets
-├── features/        feature-level guides
-└── screens/         one maintained reference page per captured UI state
+└── style/           deterministic ODT/PDF publication template/theme
 ```
 
 Screenshot behavior and validation are described by:
@@ -108,6 +112,15 @@ Always include units where a numeric value is meaningless without them. Preserve
 ## Manual writing contract
 
 Before authoring or reviewing user-facing prose, read `.github/skills/styr-user-manual/knowledge/manual-quality.md`. Its quality rules are mandatory and are part of the documentation contract.
+
+For `full-regeneration`, also read and apply all of the following before deciding what the manual contains or how it is ordered:
+
+- `.github/skills/styr-user-manual/knowledge/full-product-discovery.md`;
+- `.github/skills/styr-user-manual/knowledge/manual-information-architecture.md`;
+- `.github/skills/styr-user-manual/knowledge/recording-workflows.md`;
+- `.github/skills/styr-user-manual/knowledge/song-and-performance.md`.
+
+The full-regeneration reader journey is product overview -> core concepts -> basic use -> creating/recording material -> patterns/arrangement -> Song Mode -> Performance Mode -> advanced topics -> system/maintenance -> reference -> release information. Do not replace this journey with source-tree order, screen order, or a changelog-derived list of changes.
 
 Write in US English.
 
@@ -171,9 +184,13 @@ Read `.github/skills/styr-user-manual/knowledge/documentation-lifecycle.md` befo
 
 ### Full regeneration (`full-regeneration`)
 
-Reconstruct the complete current en-US manual from authoritative product evidence. Use this for the initial bootstrap, completeness testing, periodic audit, or deliberate recovery. Existing manual prose is evidence and a comparison target, not an authority that must be copied.
+Reconstruct the complete current en-US manual from authoritative product evidence **from first principles**. Before authoring, perform the mandatory discovery passes in `knowledge/full-product-discovery.md` and derive the manual through `knowledge/manual-information-architecture.md`. Use this mode for the initial bootstrap, completeness testing, periodic audit, or deliberate recovery.
 
-A regeneration result is review material and must not automatically replace the maintained manual. Preserve stable documentation identities for semantically unchanged concepts where they already exist.
+Full regeneration is not `baseline..target` impact analysis with a larger scope. The changelog and README change tables are supplemental history, not the product inventory. Existing manual prose is evidence, a gap detector, and a quality comparison target; it must not define the product boundary.
+
+The regenerated manual must contain a coherent narrative layer that teaches the whole device before the screen-reference layer. It must explicitly cover device orientation, core concepts, basic use, sequence creation/recording, patterns, Song Mode, Performance Mode, advanced topics, maintenance/system tasks, and reference/release information when current product evidence supports them. `docs/manual/manual.toml` must reflect the intended reader order for deterministic publication.
+
+A regeneration result is review material and must not automatically replace the maintained manual. Preserve stable documentation identities for semantically unchanged concepts where they already exist and preserve stronger existing prose during the quality-comparison pass.
 
 ### Incremental release sync (`incremental-release-sync`)
 

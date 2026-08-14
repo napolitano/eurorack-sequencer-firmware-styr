@@ -14,6 +14,8 @@ The Styr manual is a maintained product document for musicians and technically c
 
 Write for the person operating Styr, not for the implementation that makes Styr work.
 
+The manual must form a deliberate learning path. A reader should encounter device orientation and core concepts before basic workflows, basic workflows before advanced sequencing concepts, and narrative workflows before screen-by-screen reference material. A technically complete pile of screen descriptions is not a complete user manual.
+
 A strong manual answers, in this order when applicable:
 
 1. What is this feature or screen for?
@@ -24,6 +26,15 @@ A strong manual answers, in this order when applicable:
 6. Is a concrete musical example useful?
 
 Do not reverse this order merely because implementation details or parameter lists are easier to extract from source code.
+
+
+## Teach the whole product, not the repository tree
+
+For full regeneration, do not mirror C++ directory structure, UI page registration order, screenshot order, or changelog order. Use `full-product-discovery.md` to determine product scope and `manual-information-architecture.md` to determine the reader journey.
+
+The manual should explicitly connect concepts that users experience together, especially recording/input/monitoring, patterns/Song Mode, Song Mode/Performance Mode, timing/divisors/microtiming, and Fill activation/track Fill behavior.
+
+A workflow chapter may link to multiple concise screen-reference pages. Do not force the reader to reconstruct a workflow by following several disconnected screen pages.
 
 ## Existing prose is an asset
 

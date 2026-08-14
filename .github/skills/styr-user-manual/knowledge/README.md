@@ -31,8 +31,12 @@ Evidence priority remains:
 | Module | Purpose |
 |---|---|
 | [`product-model.md`](product-model.md) | Product identity, documentation boundaries, display model, and high-level sequencing concepts. |
+| [`full-product-discovery.md`](full-product-discovery.md) | Mandatory ground-up product-discovery passes for `full-regeneration`; prevents changelog/manual-driven scope. |
+| [`manual-information-architecture.md`](manual-information-architecture.md) | Stable reader journey: device overview, concepts, basic use, recording, Song, Performance, advanced topics, maintenance, reference, release information. |
 | [`interaction-model.md`](interaction-model.md) | User-facing navigation, function-key layers, Quick Edit, context menus, and generator workflow. |
 | [`tracks.md`](tracks.md) | Canonical user-facing model for Note, Curve, LFO, and MIDI/CV tracks. |
+| [`recording-workflows.md`](recording-workflows.md) | Verified Note/Curve recording semantics plus recommended Step Record, Overdub, Overwrite, and Curve-recording workflows. |
+| [`song-and-performance.md`](song-and-performance.md) | Song-slot/playback semantics, Performance mute/solo/fill semantics, interactions, and recommended arrangement/live workflows. |
 | [`timing-and-transport.md`](timing-and-transport.md) | Clock, transport, external synchronization, microtiming, and boundary behavior relevant to users. |
 | [`change-catalog.md`](change-catalog.md) | User-visible Styr changes that documentation agents must consider during release synchronization. |
 | [`documentation-lifecycle.md`](documentation-lifecycle.md) | Full-regeneration versus incremental-release modes, stable identities, What's New, version history, screenshot regeneration, and regeneration testing. |
@@ -41,6 +45,10 @@ Evidence priority remains:
 | [`documentation-map.md`](documentation-map.md) | Mapping from concepts to maintained manual sections and deterministic screenshot families. |
 | [`terminology.md`](terminology.md) | Canonical English terms and stable term IDs for authoring and future localization. |
 | [`localization.md`](localization.md) | Rules for future localized manuals without creating parallel technical truths. |
+
+## Full-regeneration mandatory set
+
+When the selected mode is `full-regeneration`, the Analyst and Manual SME must not rely on the compact general modules alone. They must load `full-product-discovery.md` and `manual-information-architecture.md`; the SME/UX/Technical stages must also load the workflow modules relevant to recording, Song Mode, and Performance Mode. These modules exist specifically to prevent a full regeneration from degenerating into a changelog expansion or a rewritten list of existing screen pages.
 
 ## Maintenance rules
 

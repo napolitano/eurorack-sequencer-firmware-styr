@@ -26,6 +26,10 @@ Use it for:
 
 A full regeneration may reorganize or rewrite content when that materially improves correctness and usability, but it must still preserve stable documentation IDs whenever an existing concept is semantically the same.
 
+Full regeneration must begin with the ground-up product-discovery process in `full-product-discovery.md`. It must not derive completeness from `CHANGELOG.md`, README change tables, or the existing manual tree. Those sources are supplemental history/comparison material after the current product surface, workflows, interactions, and UI states have been independently discovered.
+
+After discovery, authoring must follow the reader journey in `manual-information-architecture.md`: device overview, core concepts, basic use, creating/recording material, patterns/arrangement, Song Mode, Performance Mode, advanced topics, system/maintenance, reference, and release information. The deterministic publication order in `docs/manual/manual.toml` must follow that narrative rather than alphabetical/source-tree order.
+
 A regeneration result is a review artifact. It must **not** automatically overwrite or merge into the maintained manual. Compare it with the maintained manual and review meaningful differences before adoption.
 
 

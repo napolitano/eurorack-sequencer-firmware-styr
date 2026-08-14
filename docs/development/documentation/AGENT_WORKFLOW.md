@@ -42,11 +42,15 @@ The maintainer does not copy prompts, select branches, or hand work from one spe
 
 ### Release Documentation Analyst
 
-The Analyst is evidence-only. It inventories user-visible coverage/changes, affected stable documentation IDs, screenshot needs, What's New/version-history scope, evidence, exclusions, and unresolved questions. It returns that impact set to the Orchestrator and does not edit repository files.
+The Analyst is evidence-only. In incremental mode it inventories the complete user-visible release delta and its transitive documentation impact. In `full-regeneration` it instead performs ground-up product discovery: current product surfaces, interactions, user workflows, feature interactions, user mental model, screenshot/state gaps, and a proposed manual architecture. The changelog and existing manual are secondary comparison/history sources in this mode, not the scope definition. It returns that structured impact/coverage set to the Orchestrator and does not edit repository files.
 
 ### Manual SME
 
 The SME receives the Analyst result and authors the complete documentation bundle. It understands Styr sequencing, Eurorack/MIDI/CV terminology, UI workflows, current implementation evidence, and the distinction between full regeneration and incremental maintenance.
+
+A full regeneration must produce a real reader journey rather than a screen catalogue: device overview, concepts, basic use, sequence creation/recording, patterns, Song Mode, Performance Mode, advanced topics, system/maintenance, reference, and release information. The SME also updates `docs/manual/manual.toml` so the ODT/PDF publication order follows that journey.
+
+The shared Brain includes verified/recommended workflows for Note/Curve recording and for using Song Mode together with Performance Mode. Recommendations remain explicitly distinct from firmware facts.
 
 For a large regeneration the Orchestrator may invoke the SME more than once on the same worktree until the SME reports the authoring scope complete.
 
@@ -80,7 +84,7 @@ This avoids publishing internal analysis merely to orchestrate the agents.
 
 ## Full regeneration versus incremental sync
 
-`full-regeneration` reconstructs the complete current en-US manual from authoritative evidence. It is intended for initial bootstrap, completeness testing, periodic audit, and deliberate recovery. The Orchestrator regenerates the complete deterministic screenshot corpus before analysis and again after authoring/UX review. A full regeneration cannot succeed with stale screenshots.
+`full-regeneration` reconstructs the complete current en-US manual from authoritative evidence **from first principles**. It is intended for initial bootstrap, completeness testing, periodic audit, and deliberate recovery. Product scope is discovered from the current firmware/model/UI/tests and freshly generated screenshots, not from the changelog or existing manual tree. The Orchestrator regenerates the complete deterministic screenshot corpus before analysis and again after authoring/UX review. A full regeneration cannot succeed with stale screenshots.
 
 `incremental-release-sync` is the normal release-maintenance mode after the initial manual exists. It preserves unaffected structure, stable IDs/paths, and unaffected prose while incorporating the complete user-visible delta since the selected baseline. Affected screenshots are updated during authoring, and the complete corpus is regenerated once before Technical Review to prevent mixed-version UI assets. `What's New` covers only that interval; the version history remains cumulative.
 

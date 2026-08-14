@@ -11,6 +11,14 @@ Use this map to locate all mutually affected manual areas before editing.
 | Concept | Primary manual source | Related screen family |
 |---|---|---|
 | Manual entry point | `docs/manual/README.md` | all |
+| Device overview / navigation | `docs/manual/guide/device-overview.md` (target narrative layer) | interface + representative global states |
+| Core concepts / product mental model | `docs/manual/guide/core-concepts.md` (target narrative layer) | cross-family |
+| Getting started / first sequence | `docs/manual/guide/getting-started.md` (target narrative layer) | project, note, pattern |
+| Sequence editing workflow | `docs/manual/guide/editing-sequences.md` (target narrative layer) | note, curve, generators |
+| Recording workflows | `docs/manual/guide/recording-sequences.md` (target narrative layer) | project, note recording states, curve recording states |
+| Pattern workflow | `docs/manual/guide/patterns.md` (target narrative layer) | global/pattern |
+| Song Mode workflow | `docs/manual/guide/song-mode.md` (target narrative layer) | song/* |
+| Performance Mode workflow | `docs/manual/guide/performance-mode.md` (target narrative layer) | global/performance plus performance-specific states |
 | What's New (single release interval) | `docs/manual/whats-new.md` | relevant changed screens |
 | Version history | `docs/manual/releases/README.md` and per-release entries | none required by default |
 | Display anatomy | `docs/manual/screens/interface/README.md` | `interface/*` |

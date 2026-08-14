@@ -27,6 +27,13 @@ Before doing any work, read:
 - `.github/skills/styr-user-manual/knowledge/manual-quality.md`;
 - the knowledge modules relevant to the requested documentation bundle.
 
+For `full-regeneration`, also read these mandatory product/manual modules before authoring:
+
+- `.github/skills/styr-user-manual/knowledge/full-product-discovery.md`;
+- `.github/skills/styr-user-manual/knowledge/manual-information-architecture.md`;
+- `.github/skills/styr-user-manual/knowledge/recording-workflows.md`;
+- `.github/skills/styr-user-manual/knowledge/song-and-performance.md`.
+
 Treat the knowledge base as a curated starting model, not as permission to skip verification against current product behavior.
 
 ## Mission
@@ -35,7 +42,13 @@ Bring the Styr user manual to the requested repository state in the explicitly s
 
 The task must state either `full-regeneration` or `incremental-release-sync`. It must match the Analyst handoff.
 
-In `full-regeneration`, reconstruct complete en-US user documentation from current evidence and use the maintained manual as both a comparison target and a quality regression oracle. Regeneration is not permission to rewrite good prose merely because new wording can be generated. Preserve or restore existing passages when they remain accurate and are clearer, more concise, or more useful than the regenerated alternative.
+In `full-regeneration`, reconstruct complete en-US user documentation from current evidence and the Analyst's independent product-discovery maps. Do not scope the result from the changelog or current manual tree. Build a coherent narrative manual that follows `manual-information-architecture.md` before the screen-reference layer.
+
+At minimum, when supported by current product evidence, the narrative layer must teach: device overview and navigation; Styr's Project/Track/Pattern/Sequence/Step mental model; a first/basic sequence; recording and creation workflows; patterns; Song Mode; Performance Mode; advanced sequencing/modulation/timing/routing topics; project/system/maintenance tasks; and reference/release information. Update `docs/manual/manual.toml` so deterministic ODT/PDF publication follows that reader order.
+
+Use `recording-workflows.md` as the starting point for a practical recommendation that clearly distinguishes Step Record, realtime Overdub, deliberate Overwrite, and Curve recording. Use `song-and-performance.md` to explain arrangement and live interaction as workflows rather than parameter inventories.
+
+Use the maintained manual as both a comparison target and a quality regression oracle. Regeneration is not permission to rewrite good prose merely because new wording can be generated. Preserve or restore existing passages when they remain accurate and are clearer, more concise, or more useful than the regenerated alternative.
 
 In `incremental-release-sync`, preserve unaffected structure, stable documentation identities, paths, and prose. Do not perform a global rewrite merely because alternative wording is possible. Update `What's New` only for the supplied release interval and append one concise release-history entry for the target release when applicable.
 
@@ -63,6 +76,8 @@ Inspect `CHANGELOG.md`, relevant README feature/fix tables, current manual secti
 ## Writing rules
 
 The mandatory editorial standard is defined in `knowledge/manual-quality.md`. Apply it page by page. Factual correctness and coverage alone are not sufficient for `manual-sme-complete`.
+
+For full regeneration, write the main guide as a **reader journey**, not as a concatenation of screen pages. Introduce concepts before advanced consequences. Teach a useful workflow before giving exhaustive reference detail. The screen-reference tree supports the narrative manual; it does not replace it.
 
 - Write in natural US English.
 - Write for an end user operating the module, not for a C++ developer.
