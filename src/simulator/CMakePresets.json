@@ -7,7 +7,8 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/../../build/simulator/debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "STYR_SIM_BUILD_FRONTEND": "ON"
       }
     },
     {
@@ -16,7 +17,8 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/../../build/simulator/release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "STYR_SIM_BUILD_FRONTEND": "ON"
       }
     },
     {
@@ -48,7 +50,8 @@
           "value": "C:/msys64/ucrt64/bin/ninja.exe"
         },
         "CMAKE_PREFIX_PATH": "C:/msys64/ucrt64",
-        "STYR_UCRT64_PREFIX": "C:/msys64/ucrt64"
+        "STYR_UCRT64_PREFIX": "C:/msys64/ucrt64",
+        "STYR_SIM_BUILD_FRONTEND": "ON"
       }
     },
     {
@@ -80,7 +83,56 @@
           "value": "C:/msys64/ucrt64/bin/ninja.exe"
         },
         "CMAKE_PREFIX_PATH": "C:/msys64/ucrt64",
-        "STYR_UCRT64_PREFIX": "C:/msys64/ucrt64"
+        "STYR_UCRT64_PREFIX": "C:/msys64/ucrt64",
+        "STYR_SIM_BUILD_FRONTEND": "ON"
+      }
+    },
+    {
+      "name": "manual-screenshots",
+      "displayName": "Styr Manual Screenshots - Headless Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../../build/simulator/manual-screenshots",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "STYR_BUILD_TESTS": "OFF",
+        "STYR_SIM_ENABLE_PYTHON": "OFF",
+        "STYR_SIM_BUILD_FRONTEND": "OFF",
+        "STYR_SIM_FETCH_DEPENDENCIES": "OFF"
+      }
+    },
+    {
+      "name": "windows-ucrt64-manual-screenshots",
+      "displayName": "Styr Manual Screenshots - Windows MSYS2 UCRT64 Headless Release",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../../build/simulator/windows-ucrt64-manual-screenshots",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "environment": {
+        "PATH": "C:/msys64/ucrt64/bin;C:/msys64/usr/bin;$penv{PATH}"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": {
+          "type": "FILEPATH",
+          "value": "C:/msys64/ucrt64/bin/gcc.exe"
+        },
+        "CMAKE_CXX_COMPILER": {
+          "type": "FILEPATH",
+          "value": "C:/msys64/ucrt64/bin/g++.exe"
+        },
+        "CMAKE_MAKE_PROGRAM": {
+          "type": "FILEPATH",
+          "value": "C:/msys64/ucrt64/bin/ninja.exe"
+        },
+        "CMAKE_PREFIX_PATH": "C:/msys64/ucrt64",
+        "STYR_UCRT64_PREFIX": "C:/msys64/ucrt64",
+        "STYR_BUILD_TESTS": "OFF",
+        "STYR_SIM_ENABLE_PYTHON": "OFF",
+        "STYR_SIM_BUILD_FRONTEND": "OFF",
+        "STYR_SIM_FETCH_DEPENDENCIES": "OFF"
       }
     },
     {
@@ -92,7 +144,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "STYR_BUILD_TESTS": "OFF",
-        "STYR_SIM_ENABLE_PYTHON": "OFF"
+        "STYR_SIM_ENABLE_PYTHON": "OFF",
+        "STYR_SIM_BUILD_FRONTEND": "ON"
       }
     }
   ],
@@ -116,6 +169,14 @@
     {
       "name": "web",
       "configurePreset": "web"
+    },
+    {
+      "name": "manual-screenshots",
+      "configurePreset": "manual-screenshots"
+    },
+    {
+      "name": "windows-ucrt64-manual-screenshots",
+      "configurePreset": "windows-ucrt64-manual-screenshots"
     }
   ],
   "testPresets": [

@@ -15,6 +15,7 @@
  * SPDX-License-Identifier: MIT
  */
 #include "core/Simulator.h"
+#include "core/TargetTrace.h"
 
 #include <pybind11/pybind11.h>
 

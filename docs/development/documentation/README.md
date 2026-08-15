@@ -135,15 +135,20 @@ It enforces the one-to-one mapping between capture names, Markdown reference pag
 
 ## Generate images
 
+Use the repository helper so screenshot generation stays on the dedicated headless build graph:
+
 ```bash
-cmake --build --preset <preset> --target manual-screenshots
+python3 toolchain/regenerate_manual_screenshots.py
 ```
 
-For Windows UCRT64:
+The helper selects `manual-screenshots` on Linux/macOS and `windows-ucrt64-manual-screenshots` on Windows. Those presets disable the interactive frontend and simulator dependency fetching, so screenshot generation does not require SDL, OpenGL, GLEW, X11/Wayland or a display server.
+
+For direct Windows UCRT64 use:
 
 ```powershell
-cmake.exe --preset windows-ucrt64-debug
-cmake.exe --build --preset windows-ucrt64-debug --target manual-screenshots
+cd src/simulator
+cmake.exe --preset windows-ucrt64-manual-screenshots
+cmake.exe --build --preset windows-ucrt64-manual-screenshots --target manual-screenshots
 ```
 
 ## Adding coverage

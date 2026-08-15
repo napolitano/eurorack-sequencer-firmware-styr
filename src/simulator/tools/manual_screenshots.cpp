@@ -464,7 +464,7 @@ void prepareLfoDocumentationState(Project &project) {
     }
 }
 
-void captureLfo(ScreenshotController &c, Project &project) {
+void captureLfo(ScreenshotController &c, Project &project, Engine &engine) {
     prepareLfoDocumentationState(project);
     auto &lfo = project.track(0).lfoTrack();
 
@@ -490,6 +490,13 @@ void captureLfo(ScreenshotController &c, Project &project) {
     };
     for (const auto &capture : waveformCaptures) {
         lfo.setWaveform(capture.waveform);
+        // The actual LFO engine intentionally seeds from runtime entropy. For
+        // documentation, reset its simulator-only RNG before each random shape
+        // so Random and Smoothed Random are stable across clean capture runs.
+        if (capture.waveform == LfoTrack::Waveform::RandomHard ||
+            capture.waveform == LfoTrack::Waveform::RandomSoft) {
+            engine.selectedTrackEngine().as<LfoTrackEngine>().setSimulationRandomSeed(0x53545952u);
+        }
         // LfoPainter intentionally uses std::rand() for Noise. Reset the seed
         // before that capture so documentation output remains reproducible.
         if (capture.waveform == LfoTrack::Waveform::Noise) {
@@ -715,7 +722,7 @@ int main(int argc, char **argv) {
 
         if (wantsSection("lfo")) {
             beginIsolatedSection("lfo");
-            captureLfo(c, *project);
+            captureLfo(c, *project, sequencer->engine);
         }
 
         if (wantsSection("generators")) {

@@ -24,7 +24,7 @@ SIMULATOR = ROOT / "src" / "simulator"
 
 def default_preset(system: str | None = None) -> str:
     system = system or platform.system()
-    return "windows-ucrt64-debug" if system == "Windows" else "release"
+    return "windows-ucrt64-manual-screenshots" if system == "Windows" else "manual-screenshots"
 
 
 def run(command: list[str], cwd: Path) -> None:

@@ -60,35 +60,43 @@ function(styr_resolve_sim_dependency name repository revision required_file out_
 endfunction()
 
 # Keep the initial simulator migration on Performer's known-good dependency
-# revisions. Upgrades are intentionally separate, reviewable changes.
-styr_resolve_sim_dependency(
-    soloud
-    "https://github.com/jarikomppa/soloud.git"
-    "1157475881da0d7f76102578255b937c7d4e8f57"
-    "include/soloud.h"
-    STYR_SOLOUD_DIR
-)
-styr_resolve_sim_dependency(
-    nanovg
-    "https://github.com/memononen/nanovg.git"
-    "f93799c078fa11ed61c078c65a53914c8782c00b"
-    "src/nanovg.c"
-    STYR_NANOVG_DIR
-)
-styr_resolve_sim_dependency(
-    args
-    "https://github.com/Taywee/args.git"
-    "b7d67237e8bdaa517d7fd6e4e84e1f6efa24f8c5"
-    "args.hxx"
-    STYR_ARGS_DIR
-)
-styr_resolve_sim_dependency(
-    tinyformat
-    "https://github.com/c42f/tinyformat.git"
-    "aef402d85c1e8f9bf491b72570bfe8938ae26727"
-    "tinyformat.h"
-    STYR_TINYFORMAT_DIR
-)
+# revisions. Frontend-only dependencies must not be resolved for headless
+# framebuffer/manual builds.
+if(STYR_SIM_BUILD_FRONTEND)
+    styr_resolve_sim_dependency(
+        soloud
+        "https://github.com/jarikomppa/soloud.git"
+        "1157475881da0d7f76102578255b937c7d4e8f57"
+        "include/soloud.h"
+        STYR_SOLOUD_DIR
+    )
+    styr_resolve_sim_dependency(
+        nanovg
+        "https://github.com/memononen/nanovg.git"
+        "f93799c078fa11ed61c078c65a53914c8782c00b"
+        "src/nanovg.c"
+        STYR_NANOVG_DIR
+    )
+    styr_resolve_sim_dependency(
+        args
+        "https://github.com/Taywee/args.git"
+        "b7d67237e8bdaa517d7fd6e4e84e1f6efa24f8c5"
+        "args.hxx"
+        STYR_ARGS_DIR
+    )
+endif()
+
+# tinyformat is used by the interactive frontend and by TargetTrace when the
+# optional Python bindings are enabled. It is not part of the manual path.
+if(STYR_SIM_BUILD_FRONTEND OR STYR_SIM_ENABLE_PYTHON)
+    styr_resolve_sim_dependency(
+        tinyformat
+        "https://github.com/c42f/tinyformat.git"
+        "aef402d85c1e8f9bf491b72570bfe8938ae26727"
+        "tinyformat.h"
+        STYR_TINYFORMAT_DIR
+    )
+endif()
 
 if(STYR_SIM_ENABLE_PYTHON)
     styr_resolve_sim_dependency(

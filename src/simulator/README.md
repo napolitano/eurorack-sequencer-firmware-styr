@@ -13,8 +13,7 @@ The normal simulator build requires:
 - OpenGL development files;
 - GLEW on native Windows builds.
 
-Historical source dependencies (SoLoud, NanoVG, args and tinyformat) are fetched automatically by CMake at the exact revisions used by PER|FORMER and cached below `build/_deps/`. If a matching local checkout exists under `third_party/simulator/<dependency>/`, CMake uses it instead.
-The first configure therefore needs Git and network access unless those dependencies are already cached or provided locally. Subsequent configures reuse the cache.
+The interactive frontend resolves the historical source dependencies SoLoud, NanoVG, args and tinyformat at the exact revisions used by PER|FORMER and caches them below `build/_deps/`. If a matching local checkout exists under `third_party/simulator/<dependency>/`, CMake uses it instead. The first **interactive** configure therefore needs Git and network access unless those dependencies are already cached or provided locally. The headless manual-screenshot presets do not resolve or fetch these frontend dependencies.
 
 Python bindings are optional and disabled by default. Enable them explicitly with `-DSTYR_SIM_ENABLE_PYTHON=ON`; doing so also resolves the pinned pybind11 dependency.
 
@@ -42,7 +41,7 @@ Run the simulator from the repository root:
 .\build\simulator\windows-ucrt64-debug\styr_simulator.exe
 ```
 
-The Windows build stages the matching UCRT64 runtime DLLs (`SDL2.dll`, `glew32.dll`, `libstdc++-6.dll`, `libgcc_s_seh-1.dll`, `libwinpthread-1.dll` and `libiconv-2.dll`) beside each generated host executable. This keeps simulator and test startup independent of the caller's `PATH` and avoids mixing GCC runtimes from unrelated Windows toolchains.
+Windows host executables stage the matching UCRT64 compiler runtime (`libstdc++-6.dll`, `libgcc_s_seh-1.dll`, `libwinpthread-1.dll` and `libiconv-2.dll`) beside the executable. Only the interactive simulator additionally stages `SDL2.dll` and `glew32.dll`. This keeps headless tools and tests free of frontend DLLs while still making native startup independent of the caller's `PATH`.
 
 Run the simulator-specific CTest suite:
 
@@ -53,7 +52,7 @@ C:\msys64\ucrt64\bin\ctest.exe --preset windows-ucrt64-debug
 
 Product-code unit tests are not owned by this CMake project; run the complete product suite from the repository root with `pio test -e test_product_native`. The dedicated `test_bootloader_native` environment is a focused bootloader-only subset. The Windows preset explicitly selects UCRT64 GCC/G++, Ninja and the UCRT64 prefix so STM32CubeCLT or an unrelated `cc.exe` in the normal Windows `PATH` cannot silently become the simulator toolchain.
 
-SDL2 and GLEW are resolved explicitly from `C:/msys64/ucrt64` instead of through the invoking CMake installation's helper modules. The runtime links only the SDL2 DLL import library; `SDL2main` and `-mwindows` are intentionally excluded so native test executables keep normal `main()` entry points.
+SDL2 and GLEW are resolved explicitly from `C:/msys64/ucrt64` instead of through the invoking CMake installation's helper modules. They are linked only by the `styr_frontend` target; the shared `styr_runtime` used by the sequencer, tests and manual screenshot generator has no SDL/OpenGL/GLEW dependency. `SDL2main` and `-mwindows` remain excluded so native executables keep normal `main()` entry points.
 
 ## Linux / macOS
 
@@ -71,13 +70,13 @@ The simulator also provides a headless documentation-capture target. It drives t
 
 The default documentation scale is 3×, so the native 256×64 LCD becomes 768×192 pixels. Scaling uses integer nearest-neighbour pixel replication only; no filtering or anti-aliasing is applied.
 
-After configuring the simulator, regenerate the complete manual screenshot set with:
+Regenerate the complete manual screenshot set from the repository root with:
 
 ```powershell
-C:\msys64\ucrt64\bin\cmake.exe --build --preset windows-ucrt64-debug --target manual-screenshots
+python toolchain/regenerate_manual_screenshots.py
 ```
 
-On Linux/macOS use the corresponding native preset. The scale can be changed during configure with `-DSTYR_DOC_SCREENSHOT_SCALE=N`, where `N` is an integer from 1 through 8. See [`docs/development/documentation/README.md`](../../docs/development/documentation/README.md).
+The helper selects a dedicated headless preset (`windows-ucrt64-manual-screenshots` on Windows, `manual-screenshots` on Linux/macOS). These presets disable the interactive frontend and dependency fetching, so capture generation requires no SDL2, OpenGL, GLEW, X11/Wayland or display server. The scale can be changed by configuring the headless preset with `-DSTYR_DOC_SCREENSHOT_SCALE=N`, where `N` is an integer from 1 through 8. See [`docs/development/documentation/README.md`](../../docs/development/documentation/README.md).
 
 ## VSCodium
 

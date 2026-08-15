@@ -55,6 +55,17 @@ void LfoTrackEngine::generateRandomStepsIfNeeded() {
     _freeElapsed = 0.f;
 }
 
+#if defined(PLATFORM_SIM)
+void LfoTrackEngine::setSimulationRandomSeed(uint32_t seed) {
+    _rng.seed(seed);
+    _randSteps.clear();
+    _freePrevSteps.clear();
+    _freeNextSteps.clear();
+    _lastRandStepsSpeed = 0;
+    _freeInitialized = false;
+}
+#endif
+
 void LfoTrackEngine::restart() {
     reset();
 }

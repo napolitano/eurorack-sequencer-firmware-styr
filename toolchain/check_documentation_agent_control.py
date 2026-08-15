@@ -234,9 +234,14 @@ if not screenshot_regenerator.is_file():
     errors.append("canonical manual screenshot regeneration helper is missing")
 else:
     regenerator_text = screenshot_regenerator.read_text(encoding="utf-8")
-    for token in ("manual-screenshots", "--require-assets", "windows-ucrt64-debug", "release"):
+    for token in ("manual-screenshots", "--require-assets", "windows-ucrt64-manual-screenshots"):
         if token not in regenerator_text:
             errors.append(f"manual screenshot regeneration helper missing required token: {token}")
+    presets_text = (ROOT / "src" / "simulator" / "CMakePresets.json").read_text(encoding="utf-8")
+    for token in ("manual-screenshots", "windows-ucrt64-manual-screenshots", "STYR_SIM_BUILD_FRONTEND", "STYR_SIM_FETCH_DEPENDENCIES"):
+        if token not in presets_text:
+            errors.append(f"manual screenshot headless preset contract missing required token: {token}")
+
 
 quality = ROOT / ".github" / "skills" / "styr-user-manual" / "knowledge" / "manual-quality.md"
 if not quality.is_file():

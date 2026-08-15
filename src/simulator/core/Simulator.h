@@ -18,7 +18,6 @@
 
 #include "Target.h"
 #include "TargetStateTracker.h"
-#include "TargetTrace.h"
 
 #include <array>
 #include <cstdint>

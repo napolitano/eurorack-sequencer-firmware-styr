@@ -26,6 +26,7 @@ artifact = load_module("styr_manual_artifact", ROOT / "toolchain" / "manual" / "
 fonts = load_module("styr_manual_fonts", ROOT / "toolchain" / "manual" / "fetch_ubuntu_fonts.py")
 screenshots = load_module("styr_manual_screenshots_check", ROOT / "toolchain" / "check_manual_screenshots.py")
 regenerator = load_module("styr_manual_screenshot_regenerator", ROOT / "toolchain" / "regenerate_manual_screenshots.py")
+architecture = load_module("styr_manual_screenshot_architecture", ROOT / "toolchain" / "check_manual_screenshot_architecture.py")
 
 
 class ManualToolingTests(unittest.TestCase):
@@ -98,9 +99,12 @@ class ManualToolingTests(unittest.TestCase):
                 screenshots.ASSETS = old_assets
 
     def test_screenshot_regenerator_selects_repository_platform_presets(self):
-        self.assertEqual(regenerator.default_preset("Linux"), "release")
-        self.assertEqual(regenerator.default_preset("Darwin"), "release")
-        self.assertEqual(regenerator.default_preset("Windows"), "windows-ucrt64-debug")
+        self.assertEqual(regenerator.default_preset("Linux"), "manual-screenshots")
+        self.assertEqual(regenerator.default_preset("Darwin"), "manual-screenshots")
+        self.assertEqual(regenerator.default_preset("Windows"), "windows-ucrt64-manual-screenshots")
+
+    def test_manual_screenshot_architecture_is_headless(self):
+        self.assertEqual(architecture.static_errors(), [])
 
 
 if __name__ == "__main__":

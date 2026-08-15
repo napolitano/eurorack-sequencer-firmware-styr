@@ -47,31 +47,36 @@ The default is configured with:
 STYR_DOC_SCREENSHOT_SCALE=3
 ```
 
-For example:
+For example, the dedicated headless preset can be overridden without enabling the desktop frontend:
 
 ```powershell
-cmake.exe --preset windows-ucrt64-debug -DSTYR_DOC_SCREENSHOT_SCALE=4
+cmake.exe --preset windows-ucrt64-manual-screenshots -DSTYR_DOC_SCREENSHOT_SCALE=4
 ```
 
 Do not resize generated screenshots in an image editor. Regenerate them at another integer scale instead.
 
-## Windows prerequisites
+## Host prerequisites
 
-The Windows simulator uses MSYS2 UCRT64. GLEW is required in addition to the compiler, CMake/Ninja and SDL2 dependencies:
+Manual screenshot generation uses a dedicated headless build. It needs the native compiler plus CMake/Ninja, but **not** SDL2, OpenGL, GLEW, X11, Wayland or a display server. Those dependencies belong only to the interactive desktop simulator. On Windows the headless preset uses the same MSYS2 UCRT64 GCC toolchain.
 
-```powershell
-C:/msys64/usr/bin/pacman.exe -S --needed mingw-w64-ucrt-x86_64-glew
-```
-
-See [`src/simulator/README.md`](src/simulator/README.md) for the complete host setup.
+See [`src/simulator/README.md`](src/simulator/README.md) for the additional prerequisites required when building the interactive simulator.
 
 ## Generate the complete screenshot set
 
-From `src/simulator`:
+From the repository root, use the canonical helper:
 
 ```powershell
-cmake.exe --preset windows-ucrt64-debug
-cmake.exe --build --preset windows-ucrt64-debug --target manual-screenshots
+python toolchain/regenerate_manual_screenshots.py
+```
+
+It selects `manual-screenshots` on Linux/macOS and `windows-ucrt64-manual-screenshots` on Windows, configures with the interactive frontend and dependency fetching disabled, runs the canonical `manual-screenshots` target, and then validates the complete asset set.
+
+The underlying Windows commands are:
+
+```powershell
+cd src/simulator
+cmake.exe --preset windows-ucrt64-manual-screenshots
+cmake.exe --build --preset windows-ucrt64-manual-screenshots --target manual-screenshots
 ```
 
 The target builds `styr_manual_screenshots`, creates `docs/manual/assets/` if needed and regenerates the complete PNG capture set.
@@ -110,7 +115,7 @@ embedded docs/manual/assets/<capture-name>.png
 
 It also checks for duplicate capture names and the required manual footer.
 
-The Linux simulator CI explicitly builds `styr_manual_screenshots` before running the simulator-specific tests, so compile errors in the documentation tool can no longer remain hidden behind `EXCLUDE_FROM_ALL`.
+CI validates the screenshot path twice: the normal Linux simulator job still builds `styr_manual_screenshots` inside the full desktop graph, while a separate headless job runs the complete regeneration with no display and no graphics development packages. The headless job regenerates the corpus a second time and requires all 126 PNG SHA-256 hashes to remain identical. It also inspects the built executable and rejects SDL/OpenGL/GLEW/X11/Wayland linkage.
 
 ## Manual structure
 
@@ -193,8 +198,8 @@ This is intentional. Each section starts with a fresh `SequencerApp` and simulat
 A single section can be reproduced directly for debugging:
 
 ```powershell
-.\build\simulator\windows-ucrt64-debug\styr_manual_screenshots.exe `
-  .\build\simulator\windows-ucrt64-debug\manual-screenshots-debug `
+.\build\simulator\windows-ucrt64-manual-screenshots\styr_manual_screenshots.exe `
+  .\build\simulator\windows-ucrt64-manual-screenshots\manual-screenshots-debug `
   3 `
   generators
 ```

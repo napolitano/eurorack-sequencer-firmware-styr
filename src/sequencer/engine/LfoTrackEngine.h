@@ -121,6 +121,18 @@ public:
      */
     void generateRandomStepsIfNeeded();
 
+#if defined(PLATFORM_SIM)
+    /**
+     * @brief Seeds the simulator-only LFO random generator deterministically.
+     *
+     * This hook exists for reproducible simulator captures and tests. Embedded
+     * firmware retains the normal runtime entropy path used by reset().
+     *
+     * @param[in] seed Seed used for subsequent random LFO samples.
+     */
+    void setSimulationRandomSeed(uint32_t seed);
+#endif
+
 private:
     /**
      * @brief Reference to lfo track owned by another component.
