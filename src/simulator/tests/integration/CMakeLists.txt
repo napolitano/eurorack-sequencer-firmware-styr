@@ -9,8 +9,13 @@
 function(register_simulator_integration_test test file)
     add_executable(${test} ${file})
     target_include_directories(${test} PRIVATE ${STYR_TEST_FRAMEWORK_DIR})
-    target_link_libraries(${test} PRIVATE styr_runtime)
-    platform_postprocess_executable(${test})
+    # IntegrationTestRunner owns a sim::Frontend, so these deliberately
+    # interactive tests must consume the frontend target. Besides the actual
+    # frontend implementation this propagates its SDL/OpenGL include/link
+    # requirements; linking only styr_runtime breaks as soon as the headless
+    # runtime is correctly isolated from desktop graphics dependencies.
+    target_link_libraries(${test} PRIVATE styr_frontend)
+    platform_postprocess_frontend_executable(${test})
 endfunction()
 
 register_simulator_integration_test(TestButtonLedMatrix drivers/TestButtonLedMatrix.cpp)

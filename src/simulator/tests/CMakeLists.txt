@@ -28,4 +28,9 @@ endfunction()
 register_simulator_test(TestSimulatorReboot unit/TestSimulatorReboot.cpp)
 register_simulator_test(TestClockTimer unit/TestClockTimer.cpp)
 
-add_subdirectory(integration)
+# The integration harness drives the interactive Frontend and therefore belongs
+# to the frontend side of the simulator dependency boundary. Headless builds
+# (for example the manual-screenshot preset) must not instantiate these targets.
+if(STYR_SIM_BUILD_FRONTEND)
+    add_subdirectory(integration)
+endif()

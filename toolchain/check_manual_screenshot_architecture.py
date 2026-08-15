@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SIM_CMAKE = ROOT / "src" / "simulator" / "CMakeLists.txt"
 DEPS_CMAKE = ROOT / "src" / "simulator" / "cmake" / "StyrDependencies.cmake"
 PRESETS = ROOT / "src" / "simulator" / "CMakePresets.json"
+TESTS_CMAKE = ROOT / "src" / "simulator" / "tests" / "CMakeLists.txt"
+INTEGRATION_CMAKE = ROOT / "src" / "simulator" / "tests" / "integration" / "CMakeLists.txt"
 
 FORBIDDEN_SOURCE_TOKENS = (
     "core/frontend/",
@@ -51,6 +53,8 @@ def static_errors() -> list[str]:
     cmake = SIM_CMAKE.read_text(encoding="utf-8")
     deps = DEPS_CMAKE.read_text(encoding="utf-8")
     presets = PRESETS.read_text(encoding="utf-8")
+    tests_cmake = TESTS_CMAKE.read_text(encoding="utf-8")
+    integration_cmake = INTEGRATION_CMAKE.read_text(encoding="utf-8")
 
     for token in (
         'option(STYR_SIM_BUILD_FRONTEND',
@@ -84,6 +88,24 @@ def static_errors() -> list[str]:
     ):
         if token not in presets:
             errors.append(f"headless screenshot preset contract missing token: {token}")
+
+    # Interactive integration tests include IntegrationTestRunner -> Frontend.
+    # They must remain on the frontend side of the boundary and must disappear
+    # entirely when a headless configuration disables the frontend.
+    if not re.search(
+        r"if\(STYR_SIM_BUILD_FRONTEND\).*?add_subdirectory\(integration\).*?endif\(\)",
+        tests_cmake,
+        flags=re.DOTALL,
+    ):
+        errors.append("interactive integration tests are not guarded by STYR_SIM_BUILD_FRONTEND")
+    if not re.search(
+        r"target_link_libraries\(\$\{test\}\s+PRIVATE\s+styr_frontend\s*\)",
+        integration_cmake,
+        flags=re.DOTALL,
+    ):
+        errors.append("interactive integration tests do not link the styr_frontend target")
+    if "platform_postprocess_frontend_executable(${test})" not in integration_cmake:
+        errors.append("interactive integration tests do not stage frontend runtime dependencies")
 
     return errors
 
