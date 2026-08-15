@@ -3,7 +3,7 @@
 
 # System
 
-System pages cover calibration, utilities and firmware update access.
+System pages cover calibration, advanced settings, utilities, and firmware update access.
 
 - [System Calibration Edit](system-calibration-edit.md)
 - [System Calibration](system-calibration.md)

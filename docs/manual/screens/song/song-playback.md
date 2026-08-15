@@ -15,7 +15,13 @@ Start song playback from the Song page.
 
 ## Operation
 
-The active slot/pattern state is reflected in the page and header while playback advances.
+The page shows active-slot progress, repeat progress, and current per-track slot state as playback advances.
+
+Important interaction:
+
+- Slot changes follow slot repeat counts at measure boundaries.
+- Synced Song start/stop requests follow the configured Sync Measure boundary.
+- A direct pattern change outside Song flow stops song playback.
 
 
 From Munich with <img src="../../assets/blue-heart.svg" alt="blue heart" width="14">

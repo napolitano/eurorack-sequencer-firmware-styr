@@ -3,15 +3,25 @@
 
 # Styr User Manual
 
-The maintained end-user documentation for Styr lives here. Markdown is hand-maintained source material; the screenshot pipeline regenerates PNG files only and never rewrites these documents. Initial descriptions are based on the original PER|FORMER user documentation where behaviour is inherited and are checked against the current Styr implementation.
+The maintained end-user documentation for Styr lives here. Markdown is hand-maintained source material; the screenshot pipeline regenerates PNG files only and never rewrites these documents.
 
 LCD images are stored only in [`assets/`](assets/). Every captured UI state has a dedicated, hand-maintained Markdown reference page below [`screens/`](screens/README.md); related states are grouped by functional area so the manual remains navigable as coverage grows. Screenshot regeneration updates PNG files only after a complete successful capture run.
 
-## Documentation baseline
+## Reader journey (guide)
 
-For inherited behavior, the first reference is Simon Kallweit's official [PER|FORMER user manual](https://westlicht.github.io/performer/manual/). Styr documentation is not a generated copy of that manual: the original description is used as a behavioral baseline and every maintained page must be checked against the current Styr implementation. Where Styr differs, the current code and observed UI behavior take precedence.
+- [Device Overview and Navigation](guide/device-overview.md)
+- [Core Concepts](guide/core-concepts.md)
+- [Getting Started](guide/getting-started.md)
+- [Editing Sequences](guide/editing-sequences.md)
+- [Recording Sequences](guide/recording-sequences.md)
+- [Patterns](guide/patterns.md)
+- [Song Mode](guide/song-mode.md)
+- [Performance Mode](guide/performance-mode.md)
+- [Advanced Timing and Modulation](guide/advanced-timing-and-modulation.md)
+- [Advanced Routing, MIDI, and CV](guide/advanced-routing-midi-cv.md)
+- [Projects, Maintenance, and System Tasks](guide/projects-and-system.md)
 
-## Styr-specific features
+## Feature guides
 
 - [LFO Track](features/lfo/README.md)
 - [Acid Bassline Generator](features/acid-bassline/README.md)
@@ -36,11 +46,13 @@ For inherited behavior, the first reference is Simon Kallweit's official [PER|FO
 - [Song](screens/song/README.md)
 - [System](screens/system/README.md)
 
+## Release history
+
+- [Release History](releases/README.md)
+
 ## Screenshot convention
 
-The native LCD framebuffer is 256×64 pixels. Manual captures default to **3×**, producing 768×192 pixel PNG files. Scaling is always an integer multiple and uses direct nearest-neighbour pixel replication; screenshots must never be resampled with anti-aliasing. See [`README_SCREENSHOTS.md`](../../README_SCREENSHOTS.md) for generation, validation and review workflow.
-
-From Munich with <img src="assets/blue-heart.svg" alt="blue heart" width="14">
+The native LCD framebuffer is 256×64 pixels. Manual captures default to **3×**, producing 768×192 pixel PNG files. Scaling is always an integer multiple and uses direct nearest-neighbor pixel replication; screenshots must never be resampled with anti-aliasing. See [`README_SCREENSHOTS.md`](../../README_SCREENSHOTS.md) for generation, validation, and review workflow.
 
 ## Publication pipeline
 

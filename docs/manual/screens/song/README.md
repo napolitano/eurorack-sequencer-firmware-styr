@@ -3,10 +3,10 @@
 
 # Song
 
-Song pages arrange and play pattern chains.
+Song pages arrange patterns into slots with repeats and per-track pattern/mute states.
 
+- [Song](song.md)
 - [Song Chain Example](song-chain-example.md)
 - [Song Playback](song-playback.md)
-- [Song](song.md)
 
 From Munich with <img src="../../assets/blue-heart.svg" alt="blue heart" width="14">

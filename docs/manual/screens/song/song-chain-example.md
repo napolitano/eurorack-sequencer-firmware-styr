@@ -15,7 +15,13 @@ Create several song slots/pattern entries on the Song page.
 
 ## Operation
 
-The example illustrates how multiple pattern selections form a longer arrangement.
+The example illustrates:
+
+- repeated slots
+- per-track pattern variation
+- evolving arrangement state across multiple slots
+
+Use repeat counts before duplicating identical slots; reserve extra slots for intentional musical changes.
 
 
 From Munich with <img src="../../assets/blue-heart.svg" alt="blue heart" width="14">
